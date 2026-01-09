@@ -7,7 +7,7 @@ export default async function handler(req, res) {
     const body = req.body || {};
 
     // Minimal server-side validation
-    const required = ['role', 'name', 'whatsapp', 'country', 'dob', 'is18', 'consent'];
+    const required = ['role', 'name', 'whatsapp', 'country', 'dob', 'is18'];
     for (const k of required) {
       if (body[k] === undefined || body[k] === null || body[k] === '') {
         return res.status(400).send(`Missing field: ${k}`);
