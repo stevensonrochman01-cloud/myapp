@@ -30,8 +30,8 @@
       --border: rgba(255,255,255,0.08);
       --border-strong: rgba(255,255,255,0.14);
       --shadow-gold: 0 0 22px rgba(212, 175, 55, 0.18);
-      --radius-soft: 8px;
-      --radius-card: 4px;
+      --radius-soft: 10px;
+      --radius-card: 6px;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -164,6 +164,24 @@
 
     .nav-actions { display: flex; gap: 12px; align-items: center; }
 
+    /* Language picker */
+    .lang-select {
+      height: 40px;
+      padding: 0 10px;
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,0.30);
+      color: rgba(255,255,255,0.9);
+      outline: none;
+      border-radius: 8px;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      font-size: 0.9rem;
+    }
+    .lang-select:focus {
+      border-color: rgba(212,175,55,0.55);
+      box-shadow: 0 0 0 3px rgba(212,175,55,0.12);
+    }
+
     .menu-btn {
       display: none;
       width: 44px;
@@ -175,6 +193,7 @@
       cursor: pointer;
       align-items: center;
       justify-content: center;
+      border-radius: 8px;
     }
     .menu-btn:hover { border-color: var(--gold-main); color: var(--gold-main); box-shadow: var(--shadow-gold); }
 
@@ -256,6 +275,7 @@
       backdrop-filter: blur(10px);
       padding: 18px 14px;
       text-align: left;
+      border-radius: 10px;
     }
     .trust-item strong { display: block; font-size: 0.95rem; }
     .trust-item span { display: block; margin-top: 6px; color: rgba(255,255,255,0.65); font-size: 0.82rem; }
@@ -374,6 +394,7 @@
       color: rgba(255,255,255,0.85);
       background: rgba(0,0,0,0.22);
       backdrop-filter: blur(10px);
+      border-radius: 10px;
     }
 
     .tier-card h3 { margin: 14px 0 8px; font-size: 1.4rem; }
@@ -399,6 +420,7 @@
       background: rgba(0,0,0,0.28);
       color: rgba(255,255,255,0.72);
       font-size: 0.9rem;
+      border-radius: 10px;
     }
 
     /* VERIFICATION TABS */
@@ -409,7 +431,7 @@
       margin: 50px auto 0;
       background: #0a0a0a;
       border: 1px solid #222;
-      border-radius: 8px;
+      border-radius: 10px;
       overflow: hidden;
     }
 
@@ -464,6 +486,7 @@
       padding: 18px 20px;
       border-left: 2px solid var(--gold-main);
       margin-top: 28px;
+      border-radius: 10px;
     }
 
     /* PROFILES */
@@ -530,6 +553,7 @@
       z-index: 3;
       backdrop-filter: blur(5px);
       letter-spacing: 1px;
+      border-radius: 10px;
     }
 
     .profile-meta {
@@ -545,6 +569,7 @@
       padding: 6px 10px;
       background: rgba(0,0,0,0.25);
       backdrop-filter: blur(10px);
+      border-radius: 999px;
     }
 
     .profiles-cta {
@@ -618,6 +643,7 @@
       background: rgba(0,0,0,0.40);
       backdrop-filter: blur(12px);
       padding: 40px 24px;
+      border-radius: 12px;
     }
     .cta-box h2 { font-size: 2.6rem; }
     .cta-box p { margin-top: 12px; color: rgba(255,255,255,0.72); max-width: 760px; margin-left: auto; margin-right: auto; }
@@ -689,12 +715,11 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      border-radius: 10px;
     }
     .modal-close:hover { border-color: var(--gold-main); color: var(--gold-main); box-shadow: var(--shadow-gold); }
 
-    .modal-body {
-      padding: 18px 18px 20px;
-    }
+    .modal-body { padding: 18px 18px 20px; }
 
     .modal-note {
       border-left: 2px solid var(--gold-main);
@@ -703,11 +728,10 @@
       color: rgba(255,255,255,0.72);
       font-size: 0.9rem;
       margin-bottom: 16px;
+      border-radius: 10px;
     }
 
-    .field {
-      margin-bottom: 12px;
-    }
+    .field { margin-bottom: 12px; }
     .field label {
       display: block;
       font-size: 0.78rem;
@@ -716,17 +740,23 @@
       color: rgba(255,255,255,0.78);
       margin-bottom: 8px;
     }
-    .field input {
+    .field input,
+    .field select,
+    .field textarea {
       width: 100%;
       padding: 12px 12px;
       border: 1px solid rgba(255,255,255,0.12);
       background: rgba(0,0,0,0.35);
       color: rgba(255,255,255,0.92);
       outline: none;
-      border-radius: 6px;
+      border-radius: 10px;
       font-size: 0.95rem;
+      appearance: none;
     }
-    .field input:focus {
+    .field textarea { min-height: 110px; resize: vertical; }
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
       border-color: rgba(212,175,55,0.55);
       box-shadow: 0 0 0 3px rgba(212,175,55,0.12);
     }
@@ -745,6 +775,139 @@
       display: none;
       color: #ff6b6b;
       font-size: 0.92rem;
+    }
+
+    /* APPLY FORM (improved + hidden by default) */
+    .apply-section { background: #050505; border-top: 1px solid rgba(255,255,255,0.04); }
+
+    .apply-wrap {
+      max-width: 980px;
+      margin: 30px auto 0;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(0,0,0,0.35);
+      backdrop-filter: blur(12px);
+      padding: 26px;
+      border-radius: 14px;
+      box-shadow: 0 20px 70px rgba(0,0,0,0.45);
+    }
+
+    .apply-hidden { display: none; }
+
+    .apply-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      margin-bottom: 18px;
+    }
+
+    .apply-top h3 {
+      font-size: 1.55rem;
+      line-height: 1.2;
+    }
+
+    .apply-top p {
+      margin-top: 8px;
+      color: rgba(255,255,255,0.70);
+      font-size: 0.95rem;
+      max-width: 720px;
+    }
+
+    .apply-close {
+      width: 44px;
+      height: 44px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.25);
+      color: rgba(255,255,255,0.85);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      flex: 0 0 auto;
+    }
+    .apply-close:hover { border-color: var(--gold-main); color: var(--gold-main); box-shadow: var(--shadow-gold); }
+
+    .apply-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .apply-grid .full { grid-column: 1 / -1; }
+
+    .small-note {
+      color: rgba(255,255,255,0.55);
+      font-size: 0.85rem;
+      margin-top: 8px;
+    }
+
+    .inline-checks {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 8px;
+    }
+
+    .check {
+      display: inline-flex;
+      gap: 10px;
+      align-items: flex-start;
+      color: rgba(255,255,255,0.78);
+      font-size: 0.92rem;
+    }
+    .check input { margin-top: 4px; }
+
+    .apply-help {
+      margin-top: 10px;
+      color: rgba(255,255,255,0.65);
+      font-size: 0.9rem;
+    }
+
+    .apply-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    .form-alert {
+      margin-top: 14px;
+      display: none;
+      padding: 12px 14px;
+      border-left: 2px solid var(--gold-main);
+      background: rgba(0,0,0,0.25);
+      color: rgba(255,255,255,0.78);
+      border-radius: 10px;
+    }
+    .form-alert.error { border-left-color: #ff6b6b; color: #ffb3b3; }
+    .form-alert.success { border-left-color: #2ecc71; color: #c7f7d7; }
+
+    .apply-launch {
+      max-width: 980px;
+      margin: 46px auto 0;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(0,0,0,0.30);
+      backdrop-filter: blur(12px);
+      padding: 22px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .apply-launch h3 {
+      font-size: 1.35rem;
+      line-height: 1.2;
+    }
+    .apply-launch p {
+      margin-top: 8px;
+      color: rgba(255,255,255,0.70);
+      font-size: 0.95rem;
+      max-width: 680px;
     }
 
     /* RESPONSIVE */
@@ -767,104 +930,12 @@
       .features-grid { grid-template-columns: 1fr; }
       .testimonials-grid { grid-template-columns: 1fr; }
       .tab-content { padding: 34px 18px; }
+
+      .apply-grid { grid-template-columns: 1fr; }
+      .apply-launch { flex-direction: column; align-items: flex-start; }
+      .apply-top { flex-direction: column; }
+      .apply-close { align-self: flex-end; }
     }
-/* APPLY FORM */
-.apply-section { background: #050505; border-top: 1px solid rgba(255,255,255,0.04); }
-.apply-wrap {
-  max-width: 980px;
-  margin: 46px auto 0;
-  border: 1px solid rgba(255,255,255,0.10);
-  background: rgba(0,0,0,0.35);
-  backdrop-filter: blur(12px);
-  padding: 26px;
-  border-radius: 10px;
-}
-
-.apply-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-}
-
-.apply-grid .full { grid-column: 1 / -1; }
-
-.apply-help {
-  margin-top: 10px;
-  color: rgba(255,255,255,0.65);
-  font-size: 0.9rem;
-}
-
-.apply-form .field input,
-.apply-form .field select,
-.apply-form .field textarea {
-  width: 100%;
-  padding: 12px 12px;
-  border: 1px solid rgba(255,255,255,0.12);
-  background: rgba(0,0,0,0.35);
-  color: rgba(255,255,255,0.92);
-  outline: none;
-  border-radius: 8px;
-  font-size: 0.95rem;
-}
-
-.apply-form .field textarea { min-height: 110px; resize: vertical; }
-
-.apply-form .field input:focus,
-.apply-form .field select:focus,
-.apply-form .field textarea:focus {
-  border-color: rgba(212,175,55,0.55);
-  box-shadow: 0 0 0 3px rgba(212,175,55,0.12);
-}
-
-.inline-checks {
-  display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
-  align-items: center;
-  margin-top: 8px;
-}
-
-.check {
-  display: inline-flex;
-  gap: 10px;
-  align-items: flex-start;
-  color: rgba(255,255,255,0.78);
-  font-size: 0.92rem;
-}
-
-.check input { margin-top: 4px; }
-
-.apply-actions {
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-  flex-wrap: wrap;
-  margin-top: 14px;
-}
-
-.form-alert {
-  margin-top: 14px;
-  display: none;
-  padding: 12px 14px;
-  border-left: 2px solid var(--gold-main);
-  background: rgba(0,0,0,0.25);
-  color: rgba(255,255,255,0.78);
-}
-
-.form-alert.error { border-left-color: #ff6b6b; color: #ffb3b3; }
-.form-alert.success { border-left-color: #2ecc71; color: #c7f7d7; }
-
-.small-note {
-  color: rgba(255,255,255,0.55);
-  font-size: 0.85rem;
-  margin-top: 8px;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .apply-grid { grid-template-columns: 1fr; }
-}
-
   </style>
 </head>
 
@@ -878,18 +949,31 @@
 
     <nav aria-label="Primary navigation">
       <ul>
-        <li><a href="#features">Why Us</a></li>
-        <li><a href="#process">Process</a></li>
-        <li><a href="#tiers">Plans</a></li>
-        <li><a href="#verify">Verification</a></li>
-        <li><a href="#profiles">Profiles</a></li>
-<li><a href="#apply" class="btn-gold apply-mini"><i class="fa-solid fa-pen-to-square"></i> Apply Now</a></li>
-
-        <li><a href="#" class="btn-ghost login-mini" id="loginBtn"><i class="fa-solid fa-lock"></i> Client Login</a></li>
+        <li><a href="#features" data-i18n="nav_why">Why Us</a></li>
+        <li><a href="#process" data-i18n="nav_process">Process</a></li>
+        <li><a href="#tiers" data-i18n="nav_plans">Plans</a></li>
+        <li><a href="#verify" data-i18n="nav_verify">Verification</a></li>
+        <li><a href="#profiles" data-i18n="nav_profiles">Profiles</a></li>
+        <li>
+          <a href="#apply" class="btn-gold apply-mini js-open-apply">
+            <i class="fa-solid fa-pen-to-square"></i> <span data-i18n="btn_apply">Apply Now</span>
+          </a>
+        </li>
+        <li>
+          <a href="#" class="btn-ghost login-mini" id="loginBtn">
+            <i class="fa-solid fa-lock"></i> <span data-i18n="btn_login">Client Login</span>
+          </a>
+        </li>
       </ul>
     </nav>
 
     <div class="nav-actions">
+      <select class="lang-select" id="langSelect" aria-label="Language">
+        <option value="en">EN</option>
+        <option value="es">ES</option>
+        <option value="ru">RU</option>
+      </select>
+
       <button class="menu-btn" id="menuBtn" aria-label="Open menu">
         <i class="fa-solid fa-bars"></i>
       </button>
@@ -897,52 +981,55 @@
   </header>
 
   <div class="mobile-nav" id="mobileNav" aria-label="Mobile navigation">
-    <a href="#features">Why Us</a>
-    <a href="#process">Process</a>
-    <a href="#tiers">Plans</a>
-    <a href="#verify">Verification</a>
-    <a href="#profiles">Profiles</a>
-<li><a href="#apply" class="btn-gold apply-mini"><i class="fa-solid fa-pen-to-square"></i> Apply Now</a></li>
-
-    <a href="#" id="loginBtnMobile"><i class="fa-solid fa-lock"></i> Client Login</a>
+    <a href="#features" data-i18n="nav_why">Why Us</a>
+    <a href="#process" data-i18n="nav_process">Process</a>
+    <a href="#tiers" data-i18n="nav_plans">Plans</a>
+    <a href="#verify" data-i18n="nav_verify">Verification</a>
+    <a href="#profiles" data-i18n="nav_profiles">Profiles</a>
+    <a href="#apply" class="js-open-apply">
+      <i class="fa-solid fa-pen-to-square"></i> <span data-i18n="btn_apply">Apply Now</span>
+    </a>
+    <a href="#" id="loginBtnMobile">
+      <i class="fa-solid fa-lock"></i> <span data-i18n="btn_login">Client Login</span>
+    </a>
   </div>
 
   <!-- LOGIN MODAL -->
   <div class="modal-overlay" id="loginModal" aria-hidden="true">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
       <div class="modal-header">
-        <div class="modal-title" id="loginTitle">Client Login</div>
+        <div class="modal-title" id="loginTitle" data-i18n="login_title">Client Login</div>
         <button class="modal-close" id="closeModal" aria-label="Close login">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
 
       <div class="modal-body">
-        <div class="modal-note">
+        <div class="modal-note" data-i18n="login_note">
           Client login credentials are only for SugarDaddy clients and will be shared after the verification process.
         </div>
 
         <form id="loginForm">
           <div class="field">
-            <label for="loginEmail">Email or Username</label>
-            <input id="loginEmail" type="text" placeholder="Enter your email or username" autocomplete="username" required />
+            <label for="loginEmail" data-i18n="login_email_label">Email or Username</label>
+            <input id="loginEmail" type="text" data-i18n-placeholder="login_email_ph" placeholder="Enter your email or username" autocomplete="username" required />
           </div>
 
           <div class="field">
-            <label for="loginPass">Password</label>
-            <input id="loginPass" type="password" placeholder="Enter your password" autocomplete="current-password" required />
+            <label for="loginPass" data-i18n="login_pass_label">Password</label>
+            <input id="loginPass" type="password" data-i18n-placeholder="login_pass_ph" placeholder="Enter your password" autocomplete="current-password" required />
           </div>
 
           <div class="modal-actions">
-            <button type="button" class="btn-ghost" id="cancelLogin">
+            <button type="button" class="btn-ghost" id="cancelLogin" data-i18n="btn_cancel">
               Cancel
             </button>
             <button type="submit" class="btn-gold">
-              <i class="fa-solid fa-right-to-bracket"></i> Login
+              <i class="fa-solid fa-right-to-bracket"></i> <span data-i18n="btn_login2">Login</span>
             </button>
           </div>
 
-          <div class="error" id="loginError">Incorrect password.</div>
+          <div class="error" id="loginError" data-i18n="login_error">Incorrect password.</div>
         </form>
       </div>
     </div>
@@ -951,49 +1038,52 @@
   <section class="hero" aria-label="Hero">
     <div class="kicker">
       <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
-      Discreet. Verified. Agent-led.
+      <span data-i18n="hero_kicker">Discreet. Verified. Agent-led.</span>
     </div>
 
     <h1>
-      <span class="gold-text">World’s #1</span><br>
-      SugarDaddy & SugarBaby Dating Site
+      <span class="gold-text" data-i18n="hero_title_gold">World’s #1</span><br>
+      <span data-i18n="hero_title_rest">SugarDaddy & SugarBaby Dating Site</span>
     </h1>
 
-    <p>
+    <p data-i18n="hero_desc">
       Golden Sugar Dating is built for real SugarDaddy and SugarBaby connections.
       Verified profiles, privacy controls, and a clean process that keeps things respectful and straightforward.
     </p>
 
     <div class="hero-ctas">
-
-      <a href="#apply" class="btn-gold"><i class="fa-solid fa-clipboard-check"></i> Apply Now</a>
-      <a href="#verify" class="btn-ghost"><i class="fa-solid fa-user-shield"></i> Verification Standards</a>
+      <a href="#apply" class="btn-gold js-open-apply">
+        <i class="fa-solid fa-clipboard-check"></i> <span data-i18n="btn_apply">Apply Now</span>
+      </a>
+      <a href="#verify" class="btn-ghost">
+        <i class="fa-solid fa-user-shield"></i> <span data-i18n="btn_verify">Verification Standards</span>
+      </a>
     </div>
 
     <div class="trust-strip" role="list" aria-label="Highlights">
       <div class="trust-item" role="listitem">
-        <strong class="gold-text">Privacy-first onboarding</strong>
-        <span>Your personal details stay protected while we verify authenticity.</span>
+        <strong class="gold-text" data-i18n="trust_1_title">Privacy-first onboarding</strong>
+        <span data-i18n="trust_1_desc">Your personal details stay protected while we verify authenticity.</span>
       </div>
       <div class="trust-item" role="listitem">
-        <strong class="gold-text">Verified SugarDaddy access</strong>
-        <span>Client tools and login access are shared only after verification.</span>
+        <strong class="gold-text" data-i18n="trust_2_title">Verified SugarDaddy access</strong>
+        <span data-i18n="trust_2_desc">Client tools and login access are shared only after verification.</span>
       </div>
       <div class="trust-item" role="listitem">
-        <strong class="gold-text">Real SugarBaby profiles</strong>
-        <span>Live checks reduce fake accounts and impersonation.</span>
+        <strong class="gold-text" data-i18n="trust_3_title">Real SugarBaby profiles</strong>
+        <span data-i18n="trust_3_desc">Live checks reduce fake accounts and impersonation.</span>
       </div>
       <div class="trust-item" role="listitem">
-        <strong class="gold-text">Global cities</strong>
-        <span>London, NYC, Miami, Paris, Dubai, Monaco and more.</span>
+        <strong class="gold-text" data-i18n="trust_4_title">Global cities</strong>
+        <span data-i18n="trust_4_desc">London, NYC, Miami, Paris, Dubai, Monaco and more.</span>
       </div>
     </div>
   </section>
 
   <section id="features" class="section-padding features-section" aria-label="Features">
     <div class="max-w text-center">
-      <h2>Why People Use <span class="gold-text">Golden SugarDaddy</span></h2>
-      <p class="muted" style="margin-top: 10px;">
+      <h2 data-i18n="features_title">Why People Use <span class="gold-text">Golden SugarDaddy</span></h2>
+      <p class="muted" style="margin-top: 10px;" data-i18n="features_sub">
         A premium sugar dating site only works when it feels safe, real, and well managed.
       </p>
       <div class="divider"></div>
@@ -1001,26 +1091,26 @@
       <div class="features-grid" role="list" aria-label="Feature list">
         <div class="feature-card" role="listitem">
           <i class="fa-solid fa-user-tie" aria-hidden="true"></i>
-          <h3>Agent Support</h3>
-          <p>After you apply, an agent contacts you and explains the process clearly.</p>
+          <h3 data-i18n="feat_1_title">Agent Support</h3>
+          <p data-i18n="feat_1_desc">After you apply, an agent contacts you and explains the process clearly.</p>
         </div>
 
         <div class="feature-card" role="listitem">
           <i class="fa-solid fa-fingerprint" aria-hidden="true"></i>
-          <h3>Verification First</h3>
-          <p>SugarDaddy and SugarBaby profiles go through checks before full access is enabled.</p>
+          <h3 data-i18n="feat_2_title">Verification First</h3>
+          <p data-i18n="feat_2_desc">SugarDaddy and SugarBaby profiles go through checks before full access is enabled.</p>
         </div>
 
         <div class="feature-card" role="listitem">
           <i class="fa-solid fa-comments" aria-hidden="true"></i>
-          <h3>Discreet Messaging</h3>
-          <p>Controlled reveals, privacy settings, and clean communication tools.</p>
+          <h3 data-i18n="feat_3_title">Discreet Messaging</h3>
+          <p data-i18n="feat_3_desc">Controlled reveals, privacy settings, and clean communication tools.</p>
         </div>
 
         <div class="feature-card" role="listitem">
           <i class="fa-solid fa-shield-heart" aria-hidden="true"></i>
-          <h3>Safer Environment</h3>
-          <p>Rules that protect both sides. Accounts that break standards are removed.</p>
+          <h3 data-i18n="feat_4_title">Safer Environment</h3>
+          <p data-i18n="feat_4_desc">Rules that protect both sides. Accounts that break standards are removed.</p>
         </div>
       </div>
     </div>
@@ -1028,8 +1118,8 @@
 
   <section id="process" class="section-padding process-section" aria-label="Workflow">
     <div class="max-w text-center">
-      <h2>The <span class="gold-text">Golden Process</span></h2>
-      <p class="muted" style="margin-top: 10px;">
+      <h2 data-i18n="process_title">The <span class="gold-text">Golden Process</span></h2>
+      <p class="muted" style="margin-top: 10px;" data-i18n="process_sub">
         A simple flow that keeps the platform legitimate and high quality.
       </p>
       <div class="divider"></div>
@@ -1039,182 +1129,186 @@
       <div class="timeline" aria-label="Timeline">
         <div class="timeline-step">
           <div class="icon-box"><i class="fas fa-user-plus" aria-hidden="true"></i></div>
-          <h4>1. Apply</h4>
-          <p>Choose your role (SugarDaddy or SugarBaby) and submit your application.</p>
+          <h4 data-i18n="step_1_title">1. Apply</h4>
+          <p data-i18n="step_1_desc">Choose your role (SugarDaddy or SugarBaby) and submit your application.</p>
         </div>
 
         <div class="timeline-step">
           <div class="icon-box"><i class="fas fa-headset" aria-hidden="true"></i></div>
-          <h4>2. Agent Contact</h4>
-          <p>An agent will contact you and walk you through the process after your application.</p>
+          <h4 data-i18n="step_2_title">2. Agent Contact</h4>
+          <p data-i18n="step_2_desc">An agent will contact you and walk you through the process after your application.</p>
         </div>
 
         <div class="timeline-step">
           <div class="icon-box"><i class="fas fa-shield-alt" aria-hidden="true"></i></div>
-          <h4>3. Verification</h4>
-          <p>Identity and authenticity checks before full access is enabled.</p>
+          <h4 data-i18n="step_3_title">3. Verification</h4>
+          <p data-i18n="step_3_desc">Identity and authenticity checks before full access is enabled.</p>
         </div>
 
         <div class="timeline-step">
           <div class="icon-box"><i class="fas fa-fingerprint" aria-hidden="true"></i></div>
-          <h4>4. Matching</h4>
-          <p>We connect compatible SugarDaddy and SugarBaby members based on preferences.</p>
+          <h4 data-i18n="step_4_title">4. Matching</h4>
+          <p data-i18n="step_4_desc">We connect compatible SugarDaddy and SugarBaby members based on preferences.</p>
         </div>
 
         <div class="timeline-step">
           <div class="icon-box"><i class="fas fa-file-signature" aria-hidden="true"></i></div>
-          <h4>5. Arrangement</h4>
-          <p>Discuss expectations clearly and agree on terms that work for both sides.</p>
+          <h4 data-i18n="step_5_title">5. Arrangement</h4>
+          <p data-i18n="step_5_desc">Discuss expectations clearly and agree on terms that work for both sides.</p>
         </div>
 
         <div class="timeline-step">
           <div class="icon-box"><i class="fas fa-credit-card" aria-hidden="true"></i></div>
-          <h4>6. Platform Commission</h4>
-          <p>For SugarDaddy clients, we take a small commission only after an amount is agreed.</p>
+          <h4 data-i18n="step_6_title">6. Platform Commission</h4>
+          <p data-i18n="step_6_desc">For SugarDaddy clients, we take a small commission only after an amount is agreed.</p>
         </div>
       </div>
     </div>
   </section>
-<section id="apply" class="section-padding apply-section" aria-label="Apply">
-  <div class="max-w text-center">
-    <h2>Apply to <span class="gold-text">Golden Sugar Dating</span></h2>
-    <p class="muted" style="margin-top:10px;">
-      Fill this out and an agent will contact you. SugarBaby access is free. SugarDaddy clients are verified.
-    </p>
-    <div class="divider"></div>
-  </div>
 
-  <div class="apply-wrap">
-    <form class="apply-form" id="applyForm">
-      <!-- Honeypot (anti-bot) -->
-      <div style="position:absolute; left:-9999px; top:-9999px;" aria-hidden="true">
-        <label>Website</label>
-        <input type="text" id="website" name="website" tabindex="-1" autocomplete="off" />
+  <!-- APPLY (hidden until Apply Now) -->
+  <section id="apply" class="section-padding apply-section" aria-label="Apply">
+    <div class="max-w text-center">
+      <h2 data-i18n="apply_title">Apply to <span class="gold-text">Golden Sugar Dating</span></h2>
+      <p class="muted" style="margin-top:10px;" data-i18n="apply_sub">
+        Fill this out and an agent will contact you. SugarBaby access is free. SugarDaddy clients are verified.
+      </p>
+      <div class="divider"></div>
+    </div>
+
+    <!-- Launch panel (visible first) -->
+    <div class="apply-launch" id="applyLaunch">
+      <div>
+        <h3 class="gold-text" data-i18n="apply_launch_title">Start your application</h3>
+        <p data-i18n="apply_launch_desc">
+          It takes under a minute. Use real contact details so an agent can reach you quickly.
+        </p>
       </div>
+      <button class="btn-gold js-open-apply" type="button">
+        <i class="fa-solid fa-pen-to-square"></i> <span data-i18n="btn_open_form">Open Form</span>
+      </button>
+    </div>
 
-      <div class="apply-grid">
-        <div class="field">
-          <label for="role" style="display:block; margin-bottom:8px; font-size:0.78rem; text-transform:uppercase; letter-spacing:2px; color:rgba(255,255,255,0.78);">
-            Role
-          </label>
-          <select id="role" required>
-            <option value="">Select</option>
-            <option value="SugarDaddy">SugarDaddy</option>
-            <option value="SugarBaby">SugarBaby</option>
-          </select>
+    <!-- Form wrapper (hidden first) -->
+    <div class="apply-wrap apply-hidden" id="applyWrap">
+      <div class="apply-top">
+        <div>
+          <h3 data-i18n="apply_form_title">Application Form</h3>
+          <p data-i18n="apply_form_desc">Submit this and an agent will contact you with the next steps.</p>
         </div>
-
-        <div class="field">
-          <label for="name" style="display:block; margin-bottom:8px; font-size:0.78rem; text-transform:uppercase; letter-spacing:2px; color:rgba(255,255,255,0.78);">
-            Name
-          </label>
-          <input id="name" type="text" placeholder="Your name" minlength="2" required />
-        </div>
-
-        <div class="field">
-          <label for="country" style="display:block; margin-bottom:8px; font-size:0.78rem; text-transform:uppercase; letter-spacing:2px; color:rgba(255,255,255,0.78);">
-            Country
-          </label>
-          <input id="country" type="text" placeholder="Country" required />
-        </div>
-
-        <div class="field">
-          <label for="city" style="display:block; margin-bottom:8px; font-size:0.78rem; text-transform:uppercase; letter-spacing:2px; color:rgba(255,255,255,0.78);">
-            City (optional)
-          </label>
-          <input id="city" type="text" placeholder="City" />
-        </div>
-
-        <div class="field">
-          <label for="dob" style="display:block; margin-bottom:8px; font-size:0.78rem; text-transform:uppercase; letter-spacing:2px; color:rgba(255,255,255,0.78);">
-            Date of Birth
-          </label>
-          <input id="dob" type="date" required />
-        </div>
-
-        <div class="field">
-          <label for="whatsapp" style="display:block; margin-bottom:8px; font-size:0.78rem; text-transform:uppercase; letter-spacing:2px; color:rgba(255,255,255,0.78);">
-            WhatsApp Number
-          </label>
-          <input id="whatsapp" type="tel" placeholder="+44 7..." required />
-          <div class="small-note">Include country code (example: +44, +1, +971).</div>
-        </div>
-
-        <div class="field">
-          <label for="telegram" style="display:block; margin-bottom:8px; font-size:0.78rem; text-transform:uppercase; letter-spacing:2px; color:rgba(255,255,255,0.78);">
-            Telegram ID (optional)
-          </label>
-          <input id="telegram" type="text" placeholder="@username" />
-        </div>
-
-        <div class="field">
-          <label for="email" style="display:block; margin-bottom:8px; font-size:0.78rem; text-transform:uppercase; letter-spacing:2px; color:rgba(255,255,255,0.78);">
-            Email (optional)
-          </label>
-          <input id="email" type="email" placeholder="name@email.com" />
-        </div>
-
-        <div class="field full">
-          <label for="about" style="display:block; margin-bottom:8px; font-size:0.78rem; text-transform:uppercase; letter-spacing:2px; color:rgba(255,255,255,0.78);">
-            Short Intro (optional)
-          </label>
-          <textarea id="about" placeholder="A short, respectful intro. Keep it simple."></textarea>
-        </div>
-
-        <div class="field full">
-          <label for="preference" style="display:block; margin-bottom:8px; font-size:0.78rem; text-transform:uppercase; letter-spacing:2px; color:rgba(255,255,255,0.78);">
-            Looking for (optional)
-          </label>
-          <select id="preference">
-            <option value="">Select</option>
-            <option value="Local">Local arrangement</option>
-            <option value="Travel">Travel + experiences</option>
-            <option value="LongTerm">Long-term arrangement</option>
-            <option value="Flexible">Flexible / open</option>
-          </select>
-        </div>
-
-        <div class="field full">
-          <div class="inline-checks">
-            <label class="check">
-              <input id="is18" type="checkbox" required />
-I confirm I am 18+ & I agree to be contacted about my application.
-            </label>
-
-
-          </div>
-
-          <div class="apply-help">
-            After submission, an agent will review and contact you with the next steps.
-          </div>
-        </div>
-      </div>
-
-      <div class="apply-actions">
-        <button type="reset" class="btn-ghost">Clear</button>
-        <button type="submit" class="btn-gold" id="applySubmitBtn">
-          <i class="fa-solid fa-paper-plane"></i> Submit Application
+        <button class="apply-close" id="applyClose" type="button" aria-label="Close application form">
+          <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
 
-      <div class="form-alert success" id="applySuccess">
-        Application received. An agent will contact you soon.
-      </div>
-      <div class="form-alert error" id="applyError">
-        Something went wrong. Please try again.
-      </div>
+      <form class="apply-form" id="applyForm" novalidate>
+        <!-- Honeypot (anti-bot) -->
+        <div style="position:absolute; left:-9999px; top:-9999px;" aria-hidden="true">
+          <label>Website</label>
+          <input type="text" id="website" name="website" tabindex="-1" autocomplete="off" />
+        </div>
 
-      <div class="small-note">
-        Tip: Use real contact details. Fake numbers usually fail verification.
-      </div>
-    </form>
-  </div>
-</section>
+        <div class="apply-grid">
+          <div class="field">
+            <label for="role" data-i18n="f_role">Role</label>
+            <select id="role" name="role" required>
+              <option value="" data-i18n="opt_select">Select</option>
+              <option value="SugarDaddy" data-i18n="opt_daddy">SugarDaddy</option>
+              <option value="SugarBaby" data-i18n="opt_baby">SugarBaby</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="name" data-i18n="f_name">Name</label>
+            <input id="name" name="name" type="text" data-i18n-placeholder="ph_name" placeholder="Your name" minlength="2" required />
+          </div>
+
+          <div class="field">
+            <label for="country" data-i18n="f_country">Country</label>
+            <input id="country" name="country" type="text" data-i18n-placeholder="ph_country" placeholder="Country" required />
+          </div>
+
+          <div class="field">
+            <label for="city" data-i18n="f_city">City (optional)</label>
+            <input id="city" name="city" type="text" data-i18n-placeholder="ph_city" placeholder="City" />
+          </div>
+
+          <div class="field">
+            <label for="dob" data-i18n="f_dob">Date of Birth</label>
+            <input id="dob" name="dob" type="date" required />
+          </div>
+
+          <div class="field">
+            <label for="whatsapp" data-i18n="f_whatsapp">WhatsApp Number</label>
+            <input id="whatsapp" name="whatsapp" type="tel" data-i18n-placeholder="ph_whatsapp" placeholder="+44 7..." required />
+            <div class="small-note" data-i18n="note_whatsapp">Include country code (example:  +1, +971).</div>
+          </div>
+
+          <div class="field">
+            <label for="telegram" data-i18n="f_telegram">Telegram ID (optional)</label>
+            <input id="telegram" name="telegram" type="text" data-i18n-placeholder="ph_telegram" placeholder="@username" />
+          </div>
+
+          <div class="field">
+            <label for="email" data-i18n="f_email">Email (optional)</label>
+            <input id="email" name="email" type="email" data-i18n-placeholder="ph_email" placeholder="name@email.com" />
+          </div>
+
+          <div class="field full">
+            <label for="about" data-i18n="f_about">Short Intro (optional)</label>
+            <textarea id="about" name="about" data-i18n-placeholder="ph_about" placeholder="A short, respectful intro. Keep it simple."></textarea>
+          </div>
+
+          <div class="field full">
+            <label for="preference" data-i18n="f_pref">Looking for (optional)</label>
+            <select id="preference" name="preference">
+              <option value="" data-i18n="opt_select">Select</option>
+              <option value="Local" data-i18n="opt_local">Local arrangement</option>
+              <option value="Travel" data-i18n="opt_travel">Travel + experiences</option>
+              <option value="LongTerm" data-i18n="opt_long">Long-term arrangement</option>
+              <option value="Flexible" data-i18n="opt_flex">Flexible / open</option>
+            </select>
+          </div>
+
+          <div class="">
+            <div class="inline-checks">
+              <label class="check">
+                <input id="is18" name="is18" type="checkbox" required />
+                <span data-i18n="f_is18">I confirm I am 18+ & I agree to be contacted about my application.</span>
+              </label>
+            </div>
+
+            <div class="apply-help" data-i18n="apply_help">
+              After submission, an agent will review and contact you with the next steps.
+            </div>
+          </div>
+        </div>
+
+        <div class="apply-actions">
+          <button type="button" class="btn-ghost" id="applyClear" data-i18n="btn_clear">Clear</button>
+          <button type="submit" class="btn-gold" id="applySubmitBtn">
+            <i class="fa-solid fa-paper-plane"></i> <span data-i18n="btn_submit">Submit Application</span>
+          </button>
+        </div>
+
+        <div class="form-alert success" id="applySuccess" data-i18n="apply_success">
+          Application received. An agent will contact you soon.
+        </div>
+        <div class="form-alert error" id="applyError" data-i18n="apply_error_generic">
+          Something went wrong. Please try again.
+        </div>
+
+        <div class="small-note" data-i18n="apply_tip">
+          Tip: Use real contact details. Fake numbers usually fail verification.
+        </div>
+      </form>
+    </div>
+  </section>
 
   <section id="tiers" class="section-padding tiers-section" aria-label="Plans">
     <div class="max-w text-center">
-      <h2>Plans & <span class="gold-text">Commission</span></h2>
-      <p class="muted" style="margin-top: 10px;">
+      <h2 data-i18n="tiers_title">Plans & <span class="gold-text">Commission</span></h2>
+      <p class="muted" style="margin-top: 10px;" data-i18n="tiers_sub">
         SugarBaby access is free. SugarDaddy plans include premium tools and matching support.
       </p>
       <div class="divider"></div>
@@ -1223,65 +1317,62 @@ I confirm I am 18+ & I agree to be contacted about my application.
     <div class="max-w">
       <div class="tiers-grid" role="list" aria-label="Plans">
 
-        <!-- SugarBaby Free -->
         <div class="tier-card featured" role="listitem">
-          <div class="tier-badge"><i class="fa-solid fa-heart" aria-hidden="true"></i> SugarBaby</div>
-          <h3 class="gold-text">Free Access</h3>
-          <p>Apply, verify, and create your profile with no membership fee.</p>
+          <div class="tier-badge"><i class="fa-solid fa-heart" aria-hidden="true"></i> <span data-i18n="tier_baby">SugarBaby</span></div>
+          <h3 class="gold-text" data-i18n="tier_free">Free Access</h3>
+          <p data-i18n="tier_free_desc">Apply, verify, and create your profile with no membership fee.</p>
           <ul class="tier-list">
-            <li><i class="fa-solid fa-check" aria-hidden="true"></i><span>Free registration and verification</span></li>
-            <li><i class="fa-solid fa-check" aria-hidden="true"></i><span>Privacy controls and staged reveals</span></li>
-            <li><i class="fa-solid fa-check" aria-hidden="true"></i><span>Verified-only matching environment</span></li>
+            <li><i class="fa-solid fa-check" aria-hidden="true"></i><span data-i18n="tier_free_1">Free registration and verification</span></li>
+            <li><i class="fa-solid fa-check" aria-hidden="true"></i><span data-i18n="tier_free_2">Privacy controls and staged reveals</span></li>
+            <li><i class="fa-solid fa-check" aria-hidden="true"></i><span data-i18n="tier_free_3">Verified-only matching environment</span></li>
           </ul>
         </div>
 
-        <!-- SugarDaddy Plans -->
         <div class="tier-card" role="listitem">
-          <div class="tier-badge"><i class="fa-solid fa-crown" aria-hidden="true"></i> SugarDaddy</div>
+          <div class="tier-badge"><i class="fa-solid fa-crown" aria-hidden="true"></i> <span data-i18n="tier_daddy">SugarDaddy</span></div>
           <h3 class="gold-text">Gold</h3>
-          <p>Clean access to verified profiles and standard introductions.</p>
+          <p data-i18n="tier_gold_desc">Clean access to verified profiles and standard introductions.</p>
           <ul class="tier-list">
-            <li><i class="fa-solid fa-check" aria-hidden="true"></i><span>Browse verified SugarBaby profiles</span></li>
-            <li><i class="fa-solid fa-check" aria-hidden="true"></i><span>Standard matching support</span></li>
-            <li><i class="fa-solid fa-check" aria-hidden="true"></i><span>Basic privacy tools</span></li>
+            <li><i class="fa-solid fa-check" aria-hidden="true"></i><span data-i18n="tier_gold_1">Browse verified SugarBaby profiles</span></li>
+            <li><i class="fa-solid fa-check" aria-hidden="true"></i><span data-i18n="tier_gold_2">Standard matching support</span></li>
+            <li><i class="fa-solid fa-check" aria-hidden="true"></i><span data-i18n="tier_gold_3">Basic privacy tools</span></li>
           </ul>
         </div>
 
         <div class="tier-card" role="listitem">
-          <div class="tier-badge"><i class="fa-solid fa-gem" aria-hidden="true"></i> SugarDaddy</div>
+          <div class="tier-badge"><i class="fa-solid fa-gem" aria-hidden="true"></i> <span data-i18n="tier_daddy">SugarDaddy</span></div>
           <h3 class="gold-text">Platinum</h3>
-          <p>Faster matching and more agent support for busy clients.</p>
+          <p data-i18n="tier_plat_desc">Faster matching and more agent support for busy clients.</p>
           <ul class="tier-list">
-            <li><i class="fa-solid fa-check" aria-hidden="true"></i><span>Priority review and faster introductions</span></li>
-            <li><i class="fa-solid fa-check" aria-hidden="true"></i><span>Expanded matching across cities</span></li>
-            <li><i class="fa-solid fa-check" aria-hidden="true"></i><span>Enhanced privacy options</span></li>
+            <li><i class="fa-solid fa-check" aria-hidden="true"></i><span data-i18n="tier_plat_1">Priority review and faster introductions</span></li>
+            <li><i class="fa-solid fa-check" aria-hidden="true"></i><span data-i18n="tier_plat_2">Expanded matching across cities</span></li>
+            <li><i class="fa-solid fa-check" aria-hidden="true"></i><span data-i18n="tier_plat_3">Enhanced privacy options</span></li>
           </ul>
         </div>
 
         <div class="tier-card" role="listitem">
-          <div class="tier-badge"><i class="fa-solid fa-diamond" aria-hidden="true"></i> SugarDaddy</div>
+          <div class="tier-badge"><i class="fa-solid fa-diamond" aria-hidden="true"></i> <span data-i18n="tier_daddy">SugarDaddy</span></div>
           <h3 class="gold-text">Diamond</h3>
-          <p>High-touch agent-led service and premium introductions.</p>
+          <p data-i18n="tier_diamond_desc">High-touch agent-led service and premium introductions.</p>
           <ul class="tier-list">
-            <li><i class="fa-solid fa-check" aria-hidden="true"></i><span>Agent shortlisting and outreach</span></li>
-            <li><i class="fa-solid fa-check" aria-hidden="true"></i><span>Private introductions and concierge help</span></li>
-            <li><i class="fa-solid fa-check" aria-hidden="true"></i><span>Maximum discretion settings</span></li>
+            <li><i class="fa-solid fa-check" aria-hidden="true"></i><span data-i18n="tier_diamond_1">Agent shortlisting and outreach</span></li>
+            <li><i class="fa-solid fa-check" aria-hidden="true"></i><span data-i18n="tier_diamond_2">Private introductions and concierge help</span></li>
+            <li><i class="fa-solid fa-check" aria-hidden="true"></i><span data-i18n="tier_diamond_3">Maximum discretion settings</span></li>
           </ul>
         </div>
       </div>
 
       <div class="commission-note">
-        <strong class="gold-text">Commission:</strong>
-        SugarDaddy clients pay <strong>1%</strong> of the decided arrangement amount as our commission.
-        SugarBabies are free.
+        <strong class="gold-text" data-i18n="commission_title">Commission:</strong>
+        <span data-i18n="commission_text">SugarDaddy clients pay <strong>1%</strong> of the decided arrangement amount as our commission. SugarBabies are free.</span>
       </div>
     </div>
   </section>
 
   <section id="verify" class="section-padding verification-section" aria-label="Verification standards">
     <div class="max-w text-center">
-      <h2>Verification <span class="gold-text">Standards</span></h2>
-      <p class="muted" style="margin-top: 10px;">Select your role to view requirements</p>
+      <h2 data-i18n="verify_title">Verification <span class="gold-text">Standards</span></h2>
+      <p class="muted" style="margin-top: 10px;" data-i18n="verify_sub">Select your role to view requirements</p>
       <div class="divider"></div>
     </div>
 
@@ -1290,13 +1381,13 @@ I confirm I am 18+ & I agree to be contacted about my application.
       <input type="radio" id="tab-baby" name="verify-tabs" class="tab-input">
 
       <div class="tabs-header">
-        <label for="tab-daddy" class="tab-label">For SugarDaddy</label>
-        <label for="tab-baby" class="tab-label">For SugarBaby</label>
+        <label for="tab-daddy" class="tab-label" data-i18n="verify_tab_daddy">For SugarDaddy</label>
+        <label for="tab-baby" class="tab-label" data-i18n="verify_tab_baby">For SugarBaby</label>
       </div>
 
       <div class="tab-content content-daddy">
-        <h3 style="color: var(--gold-main); margin-bottom: 16px;">SugarDaddy Verification</h3>
-        <p style="color: #ccc; margin-bottom: 26px;">
+        <h3 style="color: var(--gold-main); margin-bottom: 16px;" data-i18n="verify_daddy_title">SugarDaddy Verification</h3>
+        <p style="color: #ccc; margin-bottom: 26px;" data-i18n="verify_daddy_desc">
           SugarDaddy access is verified to keep the platform legitimate and protect SugarBabies from fake accounts.
         </p>
 
@@ -1304,8 +1395,8 @@ I confirm I am 18+ & I agree to be contacted about my application.
           <li>
             <i class="fas fa-passport" aria-hidden="true"></i>
             <div>
-              <strong style="color: white;">Identity Confirmation</strong>
-              <p style="color: #888; font-size: 0.9rem;">
+              <strong style="color: white;" data-i18n="verify_daddy_1_title">Identity Confirmation</strong>
+              <p style="color: #888; font-size: 0.9rem;" data-i18n="verify_daddy_1_desc">
                 Government ID is required. Sensitive details are never shown to other members.
               </p>
             </div>
@@ -1314,8 +1405,8 @@ I confirm I am 18+ & I agree to be contacted about my application.
           <li>
             <i class="fas fa-user-shield" aria-hidden="true"></i>
             <div>
-              <strong style="color: white;">Account Screening</strong>
-              <p style="color: #888; font-size: 0.9rem;">
+              <strong style="color: white;" data-i18n="verify_daddy_2_title">Account Screening</strong>
+              <p style="color: #888; font-size: 0.9rem;" data-i18n="verify_daddy_2_desc">
                 We review profile consistency and intent to reduce fraud and time-wasters.
               </p>
             </div>
@@ -1324,8 +1415,8 @@ I confirm I am 18+ & I agree to be contacted about my application.
           <li>
             <i class="fas fa-lock" aria-hidden="true"></i>
             <div>
-              <strong style="color: white;">Client Login Issued</strong>
-              <p style="color: #888; font-size: 0.9rem;">
+              <strong style="color: white;" data-i18n="verify_daddy_3_title">Client Login Issued</strong>
+              <p style="color: #888; font-size: 0.9rem;" data-i18n="verify_daddy_3_desc">
                 Client login credentials are shared only after verification is completed.
               </p>
             </div>
@@ -1333,15 +1424,15 @@ I confirm I am 18+ & I agree to be contacted about my application.
         </ul>
 
         <div class="requirements-box">
-          <p style="color: var(--text-grey); font-style: italic;">
+          <p style="color: var(--text-grey); font-style: italic;" data-i18n="verify_quote">
             “Verification protects both sides and keeps Golden Sugar Dating high quality.”
           </p>
         </div>
       </div>
 
       <div class="tab-content content-baby">
-        <h3 style="color: var(--gold-main); margin-bottom: 16px;">SugarBaby Verification</h3>
-        <p style="color: #ccc; margin-bottom: 26px;">
+        <h3 style="color: var(--gold-main); margin-bottom: 16px;" data-i18n="verify_baby_title">SugarBaby Verification</h3>
+        <p style="color: #ccc; margin-bottom: 26px;" data-i18n="verify_baby_desc">
           We verify SugarBaby profiles to reduce impersonation and keep the platform real.
         </p>
 
@@ -1349,8 +1440,8 @@ I confirm I am 18+ & I agree to be contacted about my application.
           <li>
             <i class="fas fa-camera" aria-hidden="true"></i>
             <div>
-              <strong style="color: white;">Live Photo Check</strong>
-              <p style="color: #888; font-size: 0.9rem;">
+              <strong style="color: white;" data-i18n="verify_baby_1_title">Live Photo Check</strong>
+              <p style="color: #888; font-size: 0.9rem;" data-i18n="verify_baby_1_desc">
                 A quick selfie prompt to confirm your profile is authentic and current.
               </p>
             </div>
@@ -1359,8 +1450,8 @@ I confirm I am 18+ & I agree to be contacted about my application.
           <li>
             <i class="fas fa-id-card" aria-hidden="true"></i>
             <div>
-              <strong style="color: white;">Age Verification</strong>
-              <p style="color: #888; font-size: 0.9rem;">
+              <strong style="color: white;" data-i18n="verify_baby_2_title">Age Verification</strong>
+              <p style="color: #888; font-size: 0.9rem;" data-i18n="verify_baby_2_desc">
                 You must be 18+. Your personal details remain private.
               </p>
             </div>
@@ -1369,8 +1460,8 @@ I confirm I am 18+ & I agree to be contacted about my application.
           <li>
             <i class="fas fa-user-check" aria-hidden="true"></i>
             <div>
-              <strong style="color: white;">Profile Review</strong>
-              <p style="color: #888; font-size: 0.9rem;">
+              <strong style="color: white;" data-i18n="verify_baby_3_title">Profile Review</strong>
+              <p style="color: #888; font-size: 0.9rem;" data-i18n="verify_baby_3_desc">
                 We approve profiles that are clear, respectful, and match their photos.
               </p>
             </div>
@@ -1378,7 +1469,7 @@ I confirm I am 18+ & I agree to be contacted about my application.
         </ul>
 
         <div class="requirements-box">
-          <p style="color: var(--text-grey); font-style: italic;">
+          <p style="color: var(--text-grey); font-style: italic;" data-i18n="verify_quote_baby">
             “SugarBaby membership is free. Verification helps keep the community real.”
           </p>
         </div>
@@ -1388,15 +1479,15 @@ I confirm I am 18+ & I agree to be contacted about my application.
 
   <section id="profiles" class="section-padding profiles-section" aria-label="Profiles">
     <div class="max-w text-center" style="margin-bottom: 44px;">
-      <h2>Recent <span class="gold-text">Profiles</span></h2>
-      <p class="muted" style="margin-top: 10px;">Faces stay blurred for privacy. Login to view full profiles after verification.</p>
+      <h2 data-i18n="profiles_title">Recent <span class="gold-text">Profiles</span></h2>
+      <p class="muted" style="margin-top: 10px;" data-i18n="profiles_sub">
+        Faces stay blurred for privacy. Login to view full profiles after verification.
+      </p>
       <div class="divider"></div>
     </div>
 
     <div class="max-w">
       <div class="carousel-container" aria-label="Profile carousel">
-
-        <!-- More varied, realistic images (different angles / lighting / scenes) -->
         <div class="card">
           <div class="privacy-badge">SugarBaby • Verifying</div>
           <div class="card-img-wrapper">
@@ -1448,177 +1539,23 @@ I confirm I am 18+ & I agree to be contacted about my application.
             </div>
           </div>
         </div>
-
-        <div class="card">
-          <div class="privacy-badge">SugarBaby • Verified</div>
-          <div class="card-img-wrapper">
-            <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=2000&auto=format&fit=crop" alt="Profile">
-          </div>
-          <div class="card-overlay">
-            <h3 class="gold-text">Isabella, 24</h3>
-            <div class="profile-meta">
-              <span class="chip">SugarBaby</span><span class="chip">Milan</span><span class="chip">Art</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="privacy-badge">SugarDaddy • Gold</div>
-          <div class="card-img-wrapper">
-            <img src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=1974&auto=format&fit=crop" alt="Profile">
-          </div>
-          <div class="card-overlay">
-            <h3 class="gold-text">Thomas, 50</h3>
-            <div class="profile-meta">
-              <span class="chip">SugarDaddy</span><span class="chip">San Francisco</span><span class="chip">Tech</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="privacy-badge">SugarBaby • Verified</div>
-          <div class="card-img-wrapper">
-            <img src="https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?q=80&w=2000&auto=format&fit=crop" alt="Profile">
-          </div>
-          <div class="card-overlay">
-            <h3 class="gold-text">Nina, 23</h3>
-            <div class="profile-meta">
-              <span class="chip">SugarBaby</span><span class="chip">Berlin</span><span class="chip">Graduate</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="privacy-badge">SugarDaddy • Diamond</div>
-          <div class="card-img-wrapper">
-            <img src="https://images.unsplash.com/photo-1542178243-bc20204b769f?q=80&w=2000&auto=format&fit=crop" alt="Profile">
-          </div>
-          <div class="card-overlay">
-            <h3 class="gold-text">Hassan, 52</h3>
-            <div class="profile-meta">
-              <span class="chip">SugarDaddy</span><span class="chip">Dubai</span><span class="chip">Hospitality</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="privacy-badge">SugarBaby • Verified</div>
-          <div class="card-img-wrapper">
-            <img src="https://images.unsplash.com/photo-1525134479668-1bee5c7c6845?q=80&w=2000&auto=format&fit=crop" alt="Profile">
-          </div>
-          <div class="card-overlay">
-            <h3 class="gold-text">Maya, 22</h3>
-            <div class="profile-meta">
-              <span class="chip">SugarBaby</span><span class="chip">Los Angeles</span><span class="chip">Wellness</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="privacy-badge">SugarDaddy • Platinum</div>
-          <div class="card-img-wrapper">
-            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=2000&auto=format&fit=crop" alt="Profile">
-          </div>
-          <div class="card-overlay">
-            <h3 class="gold-text">Michael, 60</h3>
-            <div class="profile-meta">
-              <span class="chip">SugarDaddy</span><span class="chip">NYC</span><span class="chip">Private Equity</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="privacy-badge">SugarBaby • Verified</div>
-          <div class="card-img-wrapper">
-            <img src="https://images.unsplash.com/photo-1524250502761-1ac6f2e30d43?q=80&w=1976&auto=format&fit=crop" alt="Profile">
-          </div>
-          <div class="card-overlay">
-            <h3 class="gold-text">Sasha, 22</h3>
-            <div class="profile-meta">
-              <span class="chip">SugarBaby</span><span class="chip">Monaco</span><span class="chip">Travel</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="privacy-badge">SugarDaddy • Platinum</div>
-          <div class="card-img-wrapper">
-            <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=2070&auto=format&fit=crop" alt="Profile">
-          </div>
-          <div class="card-overlay">
-            <h3 class="gold-text">William, 62</h3>
-            <div class="profile-meta">
-              <span class="chip">SugarDaddy</span><span class="chip">Dubai</span><span class="chip">Real Estate</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="privacy-badge">SugarBaby • Verifying</div>
-          <div class="card-img-wrapper">
-            <img src="https://images.unsplash.com/photo-1545959783-c553dbbf129d?q=80&w=1974&auto=format&fit=crop" alt="Profile">
-          </div>
-          <div class="card-overlay">
-            <h3 class="gold-text">Anastasia, 23</h3>
-            <div class="profile-meta">
-              <span class="chip">SugarBaby</span><span class="chip">Miami</span><span class="chip">Model</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="privacy-badge">SugarDaddy • Gold</div>
-          <div class="card-img-wrapper">
-            <img src="https://images.unsplash.com/photo-1544723795-3fb6469f5b39?q=80&w=2000&auto=format&fit=crop" alt="Profile">
-          </div>
-          <div class="card-overlay">
-            <h3 class="gold-text">David, 48</h3>
-            <div class="profile-meta">
-              <span class="chip">SugarDaddy</span><span class="chip">London</span><span class="chip">Media</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="privacy-badge">SugarBaby • Verified</div>
-          <div class="card-img-wrapper">
-            <img src="https://images.unsplash.com/photo-1605763240004-7e93b172d754?q=80&w=1974&auto=format&fit=crop" alt="Profile">
-          </div>
-          <div class="card-overlay">
-            <h3 class="gold-text">Monique, 25</h3>
-            <div class="profile-meta">
-              <span class="chip">SugarBaby</span><span class="chip">Paris</span><span class="chip">Fashion</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="privacy-badge">SugarBaby • Verified</div>
-          <div class="card-img-wrapper">
-            <img src="https://images.unsplash.com/photo-1621784563330-caee0b138a00?q=80&w=1974&auto=format&fit=crop" alt="Profile">
-          </div>
-          <div class="card-overlay">
-            <h3 class="gold-text">Chloe, 21</h3>
-            <div class="profile-meta">
-              <span class="chip">SugarBaby</span><span class="chip">London</span><span class="chip">Student</span>
-            </div>
-          </div>
-        </div>
-
       </div>
 
       <div class="profiles-cta">
-<li><a href="#apply" class="btn-gold "><i class="fa-solid fa-pen-to-square"></i> Apply Now</a></li>
-
-        <a href="#verify" class="btn-ghost"><i class="fa-solid fa-shield-heart"></i> Verification Standards</a>
+        <a href="#apply" class="btn-gold js-open-apply">
+          <i class="fa-solid fa-pen-to-square"></i> <span data-i18n="btn_apply">Apply Now</span>
+        </a>
+        <a href="#verify" class="btn-ghost">
+          <i class="fa-solid fa-shield-heart"></i> <span data-i18n="btn_verify">Verification Standards</span>
+        </a>
       </div>
     </div>
   </section>
 
   <section class="section-padding testimonials-section" aria-label="Testimonials">
     <div class="max-w text-center">
-      <h2>Member <span class="gold-text">Feedback</span></h2>
-      <p class="muted" style="margin-top: 10px;">Private and anonymised. Shared with permission.</p>
+      <h2 data-i18n="testimonials_title">Member <span class="gold-text">Feedback</span></h2>
+      <p class="muted" style="margin-top: 10px;" data-i18n="testimonials_sub">Private and anonymised. Shared with permission.</p>
       <div class="divider"></div>
     </div>
 
@@ -1626,20 +1563,20 @@ I confirm I am 18+ & I agree to be contacted about my application.
       <div class="testimonials-grid" role="list">
         <div class="quote-card" role="listitem">
           <div class="stars" aria-hidden="true">★★★★★</div>
-          <p>“I wanted a real SugarBaby environment with fewer fake profiles. The verification made the difference.”</p>
-          <div class="who">C.L.<span>SugarDaddy, London</span></div>
+          <p data-i18n="t_1">“I wanted a real SugarBaby environment with fewer fake profiles. The verification made the difference.”</p>
+          <div class="who">C.L.<span data-i18n="t_1_who">SugarDaddy, London</span></div>
         </div>
 
         <div class="quote-card" role="listitem">
           <div class="stars" aria-hidden="true">★★★★★</div>
-          <p>“As a SugarBaby, it felt safer. I could control what I revealed and when.”</p>
-          <div class="who">M.S.<span>SugarBaby, Paris</span></div>
+          <p data-i18n="t_2">“As a SugarBaby, it felt safer. I could control what I revealed and when.”</p>
+          <div class="who">M.S.<span data-i18n="t_2_who">SugarBaby, Paris</span></div>
         </div>
 
         <div class="quote-card" role="listitem">
           <div class="stars" aria-hidden="true">★★★★★</div>
-          <p>“Straightforward process and respectful people. It feels like a premium platform, not chaos.”</p>
-          <div class="who">J.A.<span>SugarDaddy, NYC</span></div>
+          <p data-i18n="t_3">“Straightforward process and respectful people. It feels like a premium platform, not chaos.”</p>
+          <div class="who">J.A.<span data-i18n="t_3_who">SugarDaddy, NYC</span></div>
         </div>
       </div>
     </div>
@@ -1647,60 +1584,55 @@ I confirm I am 18+ & I agree to be contacted about my application.
 
   <section class="section-padding faq-section" aria-label="FAQ">
     <div class="max-w text-center">
-      <h2>Frequently Asked <span class="gold-text">Questions</span></h2>
-      <p class="muted" style="margin-top: 10px;">Quick answers before you apply.</p>
+      <h2 data-i18n="faq_title">Frequently Asked <span class="gold-text">Questions</span></h2>
+      <p class="muted" style="margin-top: 10px;" data-i18n="faq_sub">Quick answers before you apply.</p>
       <div class="divider"></div>
     </div>
 
     <div class="faq" aria-label="FAQ list">
       <details>
-        <summary>Is Golden Sugar Dating for adults only?</summary>
-        <div class="faq-content">
-          Yes. Members must be 18+ to register and complete verification.
-        </div>
+        <summary data-i18n="faq_q1">Is Golden Sugar Dating for adults only?</summary>
+        <div class="faq-content" data-i18n="faq_a1">Yes. Members must be 18+ to register and complete verification.</div>
       </details>
 
       <details>
-        <summary>Is SugarBaby membership really free?</summary>
-        <div class="faq-content">
-          Yes. SugarBaby access is free. Verification is required to keep the community authentic.
-        </div>
+        <summary data-i18n="faq_q2">Is SugarBaby membership really free?</summary>
+        <div class="faq-content" data-i18n="faq_a2">Yes. SugarBaby access is free. Verification is required to keep the community authentic.</div>
       </details>
 
       <details>
-        <summary>How does the 1% SugarDaddy commission work?</summary>
-        <div class="faq-content">
+        <summary data-i18n="faq_q3">How does the 1% SugarDaddy commission work?</summary>
+        <div class="faq-content" data-i18n="faq_a3">
           SugarDaddy clients pay 1% of the decided arrangement amount as our commission.
           This is only for SugarDaddy clients. SugarBabies are free.
         </div>
       </details>
 
       <details>
-        <summary>When do I get client login credentials?</summary>
-        <div class="faq-content">
-          Client login credentials are only for SugarDaddy clients and are shared after verification is completed.
-        </div>
+        <summary data-i18n="faq_q4">When do I get client login credentials?</summary>
+        <div class="faq-content" data-i18n="faq_a4">Client login credentials are only for SugarDaddy clients and are shared after verification is completed.</div>
       </details>
 
       <details>
-        <summary>Do you show my identity to other members?</summary>
-        <div class="faq-content">
-          No. Identity checks are used for verification only. Your profile controls what is visible, and you decide what to reveal.
-        </div>
+        <summary data-i18n="faq_q5">Do you show my identity to other members?</summary>
+        <div class="faq-content" data-i18n="faq_a5">No. Identity checks are used for verification only. Your profile controls what is visible, and you decide what to reveal.</div>
       </details>
     </div>
   </section>
 
   <section class="cta-section" aria-label="Call to action">
     <div class="cta-box">
-      <h2>Apply to <span class="gold-text">Golden Sugar Dating</span></h2>
-      <p>
+      <h2 data-i18n="cta_title">Apply to <span class="gold-text">Golden Sugar Dating</span></h2>
+      <p data-i18n="cta_desc">
         Submit your application, complete verification, and unlock a cleaner sugar dating experience built for real SugarDaddy and SugarBaby connections.
       </p>
       <div class="cta-actions">
-<li><a href="#apply" class="btn-gold"><i class="fa-solid fa-pen-to-square"></i> Apply Now</a></li>
-
-        <a href="#tiers" class="btn-ghost"><i class="fa-solid fa-gem"></i> View Plans</a>
+        <a href="#apply" class="btn-gold js-open-apply">
+          <i class="fa-solid fa-pen-to-square"></i> <span data-i18n="btn_apply">Apply Now</span>
+        </a>
+        <a href="#tiers" class="btn-ghost">
+          <i class="fa-solid fa-gem"></i> <span data-i18n="btn_view_plans">View Plans</span>
+        </a>
       </div>
     </div>
   </section>
@@ -1712,23 +1644,582 @@ I confirm I am 18+ & I agree to be contacted about my application.
     </div>
 
     <div class="footer-links" aria-label="Footer links">
-      <a href="#verify">Verification</a>
-      <a href="#process">Process</a>
-      <a href="#tiers">Plans</a>
-      <a href="#profiles">Profiles</a>
-      <a href="#">Privacy</a>
-      <a href="#">Terms</a>
-      <a href="#">Contact</a>
+      <a href="#verify" data-i18n="nav_verify">Verification</a>
+      <a href="#process" data-i18n="nav_process">Process</a>
+      <a href="#tiers" data-i18n="nav_plans">Plans</a>
+      <a href="#profiles" data-i18n="nav_profiles">Profiles</a>
+      <a href="#" data-i18n="footer_privacy">Privacy</a>
+      <a href="#" data-i18n="footer_terms">Terms</a>
+      <a href="#" data-i18n="footer_contact">Contact</a>
     </div>
 
-    <p style="color: #444; font-size: 0.82rem; margin-top: 18px;">
+    <p style="color: #444; font-size: 0.82rem; margin-top: 18px;" data-i18n="footer_copy">
       &copy; 2026 Golden Sugar Dating. Members must be 18+ to register. <br>
       Verified access helps keep the platform authentic and respectful.
     </p>
   </footer>
 
   <script>
-    // Header scroll effect + simple mobile menu
+    // ---------------------------
+    // Simple i18n (EN/ES/RU)
+    // ---------------------------
+    const I18N = {
+      en: {
+        nav_why: "Why Us",
+        nav_process: "Process",
+        nav_plans: "Plans",
+        nav_verify: "Verification",
+        nav_profiles: "Profiles",
+        btn_apply: "Apply Now",
+        btn_open_form: "Open Form",
+        btn_login: "Client Login",
+        btn_login2: "Login",
+        btn_cancel: "Cancel",
+        btn_clear: "Clear",
+        btn_submit: "Submit Application",
+        btn_verify: "Verification Standards",
+        btn_view_plans: "View Plans",
+
+        hero_kicker: "Discreet. Verified. Agent-led.",
+        hero_title_gold: "World’s #1",
+        hero_title_rest: "SugarDaddy & SugarBaby Dating Site",
+        hero_desc: "Golden Sugar Dating is built for real SugarDaddy and SugarBaby connections. Verified profiles, privacy controls, and a clean process that keeps things respectful and straightforward.",
+
+        trust_1_title: "Privacy-first onboarding",
+        trust_1_desc: "Your personal details stay protected while we verify authenticity.",
+        trust_2_title: "Verified SugarDaddy access",
+        trust_2_desc: "Client tools and login access are shared only after verification.",
+        trust_3_title: "Real SugarBaby profiles",
+        trust_3_desc: "Live checks reduce fake accounts and impersonation.",
+        trust_4_title: "Global cities",
+        trust_4_desc: "London, NYC, Miami, Paris, Dubai, Monaco and more.",
+
+        features_title: "Why People Use <span class=\"gold-text\">Golden SugarDaddy</span>",
+        features_sub: "A premium sugar dating site only works when it feels safe, real, and well managed.",
+        feat_1_title: "Agent Support",
+        feat_1_desc: "After you apply, an agent contacts you and explains the process clearly.",
+        feat_2_title: "Verification First",
+        feat_2_desc: "SugarDaddy and SugarBaby profiles go through checks before full access is enabled.",
+        feat_3_title: "Discreet Messaging",
+        feat_3_desc: "Controlled reveals, privacy settings, and clean communication tools.",
+        feat_4_title: "Safer Environment",
+        feat_4_desc: "Rules that protect both sides. Accounts that break standards are removed.",
+
+        process_title: "The <span class=\"gold-text\">Golden Process</span>",
+        process_sub: "A simple flow that keeps the platform legitimate and high quality.",
+        step_1_title: "1. Apply",
+        step_1_desc: "Choose your role (SugarDaddy or SugarBaby) and submit your application.",
+        step_2_title: "2. Agent Contact",
+        step_2_desc: "An agent will contact you and walk you through the process after your application.",
+        step_3_title: "3. Verification",
+        step_3_desc: "Identity and authenticity checks before full access is enabled.",
+        step_4_title: "4. Matching",
+        step_4_desc: "We connect compatible SugarDaddy and SugarBaby members based on preferences.",
+        step_5_title: "5. Arrangement",
+        step_5_desc: "Discuss expectations clearly and agree on terms that work for both sides.",
+        step_6_title: "6. Platform Commission",
+        step_6_desc: "For SugarDaddy clients, we take a small commission only after an amount is agreed.",
+
+        apply_title: "Apply to <span class=\"gold-text\">Golden Sugar Dating</span>",
+        apply_sub: "Fill this out and an agent will contact you. SugarBaby access is free. SugarDaddy clients are verified.",
+        apply_launch_title: "Start your application",
+        apply_launch_desc: "It takes under a minute. Use real contact details so an agent can reach you quickly.",
+        apply_form_title: "Application Form",
+        apply_form_desc: "Submit this and an agent will contact you with the next steps.",
+        apply_help: "After submission, an agent will review and contact you with the next steps.",
+        apply_success: "Application received. An agent will contact you soon.",
+        apply_error_generic: "Something went wrong. Please try again.",
+        apply_tip: "Tip: Use real contact details. Fake numbers usually fail verification.",
+
+        f_role: "Role",
+        f_name: "Name",
+        f_country: "Country",
+        f_city: "City (optional)",
+        f_dob: "Date of Birth",
+        f_whatsapp: "WhatsApp Number",
+        f_telegram: "Telegram ID (optional)",
+        f_email: "Email (optional)",
+        f_about: "Short Intro (optional)",
+        f_pref: "Looking for (optional)",
+        f_is18: "I confirm I am 18+ & I agree to be contacted about my application.",
+        note_whatsapp: "Include country code (example:  +1, +971).",
+
+        opt_select: "Select",
+        opt_daddy: "SugarDaddy",
+        opt_baby: "SugarBaby",
+        opt_local: "Local arrangement",
+        opt_travel: "Travel + experiences",
+        opt_long: "Long-term arrangement",
+        opt_flex: "Flexible / open",
+
+        ph_name: "Your name",
+        ph_country: "Country",
+        ph_city: "City",
+        ph_whatsapp: "+44 7...",
+        ph_telegram: "@username",
+        ph_email: "name@email.com",
+        ph_about: "A short, respectful intro. Keep it simple.",
+
+        tiers_title: "Plans & <span class=\"gold-text\">Commission</span>",
+        tiers_sub: "SugarBaby access is free. SugarDaddy plans include premium tools and matching support.",
+        tier_baby: "SugarBaby",
+        tier_daddy: "SugarDaddy",
+        tier_free: "Free Access",
+        tier_free_desc: "Apply, verify, and create your profile with no membership fee.",
+        tier_free_1: "Free registration and verification",
+        tier_free_2: "Privacy controls and staged reveals",
+        tier_free_3: "Verified-only matching environment",
+        tier_gold_desc: "Clean access to verified profiles and standard introductions.",
+        tier_gold_1: "Browse verified SugarBaby profiles",
+        tier_gold_2: "Standard matching support",
+        tier_gold_3: "Basic privacy tools",
+        tier_plat_desc: "Faster matching and more agent support for busy clients.",
+        tier_plat_1: "Priority review and faster introductions",
+        tier_plat_2: "Expanded matching across cities",
+        tier_plat_3: "Enhanced privacy options",
+        tier_diamond_desc: "High-touch agent-led service and premium introductions.",
+        tier_diamond_1: "Agent shortlisting and outreach",
+        tier_diamond_2: "Private introductions and concierge help",
+        tier_diamond_3: "Maximum discretion settings",
+        commission_title: "Commission:",
+        commission_text: "SugarDaddy clients pay <strong>1%</strong> of the decided arrangement amount as our commission. SugarBabies are free.",
+
+        verify_title: "Verification <span class=\"gold-text\">Standards</span>",
+        verify_sub: "Select your role to view requirements",
+        verify_tab_daddy: "For SugarDaddy",
+        verify_tab_baby: "For SugarBaby",
+        verify_daddy_title: "SugarDaddy Verification",
+        verify_daddy_desc: "SugarDaddy access is verified to keep the platform legitimate and protect SugarBabies from fake accounts.",
+        verify_daddy_1_title: "Identity Confirmation",
+        verify_daddy_1_desc: "Government ID is required. Sensitive details are never shown to other members.",
+        verify_daddy_2_title: "Account Screening",
+        verify_daddy_2_desc: "We review profile consistency and intent to reduce fraud and time-wasters.",
+        verify_daddy_3_title: "Client Login Issued",
+        verify_daddy_3_desc: "Client login credentials are shared only after verification is completed.",
+        verify_baby_title: "SugarBaby Verification",
+        verify_baby_desc: "We verify SugarBaby profiles to reduce impersonation and keep the platform real.",
+        verify_baby_1_title: "Live Photo Check",
+        verify_baby_1_desc: "A quick selfie prompt to confirm your profile is authentic and current.",
+        verify_baby_2_title: "Age Verification",
+        verify_baby_2_desc: "You must be 18+. Your personal details remain private.",
+        verify_baby_3_title: "Profile Review",
+        verify_baby_3_desc: "We approve profiles that are clear, respectful, and match their photos.",
+        verify_quote: "“Verification protects both sides and keeps Golden Sugar Dating high quality.”",
+        verify_quote_baby: "“SugarBaby membership is free. Verification helps keep the community real.”",
+
+        profiles_title: "Recent <span class=\"gold-text\">Profiles</span>",
+        profiles_sub: "Faces stay blurred for privacy. Login to view full profiles after verification.",
+
+        testimonials_title: "Member <span class=\"gold-text\">Feedback</span>",
+        testimonials_sub: "Private and anonymised. Shared with permission.",
+        t_1: "“I wanted a real SugarBaby environment with fewer fake profiles. The verification made the difference.”",
+        t_1_who: "SugarDaddy, London",
+        t_2: "“As a SugarBaby, it felt safer. I could control what I revealed and when.”",
+        t_2_who: "SugarBaby, Paris",
+        t_3: "“Straightforward process and respectful people. It feels like a premium platform, not chaos.”",
+        t_3_who: "SugarDaddy, NYC",
+
+        faq_title: "Frequently Asked <span class=\"gold-text\">Questions</span>",
+        faq_sub: "Quick answers before you apply.",
+        faq_q1: "Is Golden Sugar Dating for adults only?",
+        faq_a1: "Yes. Members must be 18+ to register and complete verification.",
+        faq_q2: "Is SugarBaby membership really free?",
+        faq_a2: "Yes. SugarBaby access is free. Verification is required to keep the community authentic.",
+        faq_q3: "How does the 1% SugarDaddy commission work?",
+        faq_a3: "SugarDaddy clients pay 1% of the decided arrangement amount as our commission. This is only for SugarDaddy clients. SugarBabies are free.",
+        faq_q4: "When do I get client login credentials?",
+        faq_a4: "Client login credentials are only for SugarDaddy clients and are shared after verification is completed.",
+        faq_q5: "Do you show my identity to other members?",
+        faq_a5: "No. Identity checks are used for verification only. Your profile controls what is visible, and you decide what to reveal.",
+
+        cta_title: "Apply to <span class=\"gold-text\">Golden Sugar Dating</span>",
+        cta_desc: "Submit your application, complete verification, and unlock a cleaner sugar dating experience built for real SugarDaddy and SugarBaby connections.",
+
+        footer_privacy: "Privacy",
+        footer_terms: "Terms",
+        footer_contact: "Contact",
+        footer_copy: "&copy; 2026 Golden Sugar Dating. Members must be 18+ to register. <br> Verified access helps keep the platform authentic and respectful.",
+
+        login_title: "Client Login",
+        login_note: "Client login credentials are only for SugarDaddy clients and will be shared after the verification process.",
+        login_email_label: "Email or Username",
+        login_pass_label: "Password",
+        login_email_ph: "Enter your email or username",
+        login_pass_ph: "Enter your password",
+        login_error: "Incorrect password."
+      },
+
+      // Spanish
+      es: {
+        nav_why: "Por qué nosotros",
+        nav_process: "Proceso",
+        nav_plans: "Planes",
+        nav_verify: "Verificación",
+        nav_profiles: "Perfiles",
+        btn_apply: "Aplicar ahora",
+        btn_open_form: "Abrir formulario",
+        btn_login: "Acceso clientes",
+        btn_login2: "Entrar",
+        btn_cancel: "Cancelar",
+        btn_clear: "Borrar",
+        btn_submit: "Enviar solicitud",
+        btn_verify: "Estándares de verificación",
+        btn_view_plans: "Ver planes",
+
+        hero_kicker: "Discreto. Verificado. Con agente.",
+        hero_title_gold: "N.º 1 del mundo",
+        hero_title_rest: "Citas SugarDaddy y SugarBaby",
+        hero_desc: "Golden Sugar Dating está hecho para conexiones reales. Perfiles verificados, controles de privacidad y un proceso claro y respetuoso.",
+
+        trust_1_title: "Registro con privacidad",
+        trust_1_desc: "Tus datos se protegen mientras verificamos autenticidad.",
+        trust_2_title: "Acceso SugarDaddy verificado",
+        trust_2_desc: "Acceso y herramientas solo después de la verificación.",
+        trust_3_title: "Perfiles SugarBaby reales",
+        trust_3_desc: "Controles en vivo reducen cuentas falsas.",
+        trust_4_title: "Ciudades globales",
+        trust_4_desc: "Londres, NYC, Miami, París, Dubái, Mónaco y más.",
+
+        features_title: "Por qué la gente usa <span class=\"gold-text\">Golden SugarDaddy</span>",
+        features_sub: "Una plataforma premium funciona cuando se siente segura, real y bien gestionada.",
+        feat_1_title: "Soporte con agente",
+        feat_1_desc: "Después de aplicar, un agente te contacta y explica el proceso.",
+        feat_2_title: "Verificación primero",
+        feat_2_desc: "Perfiles pasan controles antes del acceso completo.",
+        feat_3_title: "Mensajería discreta",
+        feat_3_desc: "Revelación controlada, privacidad y comunicación limpia.",
+        feat_4_title: "Entorno más seguro",
+        feat_4_desc: "Reglas que protegen a ambos lados. Cuentas que rompen normas se eliminan.",
+
+        process_title: "El <span class=\"gold-text\">Proceso Golden</span>",
+        process_sub: "Un flujo simple que mantiene la calidad.",
+        step_1_title: "1. Aplicar",
+        step_1_desc: "Elige tu rol y envía tu solicitud.",
+        step_2_title: "2. Contacto del agente",
+        step_2_desc: "Un agente te guía después de enviar la solicitud.",
+        step_3_title: "3. Verificación",
+        step_3_desc: "Controles de identidad y autenticidad antes del acceso.",
+        step_4_title: "4. Matching",
+        step_4_desc: "Conectamos miembros compatibles según preferencias.",
+        step_5_title: "5. Acuerdo",
+        step_5_desc: "Hablen claro y acuerden términos que funcionen.",
+        step_6_title: "6. Comisión",
+        step_6_desc: "Para SugarDaddy, cobramos una comisión pequeña tras acordar un monto.",
+
+        apply_title: "Aplicar a <span class=\"gold-text\">Golden Sugar Dating</span>",
+        apply_sub: "Completa esto y un agente te contactará. SugarBaby es gratis. SugarDaddy se verifica.",
+        apply_launch_title: "Empieza tu solicitud",
+        apply_launch_desc: "Toma menos de un minuto. Usa datos reales para que el agente te contacte.",
+        apply_form_title: "Formulario de solicitud",
+        apply_form_desc: "Envíalo y un agente te contactará con los siguientes pasos.",
+        apply_help: "Tras enviar, un agente revisará y te contactará.",
+        apply_success: "Solicitud recibida. Un agente te contactará pronto.",
+        apply_error_generic: "Algo salió mal. Inténtalo de nuevo.",
+        apply_tip: "Consejo: usa datos reales. Números falsos suelen fallar.",
+
+        f_role: "Rol",
+        f_name: "Nombre",
+        f_country: "País",
+        f_city: "Ciudad (opcional)",
+        f_dob: "Fecha de nacimiento",
+        f_whatsapp: "Número de WhatsApp",
+        f_telegram: "ID de Telegram (opcional)",
+        f_email: "Email (opcional)",
+        f_about: "Breve intro (opcional)",
+        f_pref: "Busco (opcional)",
+        f_is18: "Confirmo que tengo 18+ y acepto ser contactado sobre mi solicitud.",
+        note_whatsapp: "Incluye código de país (ejemplo:  +1, +971).",
+
+        opt_select: "Seleccionar",
+        opt_daddy: "SugarDaddy",
+        opt_baby: "SugarBaby",
+        opt_local: "Arreglo local",
+        opt_travel: "Viajes + experiencias",
+        opt_long: "Arreglo a largo plazo",
+        opt_flex: "Flexible / abierto",
+
+        ph_name: "Tu nombre",
+        ph_country: "País",
+        ph_city: "Ciudad",
+        ph_whatsapp: "+34 ...",
+        ph_telegram: "@usuario",
+        ph_email: "nombre@email.com",
+        ph_about: "Una intro breve y respetuosa.",
+
+        tiers_title: "Planes y <span class=\"gold-text\">comisión</span>",
+        tiers_sub: "SugarBaby es gratis. Los planes SugarDaddy incluyen herramientas premium.",
+        tier_baby: "SugarBaby",
+        tier_daddy: "SugarDaddy",
+        tier_free: "Acceso gratis",
+        tier_free_desc: "Aplica, verifica y crea tu perfil sin cuota.",
+        tier_free_1: "Registro y verificación gratis",
+        tier_free_2: "Controles de privacidad",
+        tier_free_3: "Entorno solo verificado",
+        tier_gold_desc: "Acceso limpio a perfiles verificados e introducciones estándar.",
+        tier_gold_1: "Ver perfiles SugarBaby verificados",
+        tier_gold_2: "Soporte estándar de matching",
+        tier_gold_3: "Herramientas básicas de privacidad",
+        tier_plat_desc: "Más rápido y más soporte con agente.",
+        tier_plat_1: "Revisión prioritaria e introducciones rápidas",
+        tier_plat_2: "Matching en más ciudades",
+        tier_plat_3: "Privacidad mejorada",
+        tier_diamond_desc: "Servicio premium con agente y presentaciones privadas.",
+        tier_diamond_1: "Selección y contacto con agente",
+        tier_diamond_2: "Introducciones privadas y concierge",
+        tier_diamond_3: "Máxima discreción",
+        commission_title: "Comisión:",
+        commission_text: "Clientes SugarDaddy pagan <strong>1%</strong> del monto acordado. SugarBabies gratis.",
+
+        verify_title: "Estándares de <span class=\"gold-text\">verificación</span>",
+        verify_sub: "Selecciona tu rol para ver requisitos",
+        verify_tab_daddy: "Para SugarDaddy",
+        verify_tab_baby: "Para SugarBaby",
+        verify_daddy_title: "Verificación SugarDaddy",
+        verify_daddy_desc: "Verificamos para mantener la plataforma legítima y proteger de cuentas falsas.",
+        verify_daddy_1_title: "Confirmación de identidad",
+        verify_daddy_1_desc: "Se requiere ID. Detalles sensibles nunca se muestran.",
+        verify_daddy_2_title: "Revisión de cuenta",
+        verify_daddy_2_desc: "Revisamos consistencia e intención para reducir fraude.",
+        verify_daddy_3_title: "Acceso de cliente",
+        verify_daddy_3_desc: "Credenciales solo tras completar verificación.",
+        verify_baby_title: "Verificación SugarBaby",
+        verify_baby_desc: "Verificamos perfiles para reducir suplantación.",
+        verify_baby_1_title: "Foto en vivo",
+        verify_baby_1_desc: "Selfie rápido para confirmar autenticidad.",
+        verify_baby_2_title: "Verificación de edad",
+        verify_baby_2_desc: "Debes tener 18+. Tus datos quedan privados.",
+        verify_baby_3_title: "Revisión de perfil",
+        verify_baby_3_desc: "Aprobamos perfiles claros y respetuosos.",
+        verify_quote: "“La verificación protege a ambos lados y mantiene la calidad.”",
+        verify_quote_baby: "“SugarBaby es gratis. La verificación mantiene la comunidad real.”",
+
+        profiles_title: "Perfiles <span class=\"gold-text\">recientes</span>",
+        profiles_sub: "Rostros borrosos por privacidad. Accede después de verificación.",
+
+        testimonials_title: "Opiniones de <span class=\"gold-text\">miembros</span>",
+        testimonials_sub: "Privado y anonimizado. Compartido con permiso.",
+        t_1: "“Quería menos perfiles falsos. La verificación marcó la diferencia.”",
+        t_1_who: "SugarDaddy, Londres",
+        t_2: "“Como SugarBaby, se sintió más seguro. Controlé lo que mostraba.”",
+        t_2_who: "SugarBaby, París",
+        t_3: "“Proceso claro y gente respetuosa. Se siente premium.”",
+        t_3_who: "SugarDaddy, NYC",
+
+        faq_title: "Preguntas <span class=\"gold-text\">frecuentes</span>",
+        faq_sub: "Respuestas rápidas antes de aplicar.",
+        faq_q1: "¿Golden Sugar Dating es solo para adultos?",
+        faq_a1: "Sí. Debes tener 18+ para registrarte y verificarte.",
+        faq_q2: "¿SugarBaby realmente es gratis?",
+        faq_a2: "Sí. SugarBaby es gratis. La verificación mantiene autenticidad.",
+        faq_q3: "¿Cómo funciona la comisión del 1%?",
+        faq_a3: "Clientes SugarDaddy pagan 1% del monto acordado. SugarBabies gratis.",
+        faq_q4: "¿Cuándo recibo credenciales de cliente?",
+        faq_a4: "Solo después de completar la verificación.",
+        faq_q5: "¿Muestran mi identidad a otros miembros?",
+        faq_a5: "No. La identidad es solo para verificación. Tú controlas lo visible.",
+
+        cta_title: "Aplicar a <span class=\"gold-text\">Golden Sugar Dating</span>",
+        cta_desc: "Envía tu solicitud, verifica y desbloquea una experiencia más limpia y real.",
+
+        footer_privacy: "Privacidad",
+        footer_terms: "Términos",
+        footer_contact: "Contacto",
+        footer_copy: "&copy; 2026 Golden Sugar Dating. Solo 18+. <br> El acceso verificado mantiene la comunidad auténtica.",
+
+        login_title: "Acceso clientes",
+        login_note: "Las credenciales son solo para clientes SugarDaddy y se comparten tras la verificación.",
+        login_email_label: "Email o usuario",
+        login_pass_label: "Contraseña",
+        login_email_ph: "Ingresa tu email o usuario",
+        login_pass_ph: "Ingresa tu contraseña",
+        login_error: "Contraseña incorrecta."
+      },
+
+      // Russian
+      ru: {
+        nav_why: "Почему мы",
+        nav_process: "Процесс",
+        nav_plans: "Планы",
+        nav_verify: "Проверка",
+        nav_profiles: "Профили",
+        btn_apply: "Подать заявку",
+        btn_open_form: "Открыть форму",
+        btn_login: "Вход для клиентов",
+        btn_login2: "Войти",
+        btn_cancel: "Отмена",
+        btn_clear: "Очистить",
+        btn_submit: "Отправить заявку",
+        btn_verify: "Стандарты проверки",
+        btn_view_plans: "Смотреть планы",
+
+        hero_kicker: "Конфиденциально. Проверено. С агентом.",
+        hero_title_gold: "№1 в мире",
+        hero_title_rest: "SugarDaddy & SugarBaby знакомства",
+        hero_desc: "Golden Sugar Dating для реальных знакомств. Верифицированные профили, приватность и понятный процесс.",
+
+        trust_1_title: "Приватная регистрация",
+        trust_1_desc: "Ваши данные защищены, пока мы проверяем подлинность.",
+        trust_2_title: "Доступ SugarDaddy после проверки",
+        trust_2_desc: "Инструменты и вход выдаются только после проверки.",
+        trust_3_title: "Реальные профили SugarBaby",
+        trust_3_desc: "Живые проверки уменьшают фейки и подмены.",
+        trust_4_title: "Города по всему миру",
+        trust_4_desc: "Лондон, Нью-Йорк, Майами, Париж, Дубай, Монако и другие.",
+
+        features_title: "Почему выбирают <span class=\"gold-text\">Golden SugarDaddy</span>",
+        features_sub: "Премиум-платформа работает, когда она безопасна, реальна и хорошо управляется.",
+        feat_1_title: "Поддержка агента",
+        feat_1_desc: "После заявки агент связывается и объясняет процесс.",
+        feat_2_title: "Сначала проверка",
+        feat_2_desc: "Профили проходят проверки до полного доступа.",
+        feat_3_title: "Деликатные сообщения",
+        feat_3_desc: "Контроль раскрытия, приватность и аккуратное общение.",
+        feat_4_title: "Более безопасная среда",
+        feat_4_desc: "Правила защищают обе стороны. Нарушители удаляются.",
+
+        process_title: "<span class=\"gold-text\">Golden</span> процесс",
+        process_sub: "Простой порядок для качества и доверия.",
+        step_1_title: "1. Заявка",
+        step_1_desc: "Выберите роль и отправьте заявку.",
+        step_2_title: "2. Контакт агента",
+        step_2_desc: "Агент свяжется и проведет по шагам.",
+        step_3_title: "3. Проверка",
+        step_3_desc: "Проверка личности и подлинности до доступа.",
+        step_4_title: "4. Подбор",
+        step_4_desc: "Подбираем подходящих участников по предпочтениям.",
+        step_5_title: "5. Договоренность",
+        step_5_desc: "Обсудите ожидания и согласуйте условия.",
+        step_6_title: "6. Комиссия платформы",
+        step_6_desc: "Для SugarDaddy комиссия после согласования суммы.",
+
+        apply_title: "Заявка в <span class=\"gold-text\">Golden Sugar Dating</span>",
+        apply_sub: "Заполните форму, и агент свяжется с вами. SugarBaby бесплатно. SugarDaddy проходит проверку.",
+        apply_launch_title: "Начните заявку",
+        apply_launch_desc: "Меньше минуты. Используйте реальные контакты, чтобы агент быстро связался.",
+        apply_form_title: "Форма заявки",
+        apply_form_desc: "Отправьте форму, и агент пришлет следующие шаги.",
+        apply_help: "После отправки агент проверит и свяжется с вами.",
+        apply_success: "Заявка получена. Агент свяжется с вами скоро.",
+        apply_error_generic: "Что-то пошло не так. Попробуйте еще раз.",
+        apply_tip: "Совет: используйте реальные контакты. Фейковые номера часто не проходят проверку.",
+
+        f_role: "Роль",
+        f_name: "Имя",
+        f_country: "Страна",
+        f_city: "Город (необязательно)",
+        f_dob: "Дата рождения",
+        f_whatsapp: "Номер WhatsApp",
+        f_telegram: "Telegram (необязательно)",
+        f_email: "Email (необязательно)",
+        f_about: "Коротко о себе (необязательно)",
+        f_pref: "Ищу (необязательно)",
+        f_is18: "Подтверждаю, что мне 18+ и я согласен(на) на контакт по заявке.",
+        note_whatsapp: "Укажите код страны (например:  +1, +971).",
+
+        opt_select: "Выбрать",
+        opt_daddy: "SugarDaddy",
+        opt_baby: "SugarBaby",
+        opt_local: "Локально",
+        opt_travel: "Путешествия + впечатления",
+        opt_long: "Долгосрочно",
+        opt_flex: "Гибко / открыто",
+
+        ph_name: "Ваше имя",
+        ph_country: "Страна",
+        ph_city: "Город",
+        ph_whatsapp: "+7 ...",
+        ph_telegram: "@username",
+        ph_email: "name@email.com",
+        ph_about: "Коротко и уважительно."
+      }
+    };
+
+    function setText(el, value) {
+      if (!el) return;
+      if (value && value.includes("<")) el.innerHTML = value;
+      else el.textContent = value ?? "";
+    }
+
+    function applyLanguage(lang) {
+      const dict = I18N[lang] || I18N.en;
+      document.documentElement.lang = lang;
+
+      document.querySelectorAll("[data-i18n]").forEach(el => {
+        const key = el.getAttribute("data-i18n");
+        setText(el, dict[key]);
+      });
+
+      document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
+        const key = el.getAttribute("data-i18n-placeholder");
+        if (dict[key]) el.setAttribute("placeholder", dict[key]);
+      });
+    }
+
+    // ---------------------------
+    // URL-based language routing: /en /es /ru
+    // ---------------------------
+    const SUPPORTED_LANGS = ["en", "es", "ru"];
+    const langSelect = document.getElementById("langSelect");
+
+    function getLangFromPathname() {
+      const parts = window.location.pathname.split("/").filter(Boolean);
+      const first = (parts[0] || "").toLowerCase();
+      return SUPPORTED_LANGS.includes(first) ? first : null;
+    }
+
+    function guessBrowserLanguage() {
+      const nav = (navigator.language || "en").toLowerCase();
+      if (nav.startsWith("es")) return "es";
+      if (nav.startsWith("ru")) return "ru";
+      return "en";
+    }
+
+    function currentLang() {
+      return getLangFromPathname() || (langSelect?.value || "en");
+    }
+
+    function setUrlLanguage(lang, { replace = false } = {}) {
+      if (!SUPPORTED_LANGS.includes(lang)) lang = "en";
+
+      const parts = window.location.pathname.split("/").filter(Boolean);
+      if (parts.length && SUPPORTED_LANGS.includes(parts[0].toLowerCase())) {
+        parts.shift();
+      }
+
+      const newPath = "/" + [lang, ...parts].join("/");
+      const newUrl = newPath + window.location.search + window.location.hash;
+
+      if (replace) window.history.replaceState({}, "", newUrl);
+      else window.history.pushState({}, "", newUrl);
+    }
+
+    function syncLanguageFromUrl({ replaceIfMissing = true } = {}) {
+      const urlLang = getLangFromPathname();
+      const langToUse = urlLang || guessBrowserLanguage();
+
+      if (!urlLang && replaceIfMissing) {
+        setUrlLanguage(langToUse, { replace: true });
+      }
+
+      applyLanguage(langToUse);
+      if (langSelect) langSelect.value = langToUse;
+    }
+
+    syncLanguageFromUrl({ replaceIfMissing: true });
+
+    langSelect?.addEventListener("change", (e) => {
+      const lang = e.target.value;
+      setUrlLanguage(lang, { replace: false });
+      applyLanguage(lang);
+    });
+
+    window.addEventListener("popstate", () => {
+      syncLanguageFromUrl({ replaceIfMissing: false });
+    });
+
+    // ---------------------------
+    // Header scroll + mobile menu
+    // ---------------------------
     const header = document.getElementById('siteHeader');
     const menuBtn = document.getElementById('menuBtn');
     const mobileNav = document.getElementById('mobileNav');
@@ -1747,7 +2238,6 @@ I confirm I am 18+ & I agree to be contacted about my application.
       menuBtn.innerHTML = isOpen ? '<i class="fa-solid fa-bars"></i>' : '<i class="fa-solid fa-xmark"></i>';
     });
 
-    // Close mobile nav when clicking a link
     mobileNav.querySelectorAll('a').forEach(a => {
       a.addEventListener('click', () => {
         mobileNav.style.display = 'none';
@@ -1756,7 +2246,9 @@ I confirm I am 18+ & I agree to be contacted about my application.
       });
     });
 
-    // Login modal logic (always incorrect password)
+    // ---------------------------
+    // Login modal
+    // ---------------------------
     const loginBtn = document.getElementById('loginBtn');
     const loginBtnMobile = document.getElementById('loginBtnMobile');
     const loginModal = document.getElementById('loginModal');
@@ -1770,7 +2262,7 @@ I confirm I am 18+ & I agree to be contacted about my application.
       loginError.style.display = 'none';
       loginModal.style.display = 'flex';
       loginModal.setAttribute('aria-hidden', 'false');
-      setTimeout(() => document.getElementById('loginEmail').focus(), 0);
+      setTimeout(() => document.getElementById('loginEmail')?.focus(), 0);
     }
 
     function closeLoginModal() {
@@ -1778,124 +2270,197 @@ I confirm I am 18+ & I agree to be contacted about my application.
       loginModal.setAttribute('aria-hidden', 'true');
     }
 
-    loginBtn.addEventListener('click', openLoginModal);
-    if (loginBtnMobile) loginBtnMobile.addEventListener('click', openLoginModal);
+    loginBtn?.addEventListener('click', openLoginModal);
+    loginBtnMobile?.addEventListener('click', openLoginModal);
+    closeModal?.addEventListener('click', closeLoginModal);
+    cancelLogin?.addEventListener('click', closeLoginModal);
 
-    closeModal.addEventListener('click', closeLoginModal);
-    cancelLogin.addEventListener('click', closeLoginModal);
-
-    // Close when clicking outside the modal
-    loginModal.addEventListener('click', (e) => {
+    loginModal?.addEventListener('click', (e) => {
       if (e.target === loginModal) closeLoginModal();
     });
 
-    // ESC to close
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && loginModal.style.display === 'flex') closeLoginModal();
     });
 
-    // Always show incorrect password on submit
-    loginForm.addEventListener('submit', (e) => {
+    loginForm?.addEventListener('submit', (e) => {
       e.preventDefault();
       loginError.style.display = 'block';
     });
-// Apply form submission -> Vercel Function (/api/apply)
-const applyForm = document.getElementById('applyForm');
-const applySuccess = document.getElementById('applySuccess');
-const applyError = document.getElementById('applyError');
-const applySubmitBtn = document.getElementById('applySubmitBtn');
 
-function showApplyMessage(elToShow) {
-  [applySuccess, applyError].forEach(el => el.style.display = 'none');
-  elToShow.style.display = 'block';
-}
+    // ---------------------------
+    // Apply form show/hide (hidden first)
+    // ---------------------------
+    const applyWrap = document.getElementById("applyWrap");
+    const applyLaunch = document.getElementById("applyLaunch");
+    const applyClose = document.getElementById("applyClose");
 
-function cleanPhone(raw) {
-  return String(raw || '').trim();
-}
-
-function calcAge(dobStr) {
-  const d = new Date(dobStr);
-  if (Number.isNaN(d.getTime())) return null;
-  const now = new Date();
-  let age = now.getFullYear() - d.getFullYear();
-  const m = now.getMonth() - d.getMonth();
-  if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
-  return age;
-}
-
-applyForm?.addEventListener('submit', async (e) => {
-  e.preventDefault();
-
-  applySuccess.style.display = 'none';
-  applyError.style.display = 'none';
-
-  // Basic anti-bot honeypot
-  const websiteTrap = document.getElementById('website')?.value;
-  if (websiteTrap && websiteTrap.trim().length > 0) {
-    // silently ignore bots
-    showApplyMessage(applySuccess);
-    applyForm.reset();
-    return;
-  }
-
-  const payload = {
-    role: document.getElementById('role').value,
-    name: document.getElementById('name').value.trim(),
-    whatsapp: cleanPhone(document.getElementById('whatsapp').value),
-    telegram: document.getElementById('telegram').value.trim(),
-    email: document.getElementById('email').value.trim(),
-    country: document.getElementById('country').value.trim(),
-    city: document.getElementById('city').value.trim(),
-    dob: document.getElementById('dob').value,
-    is18: document.getElementById('is18').checked,
-
-    about: document.getElementById('about').value.trim(),
-    preference: document.getElementById('preference').value
-  };
-
-  // Extra validation
-  const age = calcAge(payload.dob);
-  if (!payload.is18) {
-    applyError.textContent = "You must be 18+ to apply.";
-    showApplyMessage(applyError);
-    return;
-  }
-
-  if (!payload.whatsapp || payload.whatsapp.length < 6) {
-    applyError.textContent = "Please enter a valid WhatsApp number (with country code).";
-    showApplyMessage(applyError);
-    return;
-  }
-
-  try {
-    applySubmitBtn.disabled = true;
-    applySubmitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending...';
-
-    const res = await fetch('/api/apply', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    if (!res.ok) {
-      const msg = await res.text().catch(() => '');
-      applyError.textContent = msg || "Something went wrong. Please try again.";
-      showApplyMessage(applyError);
-      return;
+    function openApplyForm() {
+      applyLaunch?.classList.add("apply-hidden");
+      applyWrap?.classList.remove("apply-hidden");
+      applyWrap?.scrollIntoView({ behavior: "smooth", block: "start" });
+      setTimeout(() => document.getElementById("role")?.focus(), 250);
     }
 
-    showApplyMessage(applySuccess);
-    applyForm.reset();
-  } catch (err) {
-    applyError.textContent = "Network error. Please try again.";
-    showApplyMessage(applyError);
-  } finally {
-    applySubmitBtn.disabled = false;
-    applySubmitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit Application';
-  }
-});
+    function closeApplyForm() {
+      applyWrap?.classList.add("apply-hidden");
+      applyLaunch?.classList.remove("apply-hidden");
+      applyLaunch?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
 
+    document.querySelectorAll(".js-open-apply").forEach(el => {
+      el.addEventListener("click", (e) => {
+        if (el.tagName.toLowerCase() === "a") e.preventDefault();
+        document.getElementById("apply")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        setTimeout(openApplyForm, 250);
+      });
+    });
+
+    applyClose?.addEventListener("click", closeApplyForm);
+
+    const applyClear = document.getElementById("applyClear");
+    applyClear?.addEventListener("click", () => {
+      document.getElementById("applyForm")?.reset();
+      document.getElementById("applySuccess").style.display = "none";
+      document.getElementById("applyError").style.display = "none";
+    });
+
+    // ---------------------------
+    // Apply form submission -> includes "content"
+    // ---------------------------
+    const applyForm = document.getElementById('applyForm');
+    const applySuccess = document.getElementById('applySuccess');
+    const applyError = document.getElementById('applyError');
+    const applySubmitBtn = document.getElementById('applySubmitBtn');
+
+    function showApplyMessage(elToShow) {
+      [applySuccess, applyError].forEach(el => el.style.display = 'none');
+      elToShow.style.display = 'block';
+    }
+
+    function cleanPhone(raw) {
+      return String(raw || '').trim();
+    }
+
+    function calcAge(dobStr) {
+      const d = new Date(dobStr);
+      if (Number.isNaN(d.getTime())) return null;
+      const now = new Date();
+      let age = now.getFullYear() - d.getFullYear();
+      const m = now.getMonth() - d.getMonth();
+      if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
+      return age;
+    }
+
+    function buildContentMessage(p) {
+      const lines = [
+        `New Application`,
+        `Role: ${p.role || "-"}`,
+        `Name: ${p.name || "-"}`,
+        `Country: ${p.country || "-"}`,
+        `City: ${p.city || "-"}`,
+        `DOB: ${p.dob || "-"}`,
+        `WhatsApp: ${p.whatsapp || "-"}`,
+        `Telegram: ${p.telegram || "-"}`,
+        `Email: ${p.email || "-"}`,
+        `Preference: ${p.preference || "-"}`,
+        `About: ${p.about || "-"}`,
+        `18+ Confirmed: ${p.is18 ? "Yes" : "No"}`
+      ];
+      return lines.join("\n");
+    }
+
+    applyForm?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      applySuccess.style.display = 'none';
+      applyError.style.display = 'none';
+
+      const websiteTrap = document.getElementById('website')?.value;
+      if (websiteTrap && websiteTrap.trim().length > 0) {
+        showApplyMessage(applySuccess);
+        applyForm.reset();
+        return;
+      }
+
+      const payload = {
+        role: document.getElementById('role').value,
+        name: document.getElementById('name').value.trim(),
+        whatsapp: cleanPhone(document.getElementById('whatsapp').value),
+        telegram: document.getElementById('telegram').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        country: document.getElementById('country').value.trim(),
+        city: document.getElementById('city').value.trim(),
+        dob: document.getElementById('dob').value,
+        is18: document.getElementById('is18').checked,
+        about: document.getElementById('about').value.trim(),
+        preference: document.getElementById('preference').value,
+        content: ""
+      };
+
+      payload.content = buildContentMessage(payload);
+
+      const lang = currentLang();
+      const age = calcAge(payload.dob);
+
+      if (!payload.is18 || (age !== null && age < 18)) {
+        applyError.textContent =
+          (lang === "es") ? "Debes tener 18+ para aplicar."
+          : (lang === "ru") ? "Вам должно быть 18+ для заявки."
+          : "You must be 18+ to apply.";
+        showApplyMessage(applyError);
+        return;
+      }
+
+      if (!payload.whatsapp || payload.whatsapp.length < 6) {
+        applyError.textContent =
+          (lang === "es") ? "Introduce un WhatsApp válido (con código de país)."
+          : (lang === "ru") ? "Введите корректный WhatsApp (с кодом страны)."
+          : "Please enter a valid WhatsApp number (with country code).";
+        showApplyMessage(applyError);
+        return;
+      }
+
+      try {
+        applySubmitBtn.disabled = true;
+        applySubmitBtn.innerHTML =
+          '<i class="fa-solid fa-spinner fa-spin"></i> ' +
+          ((lang === "es") ? "Enviando..." : (lang === "ru") ? "Отправка..." : "Sending...");
+
+        const res = await fetch('/api/apply', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          const msg = await res.text().catch(() => '');
+          applyError.textContent = msg || (
+            (lang === "es") ? "Algo salió mal. Inténtalo de nuevo."
+            : (lang === "ru") ? "Ошибка. Попробуйте еще раз."
+            : "Something went wrong. Please try again."
+          );
+          showApplyMessage(applyError);
+          return;
+        }
+
+        showApplyMessage(applySuccess);
+        applyForm.reset();
+      } catch (err) {
+        applyError.textContent =
+          (lang === "es") ? "Error de red. Inténtalo de nuevo."
+          : (lang === "ru") ? "Ошибка сети. Попробуйте еще раз."
+          : "Network error. Please try again.";
+        showApplyMessage(applyError);
+      } finally {
+        applySubmitBtn.disabled = false;
+        applySubmitBtn.innerHTML =
+          '<i class="fa-solid fa-paper-plane"></i> <span data-i18n="btn_submit">' +
+          ((I18N[lang] && I18N[lang].btn_submit) ? I18N[lang].btn_submit : I18N.en.btn_submit) +
+          '</span>';
+        applyLanguage(lang);
+      }
+    });
   </script>
 
 </body>
