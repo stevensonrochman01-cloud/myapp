@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SugarDaddy | Exclusive Connections</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- CSS VARIABLES & RESET --- */
+        :root {
+            --bg-color: #050505;
+            --card-bg: #121212;
+            --gold-light: #F3E5AB;
+            --gold-main: #D4AF37;
+            --gold-dark: #AA8C2C;
+            --text-white: #ffffff;
+            --text-grey: #a0a0a0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-white);
+            font-family: 'Montserrat', sans-serif;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Playfair Display', serif;
+        }
+
+        a { text-decoration: none; color: inherit; transition: 0.3s; }
+        ul { list-style: none; }
+
+        /* --- UTILITY CLASSES --- */
+        .gold-text {
+            background: linear-gradient(to right, var(--gold-light), var(--gold-main), var(--gold-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+        }
+
+        .btn-gold {
+            background: linear-gradient(135deg, var(--gold-main), var(--gold-dark));
+            color: #000;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: 1px solid var(--gold-main);
+            display: inline-block;
+        }
+
+        .btn-gold:hover {
+            background: transparent;
+            color: var(--gold-main);
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+        }
+
+        /* --- HEADER --- */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 5%;
+            position: absolute;
+            width: 100%;
+            z-index: 10;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            letter-spacing: 2px;
+        }
+
+        nav ul {
+            display: flex;
+            gap: 30px;
+        }
+
+        nav a {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        nav a:hover { color: var(--gold-main); }
+
+        /* --- HERO SECTION --- */
+        .hero {
+            height: 100vh;
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.8)), url('https://images.unsplash.com/photo-1534180477871-5d6cc81f3920?q=80&w=2070&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 0 20px;
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            line-height: 1.1;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-grey);
+            max-width: 600px;
+            margin-bottom: 40px;
+        }
+
+        /* --- CAROUSEL SECTION --- */
+        .featured {
+            padding: 80px 0;
+            background: #0a0a0a;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .section-header h2 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .section-header p {
+            color: #666;
+            font-size: 1rem;
+        }
+
+        /* The Carousel Container */
+        .carousel-container {
+            width: 100%;
+            padding: 20px 5%;
+            display: flex;
+            gap: 25px;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            padding-bottom: 40px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .carousel-container::-webkit-scrollbar {
+            height: 8px;
+        }
+        .carousel-container::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+        .carousel-container::-webkit-scrollbar-thumb {
+            background: var(--gold-dark);
+            border-radius: 4px;
+        }
+
+        /* Profile Card */
+        .card {
+            flex: 0 0 300px;
+            height: 450px;
+            position: relative;
+            border-radius: 15px;
+            overflow: hidden;
+            scroll-snap-align: center;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+        }
+
+        .card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
+        }
+
+        .card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .card-content {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 30px 20px;
+            background: linear-gradient(to top, rgba(0,0,0,0.95), transparent);
+            color: white;
+        }
+
+        .card-content h3 {
+            font-size: 1.5rem;
+            color: var(--gold-main);
+        }
+
+        .card-content span {
+            display: block;
+            font-size: 0.9rem;
+            margin-top: 5px;
+            opacity: 0.9;
+        }
+
+        .badges {
+            margin-top: 10px;
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            font-size: 0.7rem;
+            padding: 4px 8px;
+            border: 1px solid var(--text-grey);
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        /* --- STATS SECTION --- */
+        .stats-section {
+            padding: 80px 5%;
+            background: var(--card-bg);
+            text-align: center;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .stat-item h3 {
+            font-size: 3rem;
+            color: var(--gold-main);
+            margin-bottom: 10px;
+        }
+
+        .stat-item p {
+            color: var(--text-grey);
+            font-size: 1rem;
+        }
+
+        /* --- ABOUT SECTION --- */
+        .about-section {
+            padding: 100px 5%;
+            background: #0a0a0a;
+        }
+
+        .about-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .about-text h2 {
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+        }
+
+        .about-text p {
+            color: var(--text-grey);
+            line-height: 1.8;
+            margin-bottom: 20px;
+            font-size: 1.05rem;
+        }
+
+        .about-image {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(170, 140, 44, 0.2));
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .about-image img {
+            width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        /* --- FEATURES SECTION --- */
+        .features-section {
+            padding: 100px 5%;
+            background: var(--card-bg);
+        }
+
+        .features-grid {
+            max-width: 1200px;
+            margin: 60px auto 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 40px;
+        }
+
+        .feature-card {
+            background: #0a0a0a;
+            padding: 40px 30px;
+            border-radius: 15px;
+            border: 1px solid #222;
+            transition: all 0.3s;
+        }
+
+        .feature-card:hover {
+            border-color: var(--gold-dark);
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.1);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .feature-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: var(--gold-main);
+        }
+
+        .feature-card p {
+            color: var(--text-grey);
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        /* --- HOW IT WORKS --- */
+        .how-it-works {
+            padding: 100px 5%;
+            background: #0a0a0a;
+        }
+
+        .steps-container {
+            max-width: 1200px;
+            margin: 60px auto 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 50px;
+        }
+
+        .step {
+            text-align: center;
+            position: relative;
+        }
+
+        .step-number {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, var(--gold-main), var(--gold-dark));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 700;
+            color: #000;
+        }
+
+        .step h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: var(--gold-main);
+        }
+
+        .step p {
+            color: var(--text-grey);
+            line-height: 1.6;
+        }
+
+        /* --- TESTIMONIALS --- */
+        .testimonials {
+            padding: 100px 5%;
+            background: var(--card-bg);
+        }
+
+        .testimonial-grid {
+            max-width: 1200px;
+            margin: 60px auto 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .testimonial-card {
+            background: #0a0a0a;
+            padding: 40px;
+            border-radius: 15px;
+            border-left: 3px solid var(--gold-main);
+        }
+
+        .testimonial-text {
+            font-style: italic;
+            color: var(--text-grey);
+            line-height: 1.7;
+            margin-bottom: 20px;
+            font-size: 1rem;
+        }
+
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .author-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--gold-main), var(--gold-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .author-info h4 {
+            font-size: 1.1rem;
+            color: var(--gold-main);
+        }
+
+        .author-info p {
+            color: #666;
+            font-size: 0.85rem;
+        }
+
+        /* --- CTA SECTION --- */
+        .cta-section {
+            padding: 100px 5%;
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(170, 140, 44, 0.1));
+            text-align: center;
+        }
+
+        .cta-section h2 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .cta-section p {
+            font-size: 1.2rem;
+            color: var(--text-grey);
+            margin-bottom: 40px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* --- FOOTER --- */
+        footer {
+            padding: 50px 5%;
+            background: #000;
+            border-top: 1px solid #222;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-section h3 {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: var(--gold-main);
+        }
+
+        .footer-section ul li {
+            margin-bottom: 10px;
+        }
+
+        .footer-section a:hover {
+            color: var(--gold-main);
+        }
+
+        .footer-logo {
+            font-size: 1.5rem;
+            font-family: 'Playfair Display', serif;
+            margin-bottom: 15px;
+            display: inline-block;
+        }
+
+        .footer-section p {
+            color: #666;
+            line-height: 1.6;
+            font-size: 0.9rem;
+        }
+
+        .copyright {
+            text-align: center;
+            color: #444;
+            font-size: 0.85rem;
+            padding-top: 30px;
+            border-top: 1px solid #222;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .social-links a {
+            width: 40px;
+            height: 40px;
+            border: 1px solid #333;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .social-links a:hover {
+            border-color: var(--gold-main);
+            color: var(--gold-main);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .about-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2.5rem; }
+            nav { display: none; }
+            .section-header h2 { font-size: 2rem; }
+            .about-text h2 { font-size: 2rem; }
+            .cta-section h2 { font-size: 2rem; }
+            .stats-container { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo"><span class="gold-text">Sugar</span>Daddy</div>
+        <nav>
+            <ul>
+                <li><a href="#members">Elite Members</a></li>
+                <li><a href="#how">How it Works</a></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#" class="btn-gold" style="padding: 8px 20px; font-size: 0.8rem;">Join Now</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <h1>Experience the <span class="gold-text">Fine Life</span></h1>
+        <p>The world's most exclusive network for successful men and attractive women. Upgrade your lifestyle and discover meaningful connections built on mutual respect and generosity.</p>
+        <a href="#join" class="btn-gold">Start Your Journey</a>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats-section">
+        <div class="stats-container">
+            <div class="stat-item">
+                <h3>2.5M+</h3>
+                <p>Active Members Worldwide</p>
+            </div>
+            <div class="stat-item">
+                <h3>150+</h3>
+                <p>Countries & Territories</p>
+            </div>
+            <div class="stat-item">
+                <h3>98%</h3>
+                <p>Success Rate</p>
+            </div>
+            <div class="stat-item">
+                <h3>24/7</h3>
+                <p>Premium Support</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Members Carousel -->
+    <section class="featured" id="members">
+        <div class="section-header">
+            <h2>Featured <span class="gold-text">Members</span></h2>
+            <p>Swipe to discover exclusive profiles from around the world</p>
+        </div>
+
+        <div class="carousel-container">
+            
+            <div class="card">
+                <img src="https://images.unsplash.com/photo-1616091093729-c04629472ee7?q=80&w=1974&auto=format&fit=crop" alt="Model">
+                <div class="card-content">
+                    <h3>Victoria, 24</h3>
+                    <span>📍 New York, NY</span>
+                    <div class="badges">
+                        <span class="badge">Model</span>
+                        <span class="badge">Verified</span>
+                        <span class="badge">Travel</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=1974&auto=format&fit=crop" alt="Model">
+                <div class="card-content">
+                    <h3>James, 45</h3>
+                    <span>📍 London, UK</span>
+                    <div class="badges">
+                        <span class="badge">Entrepreneur</span>
+                        <span class="badge">VIP</span>
+                        <span class="badge">$1M+</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=1964&auto=format&fit=crop" alt="Model">
+                <div class="card-content">
+                    <h3>Sophia, 22</h3>
+                    <span>📍 Los Angeles, CA</span>
+                    <div class="badges">
+                        <span class="badge">Student</span>
+                        <span class="badge">Travel</span>
+                        <span class="badge">Verified</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=1974&auto=format&fit=crop" alt="Model">
+                <div class="card-content">
+                    <h3>Robert, 52</h3>
+                    <span>📍 Dubai, UAE</span>
+                    <div class="badges">
+                        <span class="badge">Investor</span>
+                        <span class="badge">Gold</span>
+                        <span class="badge">$2M+</span>
+                    </div>
+                </div>
+            </div>
+
+             <div class="card">
+                <img src="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?q=80&w=1974&auto=format&fit=crop" alt="Model">
+                <div class="card-content">
+                    <h3>Elena, 26</h3>
+                    <span>📍 Paris, France</span>
+                    <div class="badges">
+                        <span class="badge">Fashion</span>
+                        <span class="badge">Verified</span>
+                        <span class="badge">Influencer</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1974&auto=format&fit=crop" alt="Model">
+                <div class="card-content">
+                    <h3>Marcus, 48</h3>
+                    <span>📍 Singapore</span>
+                    <div class="badges">
+                        <span class="badge">Tech CEO</span>
+                        <span class="badge">Diamond</span>
+                        <span class="badge">$5M+</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=1974&auto=format&fit=crop" alt="Model">
+                <div class="card-content">
+                    <h3>Isabella, 23</h3>
+                    <span>📍 Miami, FL</span>
+                    <div class="badges">
+                        <span class="badge">Dancer</span>
+                        <span class="badge">Verified</span>
+                        <span class="badge">Fitness</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=1974&auto=format&fit=crop" alt="Model">
+                <div class="card-content">
+                    <h3>Alexander, 55</h3>
+                    <span>📍 Monaco</span>
+                    <div class="badges">
+                        <span class="badge">Real Estate</span>
+                        <span class="badge">Platinum</span>
+                        <span class="badge">$3M+</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="about-section">
+        <div class="about-content">
+            <div class="about-text">
+                <h2>Welcome to the <span class="gold-text">Elite Circle</span></h2>
+                <p>SugarDaddy is the world's premier luxury dating platform, connecting successful, generous individuals with attractive, ambitious companions. Since 2005, we've facilitated millions of meaningful connections built on mutual respect, honesty, and shared expectations.</p>
+                <p>Our members include CEOs, entrepreneurs, investors, models, students, and professionals seeking mutually beneficial relationships. Whether you're looking for mentorship, companionship, travel partners, or genuine romance with financial support, SugarDaddy provides a discreet, secure environment to connect.</p>
+                <p>We understand that modern relationships come in many forms. Our platform celebrates transparency and empowers both parties to define their ideal arrangement without judgment.</p>
+                <a href="#join" class="btn-gold" style="margin-top: 20px;">Join the Elite</a>
+            </div>
+            <div class="about-image">
+                <img src="https://images.unsplash.com/photo-1551522435-a13afa10f103?q=80&w=2070&auto=format&fit=crop" alt="Luxury Lifestyle">
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how-it-works" id="how">
+        <div class="section-header">
+            <h2>How It <span class="gold-text">Works</span></h2>
+            <p>Your journey to the lifestyle you deserve starts here</p>
+        </div>
+        
+        <div class="steps-container">
+            <div class="step">
+                <div class="step-number">1</div>
+                <h3>Create Your Profile</h3>
+                <p>Sign up in minutes and create an attractive profile highlighting your lifestyle, interests, and what you're seeking. Upload photos and complete verification to boost credibility.</p>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">2</div>
+                <h3>Browse & Connect</h3>
+                <p>Explore thousands of verified profiles using advanced filters. Send messages, virtual gifts, and express interest to those who catch your eye.</p>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">3</div>
+                <h3>Build Your Arrangement</h3>
+                <p>Communicate openly about expectations, boundaries, and arrangements. Our platform facilitates honest conversations so both parties feel valued and respected.</p>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">4</div>
+                <h3>Enjoy the Lifestyle</h3>
+                <p>Meet in person, travel together, and build meaningful connections. Share experiences, grow together, and live the life you've always imagined.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section" id="features">
+        <div class="section-header">
+            <h2>Premium <span class="gold-text">Features</span></h2>
+            <p>Everything you need for successful connections</p>
+        </div>
+        
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🔐</div>
+                <h3>Verified Profiles</h3>
+                <p>Every member undergoes rigorous verification including photo verification, identity checks, and income verification for premium members. Connect with confidence knowing profiles are authentic.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🌍</div>
+                <h3>Global Network</h3>
+                <p>Access millions of members across 150+ countries. Whether you're traveling for business or pleasure, find connections wherever you go with our location-based search.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">💬</div>
+                <h3>Private Messaging</h3>
+                <p>Enjoy encrypted end-to-end messaging with photo and video sharing. Your conversations remain completely private and secure with military-grade encryption.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <h3>Smart Matching</h3>
+                <p>Our AI-powered algorithm analyzes your preferences, lifestyle, and relationship goals to suggest highly compatible matches, saving you time and increasing success rates.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">💎</div>
+                <h3>Lifestyle Verification</h3>
+                <p>Premium members can verify their income, net worth, and lifestyle to stand out from the crowd. Verified badges increase profile visibility by 300%.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">📱</div>
+                <h3>Mobile Apps</h3>
+                <p>Stay connected on the go with our iOS and Android apps. Receive instant notifications, browse profiles, and chat from anywhere in the world.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🎁</div>
+                <h3>Virtual Gifts</h3>
+                <p>Send virtual gifts to show interest and appreciation. From champagne bottles to luxury watches, express yourself with our curated gift collection.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🛡️</div>
+                <h3>Privacy Protection</h3>
+                <p>Control who sees your profile with privacy settings, block unwanted contacts, and browse anonymously. Your discretion is our priority.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">⭐</div>
+                <h3>Priority Support</h3>
+                <p>Premium members receive 24/7 priority customer support via chat, email, or phone. Our dedicated team ensures your experience is seamless.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="testimonials">
+        <div class="section-header">
+            <h2>Success <span class="gold-text">Stories</span></h2>
+            <p>Real experiences from our elite community</p>
+        </div>
+        
+        <div class="testimonial-grid">
+            <div class="testimonial-card">
+                <p class="testimonial-text">"I've met incredible people through SugarDaddy who appreciate my ambition and support my goals. The platform is discreet, safe, and filled with genuine professionals. It's changed my life completely."</p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">S</div>
+                    <div class="author-info">
+                        <h4>Samantha K.</h4>
+                        <p>Graduate Student, Boston</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="testimonial-card">
+                <p class="testimonial-text">"As a busy entrepreneur, I don't have time for traditional dating. SugarDaddy connected me with an amazing woman who understands my lifestyle. The transparency and honesty here is refreshing."</p>
+                <div class="testimonial-author">
