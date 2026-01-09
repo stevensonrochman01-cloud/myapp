@@ -1856,7 +1856,7 @@ applyForm?.addEventListener('submit', async (e) => {
 
   // Extra validation
   const age = calcAge(payload.dob);
-  if (!payload.is18 || age === null || age < 18) {
+  if (!payload.is18) {
     applyError.textContent = "You must be 18+ to apply.";
     showApplyMessage(applyError);
     return;
