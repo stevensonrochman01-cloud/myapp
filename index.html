@@ -1,842 +1,1902 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SugarDaddy | Exclusive Connections</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-    
-    <style>
-        /* --- CSS VARIABLES & RESET --- */
-        :root {
-            --bg-color: #050505;
-            --card-bg: #121212;
-            --gold-light: #F3E5AB;
-            --gold-main: #D4AF37;
-            --gold-dark: #AA8C2C;
-            --text-white: #ffffff;
-            --text-grey: #a0a0a0;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-white);
-            font-family: 'Montserrat', sans-serif;
-            overflow-x: hidden;
-        }
-
-        h1, h2, h3 {
-            font-family: 'Playfair Display', serif;
-        }
-
-        a { text-decoration: none; color: inherit; transition: 0.3s; }
-        ul { list-style: none; }
-
-        /* --- UTILITY CLASSES --- */
-        .gold-text {
-            background: linear-gradient(to right, var(--gold-light), var(--gold-main), var(--gold-dark));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-weight: 700;
-        }
-
-        .btn-gold {
-            background: linear-gradient(135deg, var(--gold-main), var(--gold-dark));
-            color: #000;
-            padding: 12px 30px;
-            border-radius: 50px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            border: 1px solid var(--gold-main);
-            display: inline-block;
-        }
-
-        .btn-gold:hover {
-            background: transparent;
-            color: var(--gold-main);
-            box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
-        }
-
-        /* --- HEADER --- */
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 5%;
-            position: absolute;
-            width: 100%;
-            z-index: 10;
-        }
-
-        .logo {
-            font-size: 1.8rem;
-            letter-spacing: 2px;
-        }
-
-        nav ul {
-            display: flex;
-            gap: 30px;
-        }
-
-        nav a {
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        nav a:hover { color: var(--gold-main); }
-
-        /* --- HERO SECTION --- */
-        .hero {
-            height: 100vh;
-            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.8)), url('https://images.unsplash.com/photo-1534180477871-5d6cc81f3920?q=80&w=2070&auto=format&fit=crop');
-            background-size: cover;
-            background-position: center;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            padding: 0 20px;
-        }
-
-        .hero h1 {
-            font-size: 4rem;
-            margin-bottom: 20px;
-            line-height: 1.1;
-        }
-
-        .hero p {
-            font-size: 1.2rem;
-            color: var(--text-grey);
-            max-width: 600px;
-            margin-bottom: 40px;
-        }
-
-        /* --- CAROUSEL SECTION --- */
-        .featured {
-            padding: 80px 0;
-            background: #0a0a0a;
-        }
-
-        .section-header {
-            text-align: center;
-            margin-bottom: 50px;
-        }
-
-        .section-header h2 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-        }
-
-        .section-header p {
-            color: #666;
-            font-size: 1rem;
-        }
-
-        /* The Carousel Container */
-        .carousel-container {
-            width: 100%;
-            padding: 20px 5%;
-            display: flex;
-            gap: 25px;
-            overflow-x: auto;
-            scroll-snap-type: x mandatory;
-            padding-bottom: 40px;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .carousel-container::-webkit-scrollbar {
-            height: 8px;
-        }
-        .carousel-container::-webkit-scrollbar-track {
-            background: #1a1a1a;
-        }
-        .carousel-container::-webkit-scrollbar-thumb {
-            background: var(--gold-dark);
-            border-radius: 4px;
-        }
-
-        /* Profile Card */
-        .card {
-            flex: 0 0 300px;
-            height: 450px;
-            position: relative;
-            border-radius: 15px;
-            overflow: hidden;
-            scroll-snap-align: center;
-            transition: transform 0.3s ease;
-            cursor: pointer;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-        }
-
-        .card:hover {
-            transform: scale(1.02);
-            box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
-        }
-
-        .card img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .card-content {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            padding: 30px 20px;
-            background: linear-gradient(to top, rgba(0,0,0,0.95), transparent);
-            color: white;
-        }
-
-        .card-content h3 {
-            font-size: 1.5rem;
-            color: var(--gold-main);
-        }
-
-        .card-content span {
-            display: block;
-            font-size: 0.9rem;
-            margin-top: 5px;
-            opacity: 0.9;
-        }
-
-        .badges {
-            margin-top: 10px;
-            display: flex;
-            gap: 5px;
-            flex-wrap: wrap;
-        }
-
-        .badge {
-            font-size: 0.7rem;
-            padding: 4px 8px;
-            border: 1px solid var(--text-grey);
-            border-radius: 4px;
-            text-transform: uppercase;
-        }
-
-        /* --- STATS SECTION --- */
-        .stats-section {
-            padding: 80px 5%;
-            background: var(--card-bg);
-            text-align: center;
-        }
-
-        .stats-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 40px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .stat-item h3 {
-            font-size: 3rem;
-            color: var(--gold-main);
-            margin-bottom: 10px;
-        }
-
-        .stat-item p {
-            color: var(--text-grey);
-            font-size: 1rem;
-        }
-
-        /* --- ABOUT SECTION --- */
-        .about-section {
-            padding: 100px 5%;
-            background: #0a0a0a;
-        }
-
-        .about-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 60px;
-            align-items: center;
-        }
-
-        .about-text h2 {
-            font-size: 2.5rem;
-            margin-bottom: 30px;
-        }
-
-        .about-text p {
-            color: var(--text-grey);
-            line-height: 1.8;
-            margin-bottom: 20px;
-            font-size: 1.05rem;
-        }
-
-        .about-image {
-            background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(170, 140, 44, 0.2));
-            border-radius: 15px;
-            padding: 40px;
-            text-align: center;
-        }
-
-        .about-image img {
-            width: 100%;
-            border-radius: 10px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-        }
-
-        /* --- FEATURES SECTION --- */
-        .features-section {
-            padding: 100px 5%;
-            background: var(--card-bg);
-        }
-
-        .features-grid {
-            max-width: 1200px;
-            margin: 60px auto 0;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 40px;
-        }
-
-        .feature-card {
-            background: #0a0a0a;
-            padding: 40px 30px;
-            border-radius: 15px;
-            border: 1px solid #222;
-            transition: all 0.3s;
-        }
-
-        .feature-card:hover {
-            border-color: var(--gold-dark);
-            box-shadow: 0 0 20px rgba(212, 175, 55, 0.1);
-        }
-
-        .feature-icon {
-            font-size: 3rem;
-            margin-bottom: 20px;
-        }
-
-        .feature-card h3 {
-            font-size: 1.3rem;
-            margin-bottom: 15px;
-            color: var(--gold-main);
-        }
-
-        .feature-card p {
-            color: var(--text-grey);
-            line-height: 1.6;
-            font-size: 0.95rem;
-        }
-
-        /* --- HOW IT WORKS --- */
-        .how-it-works {
-            padding: 100px 5%;
-            background: #0a0a0a;
-        }
-
-        .steps-container {
-            max-width: 1200px;
-            margin: 60px auto 0;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 50px;
-        }
-
-        .step {
-            text-align: center;
-            position: relative;
-        }
-
-        .step-number {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 20px;
-            background: linear-gradient(135deg, var(--gold-main), var(--gold-dark));
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            font-weight: 700;
-            color: #000;
-        }
-
-        .step h3 {
-            font-size: 1.5rem;
-            margin-bottom: 15px;
-            color: var(--gold-main);
-        }
-
-        .step p {
-            color: var(--text-grey);
-            line-height: 1.6;
-        }
-
-        /* --- TESTIMONIALS --- */
-        .testimonials {
-            padding: 100px 5%;
-            background: var(--card-bg);
-        }
-
-        .testimonial-grid {
-            max-width: 1200px;
-            margin: 60px auto 0;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-        }
-
-        .testimonial-card {
-            background: #0a0a0a;
-            padding: 40px;
-            border-radius: 15px;
-            border-left: 3px solid var(--gold-main);
-        }
-
-        .testimonial-text {
-            font-style: italic;
-            color: var(--text-grey);
-            line-height: 1.7;
-            margin-bottom: 20px;
-            font-size: 1rem;
-        }
-
-        .testimonial-author {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .author-avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--gold-main), var(--gold-dark));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-        }
-
-        .author-info h4 {
-            font-size: 1.1rem;
-            color: var(--gold-main);
-        }
-
-        .author-info p {
-            color: #666;
-            font-size: 0.85rem;
-        }
-
-        /* --- CTA SECTION --- */
-        .cta-section {
-            padding: 100px 5%;
-            background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(170, 140, 44, 0.1));
-            text-align: center;
-        }
-
-        .cta-section h2 {
-            font-size: 3rem;
-            margin-bottom: 20px;
-        }
-
-        .cta-section p {
-            font-size: 1.2rem;
-            color: var(--text-grey);
-            margin-bottom: 40px;
-            max-width: 700px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        /* --- FOOTER --- */
-        footer {
-            padding: 50px 5%;
-            background: #000;
-            border-top: 1px solid #222;
-        }
-
-        .footer-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 40px;
-            margin-bottom: 40px;
-        }
-
-        .footer-section h3 {
-            font-size: 1.3rem;
-            margin-bottom: 20px;
-            color: var(--gold-main);
-        }
-
-        .footer-section ul li {
-            margin-bottom: 10px;
-        }
-
-        .footer-section a:hover {
-            color: var(--gold-main);
-        }
-
-        .footer-logo {
-            font-size: 1.5rem;
-            font-family: 'Playfair Display', serif;
-            margin-bottom: 15px;
-            display: inline-block;
-        }
-
-        .footer-section p {
-            color: #666;
-            line-height: 1.6;
-            font-size: 0.9rem;
-        }
-
-        .copyright {
-            text-align: center;
-            color: #444;
-            font-size: 0.85rem;
-            padding-top: 30px;
-            border-top: 1px solid #222;
-        }
-
-        .social-links {
-            display: flex;
-            gap: 15px;
-            margin-top: 15px;
-        }
-
-        .social-links a {
-            width: 40px;
-            height: 40px;
-            border: 1px solid #333;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-        }
-
-        .social-links a:hover {
-            border-color: var(--gold-main);
-            color: var(--gold-main);
-        }
-
-        /* Responsive */
-        @media (max-width: 1024px) {
-            .about-content {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .hero h1 { font-size: 2.5rem; }
-            nav { display: none; }
-            .section-header h2 { font-size: 2rem; }
-            .about-text h2 { font-size: 2rem; }
-            .cta-section h2 { font-size: 2rem; }
-            .stats-container { grid-template-columns: repeat(2, 1fr); }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Golden Sugar Dating | World’s #1 SugarDaddy & SugarBaby Dating Site</title>
+
+  <!-- SEO / Social -->
+  <meta name="description" content="Golden Sugar Dating is a discreet, verified SugarDaddy & SugarBaby dating platform with privacy-first onboarding, agent-led support, and curated matching." />
+  <meta property="og:title" content="Golden Sugar Dating | World’s #1 SugarDaddy & SugarBaby Dating Site" />
+  <meta property="og:description" content="Discreet. Verified. Agent-led. A premium space for SugarDaddy and SugarBaby connections." />
+  <meta property="og:type" content="website" />
+  <meta name="theme-color" content="#050505" />
+
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    :root {
+      --bg-color: #050505;
+      --card-bg: #121212;
+      --gold-light: #F3E5AB;
+      --gold-main: #D4AF37;
+      --gold-dark: #AA8C2C;
+      --text-white: #ffffff;
+      --text-grey: #a0a0a0;
+      --muted: #666;
+      --blur-level: 12px;
+
+      --border: rgba(255,255,255,0.08);
+      --border-strong: rgba(255,255,255,0.14);
+      --shadow-gold: 0 0 22px rgba(212, 175, 55, 0.18);
+      --radius-soft: 8px;
+      --radius-card: 4px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-white);
+      font-family: 'Montserrat', sans-serif;
+      overflow-x: hidden;
+      line-height: 1.5;
+    }
+
+    h1, h2, h3, h4 { font-family: 'Playfair Display', serif; }
+    a { text-decoration: none; color: inherit; transition: 0.25s; }
+    ul { list-style: none; }
+
+    .gold-text {
+      background: linear-gradient(to right, var(--gold-light), var(--gold-main), var(--gold-dark));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: 700;
+    }
+
+    .section-padding { padding: 100px 5%; }
+    .text-center { text-align: center; }
+    .max-w { max-width: 1100px; margin: 0 auto; }
+    .muted { color: var(--muted); }
+
+    .divider {
+      height: 1px;
+      background: linear-gradient(to right, transparent, rgba(212,175,55,0.25), transparent);
+      margin: 24px auto 0;
+      width: min(680px, 90%);
+    }
+
+    .btn-gold {
+      background: linear-gradient(135deg, var(--gold-main), var(--gold-dark));
+      color: #000;
+      padding: 12px 30px;
+      border-radius: 0px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border: 1px solid var(--gold-main);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      user-select: none;
+    }
+
+    .btn-gold:hover {
+      background: transparent;
+      color: var(--gold-main);
+      box-shadow: 0 0 20px rgba(212, 175, 55, 0.35);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-white);
+      padding: 12px 30px;
+      border-radius: 0px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border: 1px solid var(--border-strong);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      user-select: none;
+    }
+
+    .btn-ghost:hover {
+      border-color: var(--gold-main);
+      color: var(--gold-main);
+      box-shadow: var(--shadow-gold);
+    }
+
+    /* HEADER */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 5%;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 50;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      background: linear-gradient(to bottom, rgba(0,0,0,0.88), rgba(0,0,0,0.35));
+      backdrop-filter: blur(10px);
+      transition: 0.25s;
+    }
+
+    header.scrolled {
+      background: rgba(0,0,0,0.82);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      font-size: 1.55rem;
+      letter-spacing: 2px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      white-space: nowrap;
+    }
+
+    .logo-mark {
+      width: 10px; height: 10px;
+      border: 1px solid rgba(212,175,55,0.8);
+      box-shadow: var(--shadow-gold);
+      transform: rotate(45deg);
+      display: inline-block;
+    }
+
+    nav ul { display: flex; gap: 22px; align-items: center; }
+    nav a {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: rgba(255,255,255,0.88);
+    }
+    nav a:hover { color: var(--gold-main); }
+
+    .login-mini { padding: 9px 16px; font-size: 0.7rem; }
+    .apply-mini { padding: 9px 16px; font-size: 0.7rem; }
+
+    .nav-actions { display: flex; gap: 12px; align-items: center; }
+
+    .menu-btn {
+      display: none;
+      width: 44px;
+      height: 44px;
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,0.35);
+      backdrop-filter: blur(10px);
+      color: var(--text-white);
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+    }
+    .menu-btn:hover { border-color: var(--gold-main); color: var(--gold-main); box-shadow: var(--shadow-gold); }
+
+    .mobile-nav {
+      display: none;
+      position: fixed;
+      top: 72px;
+      left: 0;
+      width: 100%;
+      background: rgba(0,0,0,0.92);
+      border-bottom: 1px solid var(--border);
+      padding: 18px 5%;
+      z-index: 49;
+    }
+    .mobile-nav a {
+      display: block;
+      padding: 14px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.9);
+    }
+    .mobile-nav a:hover { color: var(--gold-main); }
+
+    /* HERO */
+    .hero {
+      min-height: 100vh;
+      background:
+        radial-gradient(1200px 600px at 50% 20%, rgba(212,175,55,0.10), transparent 60%),
+        linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.92)),
+        url('https://images.unsplash.com/photo-1470219556762-1771e7f9427d?q=80&w=2000&auto=format&fit=crop');
+      background-size: cover;
+      background-position: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 120px 5% 70px;
+    }
+
+    .hero .kicker {
+      display: inline-flex;
+      gap: 10px;
+      align-items: center;
+      font-size: 0.85rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.85);
+      border: 1px solid rgba(255,255,255,0.12);
+      padding: 10px 16px;
+      background: rgba(0,0,0,0.32);
+      backdrop-filter: blur(10px);
+    }
+
+    .hero h1 { font-size: 4.25rem; margin: 20px 0 16px; line-height: 1.03; }
+    .hero p { font-size: 1.08rem; color: rgba(255,255,255,0.78); max-width: 820px; margin-bottom: 32px; }
+
+    .hero-ctas {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .trust-strip {
+      width: min(1050px, 100%);
+      margin-top: 55px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .trust-item {
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(0,0,0,0.35);
+      backdrop-filter: blur(10px);
+      padding: 18px 14px;
+      text-align: left;
+    }
+    .trust-item strong { display: block; font-size: 0.95rem; }
+    .trust-item span { display: block; margin-top: 6px; color: rgba(255,255,255,0.65); font-size: 0.82rem; }
+
+    /* FEATURES */
+    .features-section { background: #080808; border-top: 1px solid rgba(255,255,255,0.04); }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+      margin-top: 48px;
+    }
+
+    .feature-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      padding: 24px;
+      border-radius: var(--radius-soft);
+      position: relative;
+      overflow: hidden;
+    }
+    .feature-card:before {
+      content: "";
+      position: absolute;
+      inset: -40px;
+      background: radial-gradient(circle at 20% 10%, rgba(212,175,55,0.12), transparent 60%);
+      opacity: 0.75;
+      pointer-events: none;
+    }
+    .feature-card i { color: var(--gold-main); font-size: 1.15rem; position: relative; }
+    .feature-card h3 { font-size: 1.15rem; margin: 12px 0 10px; position: relative; }
+    .feature-card p { color: rgba(255,255,255,0.70); font-size: 0.9rem; position: relative; }
+
+    /* PROCESS */
+    .process-section { background: #050505; border-top: 1px solid rgba(255,255,255,0.04); }
+
+    .timeline {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      margin-top: 60px;
+      position: relative;
+      gap: 14px;
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      top: 25px;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: #222;
+      z-index: 0;
+    }
+
+    .timeline-step {
+      position: relative;
+      z-index: 1;
+      flex: 1;
+      text-align: center;
+      min-width: 160px;
+      padding: 0 10px;
+      margin-bottom: 30px;
+    }
+
+    .icon-box {
+      width: 54px;
+      height: 54px;
+      background: #000;
+      border: 2px solid var(--gold-main);
+      border-radius: 50%;
+      margin: 0 auto 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      color: var(--gold-main);
+      box-shadow: 0 0 15px rgba(212, 175, 55, 0.18);
+    }
+
+    .timeline-step h4 { color: var(--text-white); margin-bottom: 10px; font-size: 1rem; }
+    .timeline-step p { color: #777; font-size: 0.85rem; line-height: 1.45; }
+
+    /* MEMBERSHIP */
+    .tiers-section { background: #080808; border-top: 1px solid rgba(255,255,255,0.04); }
+    .tiers-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+      margin-top: 46px;
+    }
+
+    .tier-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.10);
+      padding: 26px;
+      border-radius: var(--radius-soft);
+      position: relative;
+      overflow: hidden;
+      min-height: 320px;
+    }
+
+    .tier-card.featured { border-color: rgba(212,175,55,0.35); box-shadow: var(--shadow-gold); }
+
+    .tier-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid rgba(255,255,255,0.12);
+      padding: 8px 12px;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: rgba(255,255,255,0.85);
+      background: rgba(0,0,0,0.22);
+      backdrop-filter: blur(10px);
+    }
+
+    .tier-card h3 { margin: 14px 0 8px; font-size: 1.4rem; }
+    .tier-card p { color: rgba(255,255,255,0.72); font-size: 0.9rem; }
+
+    .tier-list { margin-top: 16px; }
+    .tier-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 0;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      color: rgba(255,255,255,0.74);
+      font-size: 0.9rem;
+    }
+    .tier-list li:first-child { border-top: none; }
+    .tier-list i { color: var(--gold-main); margin-top: 4px; }
+
+    .commission-note {
+      margin-top: 18px;
+      padding: 14px 16px;
+      border-left: 2px solid var(--gold-main);
+      background: rgba(0,0,0,0.28);
+      color: rgba(255,255,255,0.72);
+      font-size: 0.9rem;
+    }
+
+    /* VERIFICATION TABS */
+    .verification-section { background: #000; border-top: 1px solid #222; }
+
+    .tabs-wrapper {
+      max-width: 920px;
+      margin: 50px auto 0;
+      background: #0a0a0a;
+      border: 1px solid #222;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .tab-input { display: none; }
+    .tabs-header { display: flex; border-bottom: 1px solid #222; }
+
+    .tab-label {
+      flex: 1;
+      padding: 22px 18px;
+      text-align: center;
+      cursor: pointer;
+      font-family: 'Playfair Display', serif;
+      font-size: 1.35rem;
+      color: #666;
+      background: #0f0f0f;
+      transition: 0.25s;
+      user-select: none;
+    }
+
+    .tab-label:hover { color: var(--gold-light); }
+
+    #tab-daddy:checked ~ .tabs-header label[for="tab-daddy"],
+    #tab-baby:checked ~ .tabs-header label[for="tab-baby"] {
+      background: #050505;
+      color: var(--gold-main);
+      border-bottom: 3px solid var(--gold-main);
+    }
+
+    .tab-content {
+      display: none;
+      padding: 46px;
+      animation: fadeIn 0.45s ease;
+    }
+
+    #tab-daddy:checked ~ .content-daddy { display: block; }
+    #tab-baby:checked ~ .content-baby { display: block; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .verification-list li {
+      margin-bottom: 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 15px;
+    }
+    .verification-list i { color: var(--gold-main); margin-top: 5px; }
+    .requirements-box {
+      background: #111;
+      padding: 18px 20px;
+      border-left: 2px solid var(--gold-main);
+      margin-top: 28px;
+    }
+
+    /* PROFILES */
+    .profiles-section { background: #080808; border-top: 1px solid rgba(255,255,255,0.04); }
+
+    .carousel-container {
+      display: flex;
+      gap: 18px;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      padding-bottom: 24px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .carousel-container::-webkit-scrollbar { height: 6px; }
+    .carousel-container::-webkit-scrollbar-thumb { background: var(--gold-dark); border-radius: 50px; }
+
+    .card {
+      flex: 0 0 280px;
+      height: 400px;
+      position: relative;
+      scroll-snap-align: center;
+      overflow: hidden;
+      border-radius: var(--radius-card);
+      border: 1px solid #222;
+      background: #0b0b0b;
+    }
+
+    .card-img-wrapper { width: 100%; height: 100%; position: relative; }
+
+    .card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: blur(var(--blur-level));
+      transform: scale(1.1);
+      transition: filter 0.5s ease, transform 0.5s ease;
+    }
+
+    .card:hover img {
+      filter: blur(5px);
+      transform: scale(1.15);
+    }
+
+    .card-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      padding: 20px;
+      background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.0) 100%);
+      z-index: 2;
+    }
+
+    .privacy-badge {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: rgba(0,0,0,0.6);
+      border: 1px solid var(--gold-main);
+      padding: 6px 10px;
+      font-size: 0.62rem;
+      text-transform: uppercase;
+      z-index: 3;
+      backdrop-filter: blur(5px);
+      letter-spacing: 1px;
+    }
+
+    .profile-meta {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+      color: rgba(255,255,255,0.70);
+      font-size: 0.78rem;
+    }
+    .chip {
+      border: 1px solid rgba(255,255,255,0.10);
+      padding: 6px 10px;
+      background: rgba(0,0,0,0.25);
+      backdrop-filter: blur(10px);
+    }
+
+    .profiles-cta {
+      margin-top: 34px;
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    /* TESTIMONIALS */
+    .testimonials-section { background: #050505; border-top: 1px solid rgba(255,255,255,0.04); }
+    .testimonials-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      margin-top: 46px;
+    }
+    .quote-card {
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+      padding: 26px;
+      border-radius: var(--radius-soft);
+    }
+    .quote-card .stars { color: var(--gold-main); letter-spacing: 2px; font-size: 0.9rem; }
+    .quote-card p { margin-top: 12px; color: rgba(255,255,255,0.72); font-size: 0.95rem; }
+    .quote-card .who { margin-top: 16px; color: rgba(255,255,255,0.82); font-weight: 600; }
+    .quote-card .who span { display: block; font-weight: 400; color: rgba(255,255,255,0.60); font-size: 0.85rem; margin-top: 4px; }
+
+    /* FAQ */
+    .faq-section { background: #080808; border-top: 1px solid rgba(255,255,255,0.04); }
+    .faq {
+      max-width: 920px;
+      margin: 46px auto 0;
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: var(--radius-soft);
+      overflow: hidden;
+      background: rgba(0,0,0,0.30);
+    }
+    details { border-top: 1px solid rgba(255,255,255,0.08); padding: 0; }
+    details:first-child { border-top: none; }
+    summary {
+      cursor: pointer;
+      padding: 18px 20px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.90);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      user-select: none;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary:after { content: "+"; color: var(--gold-main); font-size: 1.2rem; line-height: 1; }
+    details[open] summary:after { content: "-"; }
+    .faq-content { padding: 0 20px 18px; color: rgba(255,255,255,0.72); font-size: 0.95rem; }
+
+    /* CTA */
+    .cta-section {
+      background:
+        radial-gradient(900px 500px at 20% 10%, rgba(212,175,55,0.12), transparent 60%),
+        linear-gradient(to bottom, #050505, #000);
+      border-top: 1px solid rgba(255,255,255,0.04);
+      padding: 90px 5%;
+      text-align: center;
+    }
+    .cta-box {
+      max-width: 950px;
+      margin: 0 auto;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(0,0,0,0.40);
+      backdrop-filter: blur(12px);
+      padding: 40px 24px;
+    }
+    .cta-box h2 { font-size: 2.6rem; }
+    .cta-box p { margin-top: 12px; color: rgba(255,255,255,0.72); max-width: 760px; margin-left: auto; margin-right: auto; }
+    .cta-actions { margin-top: 22px; display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+
+    /* FOOTER */
+    footer {
+      background: #000;
+      padding: 50px 5%;
+      border-top: 1px solid #222;
+      text-align: center;
+    }
+    .footer-links {
+      margin-top: 18px;
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+      color: rgba(255,255,255,0.65);
+      font-size: 0.85rem;
+    }
+    .footer-links a { color: rgba(255,255,255,0.65); }
+    .footer-links a:hover { color: var(--gold-main); }
+
+    /* LOGIN MODAL */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.72);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      padding: 22px;
+    }
+
+    .modal {
+      width: min(520px, 100%);
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(10,10,10,0.88);
+      backdrop-filter: blur(14px);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 30px 90px rgba(0,0,0,0.65);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 18px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      background: rgba(0,0,0,0.35);
+    }
+
+    .modal-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.35rem;
+      letter-spacing: 1px;
+    }
+
+    .modal-close {
+      width: 40px;
+      height: 40px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.25);
+      color: rgba(255,255,255,0.85);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-close:hover { border-color: var(--gold-main); color: var(--gold-main); box-shadow: var(--shadow-gold); }
+
+    .modal-body {
+      padding: 18px 18px 20px;
+    }
+
+    .modal-note {
+      border-left: 2px solid var(--gold-main);
+      background: rgba(0,0,0,0.25);
+      padding: 12px 14px;
+      color: rgba(255,255,255,0.72);
+      font-size: 0.9rem;
+      margin-bottom: 16px;
+    }
+
+    .field {
+      margin-bottom: 12px;
+    }
+    .field label {
+      display: block;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: rgba(255,255,255,0.78);
+      margin-bottom: 8px;
+    }
+    .field input {
+      width: 100%;
+      padding: 12px 12px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.35);
+      color: rgba(255,255,255,0.92);
+      outline: none;
+      border-radius: 6px;
+      font-size: 0.95rem;
+    }
+    .field input:focus {
+      border-color: rgba(212,175,55,0.55);
+      box-shadow: 0 0 0 3px rgba(212,175,55,0.12);
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: flex-end;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+
+    .error {
+      margin-top: 12px;
+      display: none;
+      color: #ff6b6b;
+      font-size: 0.92rem;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 1100px) {
+      .features-grid { grid-template-columns: repeat(2, 1fr); }
+      .testimonials-grid { grid-template-columns: repeat(2, 1fr); }
+      .trust-strip { grid-template-columns: repeat(2, 1fr); }
+      .tiers-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 2.65rem; }
+      .timeline::before { display: none; }
+      .timeline { flex-direction: column; align-items: center; }
+      .timeline-step { margin-bottom: 34px; width: 100%; max-width: 380px; }
+      .tab-label { font-size: 1.05rem; padding: 15px; }
+      nav { display: none; }
+      .menu-btn { display: inline-flex; }
+      .tiers-grid { grid-template-columns: 1fr; }
+      .features-grid { grid-template-columns: 1fr; }
+      .testimonials-grid { grid-template-columns: 1fr; }
+      .tab-content { padding: 34px 18px; }
+    }
+/* APPLY FORM */
+.apply-section { background: #050505; border-top: 1px solid rgba(255,255,255,0.04); }
+.apply-wrap {
+  max-width: 980px;
+  margin: 46px auto 0;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(0,0,0,0.35);
+  backdrop-filter: blur(12px);
+  padding: 26px;
+  border-radius: 10px;
+}
+
+.apply-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.apply-grid .full { grid-column: 1 / -1; }
+
+.apply-help {
+  margin-top: 10px;
+  color: rgba(255,255,255,0.65);
+  font-size: 0.9rem;
+}
+
+.apply-form .field input,
+.apply-form .field select,
+.apply-form .field textarea {
+  width: 100%;
+  padding: 12px 12px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(0,0,0,0.35);
+  color: rgba(255,255,255,0.92);
+  outline: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+.apply-form .field textarea { min-height: 110px; resize: vertical; }
+
+.apply-form .field input:focus,
+.apply-form .field select:focus,
+.apply-form .field textarea:focus {
+  border-color: rgba(212,175,55,0.55);
+  box-shadow: 0 0 0 3px rgba(212,175,55,0.12);
+}
+
+.inline-checks {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.check {
+  display: inline-flex;
+  gap: 10px;
+  align-items: flex-start;
+  color: rgba(255,255,255,0.78);
+  font-size: 0.92rem;
+}
+
+.check input { margin-top: 4px; }
+
+.apply-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.form-alert {
+  margin-top: 14px;
+  display: none;
+  padding: 12px 14px;
+  border-left: 2px solid var(--gold-main);
+  background: rgba(0,0,0,0.25);
+  color: rgba(255,255,255,0.78);
+}
+
+.form-alert.error { border-left-color: #ff6b6b; color: #ffb3b3; }
+.form-alert.success { border-left-color: #2ecc71; color: #c7f7d7; }
+
+.small-note {
+  color: rgba(255,255,255,0.55);
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .apply-grid { grid-template-columns: 1fr; }
+}
+
+  </style>
 </head>
+
 <body>
 
-    <header>
-        <div class="logo"><span class="gold-text">Sugar</span>Daddy</div>
-        <nav>
-            <ul>
-                <li><a href="#members">Elite Members</a></li>
-                <li><a href="#how">How it Works</a></li>
-                <li><a href="#features">Features</a></li>
-                <li><a href="#" class="btn-gold" style="padding: 8px 20px; font-size: 0.8rem;">Join Now</a></li>
-            </ul>
-        </nav>
-    </header>
+  <header id="siteHeader" aria-label="Site header">
+    <div class="logo" aria-label="Brand">
+      <span class="logo-mark" aria-hidden="true"></span>
+      <div><span class="gold-text">Golden</span> SugarDaddy</div>
+    </div>
 
-    <section class="hero">
-        <h1>Experience the <span class="gold-text">Fine Life</span></h1>
-        <p>The world's most exclusive network for successful men and attractive women. Upgrade your lifestyle and discover meaningful connections built on mutual respect and generosity.</p>
-        <a href="#join" class="btn-gold">Start Your Journey</a>
-    </section>
+    <nav aria-label="Primary navigation">
+      <ul>
+        <li><a href="#features">Why Us</a></li>
+        <li><a href="#process">Process</a></li>
+        <li><a href="#tiers">Plans</a></li>
+        <li><a href="#verify">Verification</a></li>
+        <li><a href="#profiles">Profiles</a></li>
+<li><a href="#apply" class="btn-gold apply-mini"><i class="fa-solid fa-pen-to-square"></i> Apply Now</a></li>
 
-    <!-- Stats Section -->
-    <section class="stats-section">
-        <div class="stats-container">
-            <div class="stat-item">
-                <h3>2.5M+</h3>
-                <p>Active Members Worldwide</p>
-            </div>
-            <div class="stat-item">
-                <h3>150+</h3>
-                <p>Countries & Territories</p>
-            </div>
-            <div class="stat-item">
-                <h3>98%</h3>
-                <p>Success Rate</p>
-            </div>
-            <div class="stat-item">
-                <h3>24/7</h3>
-                <p>Premium Support</p>
-            </div>
+        <li><a href="#" class="btn-ghost login-mini" id="loginBtn"><i class="fa-solid fa-lock"></i> Client Login</a></li>
+      </ul>
+    </nav>
+
+    <div class="nav-actions">
+      <button class="menu-btn" id="menuBtn" aria-label="Open menu">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+    </div>
+  </header>
+
+  <div class="mobile-nav" id="mobileNav" aria-label="Mobile navigation">
+    <a href="#features">Why Us</a>
+    <a href="#process">Process</a>
+    <a href="#tiers">Plans</a>
+    <a href="#verify">Verification</a>
+    <a href="#profiles">Profiles</a>
+<li><a href="#apply" class="btn-gold apply-mini"><i class="fa-solid fa-pen-to-square"></i> Apply Now</a></li>
+
+    <a href="#" id="loginBtnMobile"><i class="fa-solid fa-lock"></i> Client Login</a>
+  </div>
+
+  <!-- LOGIN MODAL -->
+  <div class="modal-overlay" id="loginModal" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
+      <div class="modal-header">
+        <div class="modal-title" id="loginTitle">Client Login</div>
+        <button class="modal-close" id="closeModal" aria-label="Close login">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="modal-note">
+          Client login credentials are only for SugarDaddy clients and will be shared after the verification process.
         </div>
-    </section>
 
-    <!-- Featured Members Carousel -->
-    <section class="featured" id="members">
-        <div class="section-header">
-            <h2>Featured <span class="gold-text">Members</span></h2>
-            <p>Swipe to discover exclusive profiles from around the world</p>
+        <form id="loginForm">
+          <div class="field">
+            <label for="loginEmail">Email or Username</label>
+            <input id="loginEmail" type="text" placeholder="Enter your email or username" autocomplete="username" required />
+          </div>
+
+          <div class="field">
+            <label for="loginPass">Password</label>
+            <input id="loginPass" type="password" placeholder="Enter your password" autocomplete="current-password" required />
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn-ghost" id="cancelLogin">
+              Cancel
+            </button>
+            <button type="submit" class="btn-gold">
+              <i class="fa-solid fa-right-to-bracket"></i> Login
+            </button>
+          </div>
+
+          <div class="error" id="loginError">Incorrect password.</div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <section class="hero" aria-label="Hero">
+    <div class="kicker">
+      <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+      Discreet. Verified. Agent-led.
+    </div>
+
+    <h1>
+      <span class="gold-text">World’s #1</span><br>
+      SugarDaddy & SugarBaby Dating Site
+    </h1>
+
+    <p>
+      Golden Sugar Dating is built for real SugarDaddy and SugarBaby connections.
+      Verified profiles, privacy controls, and a clean process that keeps things respectful and straightforward.
+    </p>
+
+    <div class="hero-ctas">
+
+      <a href="#apply" class="btn-gold"><i class="fa-solid fa-clipboard-check"></i> Apply Now</a>
+      <a href="#verify" class="btn-ghost"><i class="fa-solid fa-user-shield"></i> Verification Standards</a>
+    </div>
+
+    <div class="trust-strip" role="list" aria-label="Highlights">
+      <div class="trust-item" role="listitem">
+        <strong class="gold-text">Privacy-first onboarding</strong>
+        <span>Your personal details stay protected while we verify authenticity.</span>
+      </div>
+      <div class="trust-item" role="listitem">
+        <strong class="gold-text">Verified SugarDaddy access</strong>
+        <span>Client tools and login access are shared only after verification.</span>
+      </div>
+      <div class="trust-item" role="listitem">
+        <strong class="gold-text">Real SugarBaby profiles</strong>
+        <span>Live checks reduce fake accounts and impersonation.</span>
+      </div>
+      <div class="trust-item" role="listitem">
+        <strong class="gold-text">Global cities</strong>
+        <span>London, NYC, Miami, Paris, Dubai, Monaco and more.</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="features" class="section-padding features-section" aria-label="Features">
+    <div class="max-w text-center">
+      <h2>Why People Use <span class="gold-text">Golden SugarDaddy</span></h2>
+      <p class="muted" style="margin-top: 10px;">
+        A premium sugar dating site only works when it feels safe, real, and well managed.
+      </p>
+      <div class="divider"></div>
+
+      <div class="features-grid" role="list" aria-label="Feature list">
+        <div class="feature-card" role="listitem">
+          <i class="fa-solid fa-user-tie" aria-hidden="true"></i>
+          <h3>Agent Support</h3>
+          <p>After you apply, an agent contacts you and explains the process clearly.</p>
         </div>
 
-        <div class="carousel-container">
-            
-            <div class="card">
-                <img src="https://images.unsplash.com/photo-1616091093729-c04629472ee7?q=80&w=1974&auto=format&fit=crop" alt="Model">
-                <div class="card-content">
-                    <h3>Victoria, 24</h3>
-                    <span>📍 New York, NY</span>
-                    <div class="badges">
-                        <span class="badge">Model</span>
-                        <span class="badge">Verified</span>
-                        <span class="badge">Travel</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card">
-                <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=1974&auto=format&fit=crop" alt="Model">
-                <div class="card-content">
-                    <h3>James, 45</h3>
-                    <span>📍 London, UK</span>
-                    <div class="badges">
-                        <span class="badge">Entrepreneur</span>
-                        <span class="badge">VIP</span>
-                        <span class="badge">$1M+</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card">
-                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=1964&auto=format&fit=crop" alt="Model">
-                <div class="card-content">
-                    <h3>Sophia, 22</h3>
-                    <span>📍 Los Angeles, CA</span>
-                    <div class="badges">
-                        <span class="badge">Student</span>
-                        <span class="badge">Travel</span>
-                        <span class="badge">Verified</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card">
-                <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=1974&auto=format&fit=crop" alt="Model">
-                <div class="card-content">
-                    <h3>Robert, 52</h3>
-                    <span>📍 Dubai, UAE</span>
-                    <div class="badges">
-                        <span class="badge">Investor</span>
-                        <span class="badge">Gold</span>
-                        <span class="badge">$2M+</span>
-                    </div>
-                </div>
-            </div>
-
-             <div class="card">
-                <img src="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?q=80&w=1974&auto=format&fit=crop" alt="Model">
-                <div class="card-content">
-                    <h3>Elena, 26</h3>
-                    <span>📍 Paris, France</span>
-                    <div class="badges">
-                        <span class="badge">Fashion</span>
-                        <span class="badge">Verified</span>
-                        <span class="badge">Influencer</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card">
-                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1974&auto=format&fit=crop" alt="Model">
-                <div class="card-content">
-                    <h3>Marcus, 48</h3>
-                    <span>📍 Singapore</span>
-                    <div class="badges">
-                        <span class="badge">Tech CEO</span>
-                        <span class="badge">Diamond</span>
-                        <span class="badge">$5M+</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card">
-                <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=1974&auto=format&fit=crop" alt="Model">
-                <div class="card-content">
-                    <h3>Isabella, 23</h3>
-                    <span>📍 Miami, FL</span>
-                    <div class="badges">
-                        <span class="badge">Dancer</span>
-                        <span class="badge">Verified</span>
-                        <span class="badge">Fitness</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card">
-                <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=1974&auto=format&fit=crop" alt="Model">
-                <div class="card-content">
-                    <h3>Alexander, 55</h3>
-                    <span>📍 Monaco</span>
-                    <div class="badges">
-                        <span class="badge">Real Estate</span>
-                        <span class="badge">Platinum</span>
-                        <span class="badge">$3M+</span>
-                    </div>
-                </div>
-            </div>
-
+        <div class="feature-card" role="listitem">
+          <i class="fa-solid fa-fingerprint" aria-hidden="true"></i>
+          <h3>Verification First</h3>
+          <p>SugarDaddy and SugarBaby profiles go through checks before full access is enabled.</p>
         </div>
-    </section>
 
-    <!-- About Section -->
-    <section class="about-section">
-        <div class="about-content">
-            <div class="about-text">
-                <h2>Welcome to the <span class="gold-text">Elite Circle</span></h2>
-                <p>SugarDaddy is the world's premier luxury dating platform, connecting successful, generous individuals with attractive, ambitious companions. Since 2005, we've facilitated millions of meaningful connections built on mutual respect, honesty, and shared expectations.</p>
-                <p>Our members include CEOs, entrepreneurs, investors, models, students, and professionals seeking mutually beneficial relationships. Whether you're looking for mentorship, companionship, travel partners, or genuine romance with financial support, SugarDaddy provides a discreet, secure environment to connect.</p>
-                <p>We understand that modern relationships come in many forms. Our platform celebrates transparency and empowers both parties to define their ideal arrangement without judgment.</p>
-                <a href="#join" class="btn-gold" style="margin-top: 20px;">Join the Elite</a>
-            </div>
-            <div class="about-image">
-                <img src="https://images.unsplash.com/photo-1551522435-a13afa10f103?q=80&w=2070&auto=format&fit=crop" alt="Luxury Lifestyle">
-            </div>
+        <div class="feature-card" role="listitem">
+          <i class="fa-solid fa-comments" aria-hidden="true"></i>
+          <h3>Discreet Messaging</h3>
+          <p>Controlled reveals, privacy settings, and clean communication tools.</p>
         </div>
-    </section>
 
-    <!-- How It Works -->
-    <section class="how-it-works" id="how">
-        <div class="section-header">
-            <h2>How It <span class="gold-text">Works</span></h2>
-            <p>Your journey to the lifestyle you deserve starts here</p>
+        <div class="feature-card" role="listitem">
+          <i class="fa-solid fa-shield-heart" aria-hidden="true"></i>
+          <h3>Safer Environment</h3>
+          <p>Rules that protect both sides. Accounts that break standards are removed.</p>
         </div>
-        
-        <div class="steps-container">
-            <div class="step">
-                <div class="step-number">1</div>
-                <h3>Create Your Profile</h3>
-                <p>Sign up in minutes and create an attractive profile highlighting your lifestyle, interests, and what you're seeking. Upload photos and complete verification to boost credibility.</p>
-            </div>
-            
-            <div class="step">
-                <div class="step-number">2</div>
-                <h3>Browse & Connect</h3>
-                <p>Explore thousands of verified profiles using advanced filters. Send messages, virtual gifts, and express interest to those who catch your eye.</p>
-            </div>
-            
-            <div class="step">
-                <div class="step-number">3</div>
-                <h3>Build Your Arrangement</h3>
-                <p>Communicate openly about expectations, boundaries, and arrangements. Our platform facilitates honest conversations so both parties feel valued and respected.</p>
-            </div>
-            
-            <div class="step">
-                <div class="step-number">4</div>
-                <h3>Enjoy the Lifestyle</h3>
-                <p>Meet in person, travel together, and build meaningful connections. Share experiences, grow together, and live the life you've always imagined.</p>
-            </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="process" class="section-padding process-section" aria-label="Workflow">
+    <div class="max-w text-center">
+      <h2>The <span class="gold-text">Golden Process</span></h2>
+      <p class="muted" style="margin-top: 10px;">
+        A simple flow that keeps the platform legitimate and high quality.
+      </p>
+      <div class="divider"></div>
+    </div>
+
+    <div class="max-w">
+      <div class="timeline" aria-label="Timeline">
+        <div class="timeline-step">
+          <div class="icon-box"><i class="fas fa-user-plus" aria-hidden="true"></i></div>
+          <h4>1. Apply</h4>
+          <p>Choose your role (SugarDaddy or SugarBaby) and submit your application.</p>
         </div>
-    </section>
 
-    <!-- Features Section -->
-    <section class="features-section" id="features">
-        <div class="section-header">
-            <h2>Premium <span class="gold-text">Features</span></h2>
-            <p>Everything you need for successful connections</p>
+        <div class="timeline-step">
+          <div class="icon-box"><i class="fas fa-headset" aria-hidden="true"></i></div>
+          <h4>2. Agent Contact</h4>
+          <p>An agent will contact you and walk you through the process after your application.</p>
         </div>
-        
-        <div class="features-grid">
-            <div class="feature-card">
-                <div class="feature-icon">🔐</div>
-                <h3>Verified Profiles</h3>
-                <p>Every member undergoes rigorous verification including photo verification, identity checks, and income verification for premium members. Connect with confidence knowing profiles are authentic.</p>
-            </div>
 
-            <div class="feature-card">
-                <div class="feature-icon">🌍</div>
-                <h3>Global Network</h3>
-                <p>Access millions of members across 150+ countries. Whether you're traveling for business or pleasure, find connections wherever you go with our location-based search.</p>
-            </div>
-
-            <div class="feature-card">
-                <div class="feature-icon">💬</div>
-                <h3>Private Messaging</h3>
-                <p>Enjoy encrypted end-to-end messaging with photo and video sharing. Your conversations remain completely private and secure with military-grade encryption.</p>
-            </div>
-
-            <div class="feature-card">
-                <div class="feature-icon">🎯</div>
-                <h3>Smart Matching</h3>
-                <p>Our AI-powered algorithm analyzes your preferences, lifestyle, and relationship goals to suggest highly compatible matches, saving you time and increasing success rates.</p>
-            </div>
-
-            <div class="feature-card">
-                <div class="feature-icon">💎</div>
-                <h3>Lifestyle Verification</h3>
-                <p>Premium members can verify their income, net worth, and lifestyle to stand out from the crowd. Verified badges increase profile visibility by 300%.</p>
-            </div>
-
-            <div class="feature-card">
-                <div class="feature-icon">📱</div>
-                <h3>Mobile Apps</h3>
-                <p>Stay connected on the go with our iOS and Android apps. Receive instant notifications, browse profiles, and chat from anywhere in the world.</p>
-            </div>
-
-            <div class="feature-card">
-                <div class="feature-icon">🎁</div>
-                <h3>Virtual Gifts</h3>
-                <p>Send virtual gifts to show interest and appreciation. From champagne bottles to luxury watches, express yourself with our curated gift collection.</p>
-            </div>
-
-            <div class="feature-card">
-                <div class="feature-icon">🛡️</div>
-                <h3>Privacy Protection</h3>
-                <p>Control who sees your profile with privacy settings, block unwanted contacts, and browse anonymously. Your discretion is our priority.</p>
-            </div>
-
-            <div class="feature-card">
-                <div class="feature-icon">⭐</div>
-                <h3>Priority Support</h3>
-                <p>Premium members receive 24/7 priority customer support via chat, email, or phone. Our dedicated team ensures your experience is seamless.</p>
-            </div>
+        <div class="timeline-step">
+          <div class="icon-box"><i class="fas fa-shield-alt" aria-hidden="true"></i></div>
+          <h4>3. Verification</h4>
+          <p>Identity and authenticity checks before full access is enabled.</p>
         </div>
-    </section>
 
-    <!-- Testimonials -->
-    <section class="testimonials">
-        <div class="section-header">
-            <h2>Success <span class="gold-text">Stories</span></h2>
-            <p>Real experiences from our elite community</p>
+        <div class="timeline-step">
+          <div class="icon-box"><i class="fas fa-fingerprint" aria-hidden="true"></i></div>
+          <h4>4. Matching</h4>
+          <p>We connect compatible SugarDaddy and SugarBaby members based on preferences.</p>
         </div>
-        
-        <div class="testimonial-grid">
-            <div class="testimonial-card">
-                <p class="testimonial-text">"I've met incredible people through SugarDaddy who appreciate my ambition and support my goals. The platform is discreet, safe, and filled with genuine professionals. It's changed my life completely."</p>
-                <div class="testimonial-author">
-                    <div class="author-avatar">S</div>
-                    <div class="author-info">
-                        <h4>Samantha K.</h4>
-                        <p>Graduate Student, Boston</p>
-                    </div>
-                </div>
-            </div>
 
-            <div class="testimonial-card">
-                <p class="testimonial-text">"As a busy entrepreneur, I don't have time for traditional dating. SugarDaddy connected me with an amazing woman who understands my lifestyle. The transparency and honesty here is refreshing."</p>
-                <div class="testimonial-author">
+        <div class="timeline-step">
+          <div class="icon-box"><i class="fas fa-file-signature" aria-hidden="true"></i></div>
+          <h4>5. Arrangement</h4>
+          <p>Discuss expectations clearly and agree on terms that work for both sides.</p>
+        </div>
+
+        <div class="timeline-step">
+          <div class="icon-box"><i class="fas fa-credit-card" aria-hidden="true"></i></div>
+          <h4>6. Platform Commission</h4>
+          <p>For SugarDaddy clients, we take a small commission only after an amount is agreed.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+<section id="apply" class="section-padding apply-section" aria-label="Apply">
+  <div class="max-w text-center">
+    <h2>Apply to <span class="gold-text">Golden Sugar Dating</span></h2>
+    <p class="muted" style="margin-top:10px;">
+      Fill this out and an agent will contact you. SugarBaby access is free. SugarDaddy clients are verified.
+    </p>
+    <div class="divider"></div>
+  </div>
+
+  <div class="apply-wrap">
+    <form class="apply-form" id="applyForm">
+      <!-- Honeypot (anti-bot) -->
+      <div style="position:absolute; left:-9999px; top:-9999px;" aria-hidden="true">
+        <label>Website</label>
+        <input type="text" id="website" name="website" tabindex="-1" autocomplete="off" />
+      </div>
+
+      <div class="apply-grid">
+        <div class="field">
+          <label for="role" style="display:block; margin-bottom:8px; font-size:0.78rem; text-transform:uppercase; letter-spacing:2px; color:rgba(255,255,255,0.78);">
+            Role
+          </label>
+          <select id="role" required>
+            <option value="">Select</option>
+            <option value="SugarDaddy">SugarDaddy</option>
+            <option value="SugarBaby">SugarBaby</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="name" style="display:block; margin-bottom:8px; font-size:0.78rem; text-transform:uppercase; letter-spacing:2px; color:rgba(255,255,255,0.78);">
+            Name
+          </label>
+          <input id="name" type="text" placeholder="Your name" minlength="2" required />
+        </div>
+
+        <div class="field">
+          <label for="country" style="display:block; margin-bottom:8px; font-size:0.78rem; text-transform:uppercase; letter-spacing:2px; color:rgba(255,255,255,0.78);">
+            Country
+          </label>
+          <input id="country" type="text" placeholder="Country" required />
+        </div>
+
+        <div class="field">
+          <label for="city" style="display:block; margin-bottom:8px; font-size:0.78rem; text-transform:uppercase; letter-spacing:2px; color:rgba(255,255,255,0.78);">
+            City (optional)
+          </label>
+          <input id="city" type="text" placeholder="City" />
+        </div>
+
+        <div class="field">
+          <label for="dob" style="display:block; margin-bottom:8px; font-size:0.78rem; text-transform:uppercase; letter-spacing:2px; color:rgba(255,255,255,0.78);">
+            Date of Birth
+          </label>
+          <input id="dob" type="date" required />
+        </div>
+
+        <div class="field">
+          <label for="whatsapp" style="display:block; margin-bottom:8px; font-size:0.78rem; text-transform:uppercase; letter-spacing:2px; color:rgba(255,255,255,0.78);">
+            WhatsApp Number
+          </label>
+          <input id="whatsapp" type="tel" placeholder="+44 7..." required />
+          <div class="small-note">Include country code (example: +44, +1, +971).</div>
+        </div>
+
+        <div class="field">
+          <label for="telegram" style="display:block; margin-bottom:8px; font-size:0.78rem; text-transform:uppercase; letter-spacing:2px; color:rgba(255,255,255,0.78);">
+            Telegram ID (optional)
+          </label>
+          <input id="telegram" type="text" placeholder="@username" />
+        </div>
+
+        <div class="field">
+          <label for="email" style="display:block; margin-bottom:8px; font-size:0.78rem; text-transform:uppercase; letter-spacing:2px; color:rgba(255,255,255,0.78);">
+            Email (optional)
+          </label>
+          <input id="email" type="email" placeholder="name@email.com" />
+        </div>
+
+        <div class="field full">
+          <label for="about" style="display:block; margin-bottom:8px; font-size:0.78rem; text-transform:uppercase; letter-spacing:2px; color:rgba(255,255,255,0.78);">
+            Short Intro (optional)
+          </label>
+          <textarea id="about" placeholder="A short, respectful intro. Keep it simple."></textarea>
+        </div>
+
+        <div class="field full">
+          <label for="preference" style="display:block; margin-bottom:8px; font-size:0.78rem; text-transform:uppercase; letter-spacing:2px; color:rgba(255,255,255,0.78);">
+            Looking for (optional)
+          </label>
+          <select id="preference">
+            <option value="">Select</option>
+            <option value="Local">Local arrangement</option>
+            <option value="Travel">Travel + experiences</option>
+            <option value="LongTerm">Long-term arrangement</option>
+            <option value="Flexible">Flexible / open</option>
+          </select>
+        </div>
+
+        <div class="field full">
+          <div class="inline-checks">
+            <label class="check">
+              <input id="is18" type="checkbox" required />
+I confirm I am 18+ & I agree to be contacted about my application.
+            </label>
+
+
+          </div>
+
+          <div class="apply-help">
+            After submission, an agent will review and contact you with the next steps.
+          </div>
+        </div>
+      </div>
+
+      <div class="apply-actions">
+        <button type="reset" class="btn-ghost">Clear</button>
+        <button type="submit" class="btn-gold" id="applySubmitBtn">
+          <i class="fa-solid fa-paper-plane"></i> Submit Application
+        </button>
+      </div>
+
+      <div class="form-alert success" id="applySuccess">
+        Application received. An agent will contact you soon.
+      </div>
+      <div class="form-alert error" id="applyError">
+        Something went wrong. Please try again.
+      </div>
+
+      <div class="small-note">
+        Tip: Use real contact details. Fake numbers usually fail verification.
+      </div>
+    </form>
+  </div>
+</section>
+
+  <section id="tiers" class="section-padding tiers-section" aria-label="Plans">
+    <div class="max-w text-center">
+      <h2>Plans & <span class="gold-text">Commission</span></h2>
+      <p class="muted" style="margin-top: 10px;">
+        SugarBaby access is free. SugarDaddy plans include premium tools and matching support.
+      </p>
+      <div class="divider"></div>
+    </div>
+
+    <div class="max-w">
+      <div class="tiers-grid" role="list" aria-label="Plans">
+
+        <!-- SugarBaby Free -->
+        <div class="tier-card featured" role="listitem">
+          <div class="tier-badge"><i class="fa-solid fa-heart" aria-hidden="true"></i> SugarBaby</div>
+          <h3 class="gold-text">Free Access</h3>
+          <p>Apply, verify, and create your profile with no membership fee.</p>
+          <ul class="tier-list">
+            <li><i class="fa-solid fa-check" aria-hidden="true"></i><span>Free registration and verification</span></li>
+            <li><i class="fa-solid fa-check" aria-hidden="true"></i><span>Privacy controls and staged reveals</span></li>
+            <li><i class="fa-solid fa-check" aria-hidden="true"></i><span>Verified-only matching environment</span></li>
+          </ul>
+        </div>
+
+        <!-- SugarDaddy Plans -->
+        <div class="tier-card" role="listitem">
+          <div class="tier-badge"><i class="fa-solid fa-crown" aria-hidden="true"></i> SugarDaddy</div>
+          <h3 class="gold-text">Gold</h3>
+          <p>Clean access to verified profiles and standard introductions.</p>
+          <ul class="tier-list">
+            <li><i class="fa-solid fa-check" aria-hidden="true"></i><span>Browse verified SugarBaby profiles</span></li>
+            <li><i class="fa-solid fa-check" aria-hidden="true"></i><span>Standard matching support</span></li>
+            <li><i class="fa-solid fa-check" aria-hidden="true"></i><span>Basic privacy tools</span></li>
+          </ul>
+        </div>
+
+        <div class="tier-card" role="listitem">
+          <div class="tier-badge"><i class="fa-solid fa-gem" aria-hidden="true"></i> SugarDaddy</div>
+          <h3 class="gold-text">Platinum</h3>
+          <p>Faster matching and more agent support for busy clients.</p>
+          <ul class="tier-list">
+            <li><i class="fa-solid fa-check" aria-hidden="true"></i><span>Priority review and faster introductions</span></li>
+            <li><i class="fa-solid fa-check" aria-hidden="true"></i><span>Expanded matching across cities</span></li>
+            <li><i class="fa-solid fa-check" aria-hidden="true"></i><span>Enhanced privacy options</span></li>
+          </ul>
+        </div>
+
+        <div class="tier-card" role="listitem">
+          <div class="tier-badge"><i class="fa-solid fa-diamond" aria-hidden="true"></i> SugarDaddy</div>
+          <h3 class="gold-text">Diamond</h3>
+          <p>High-touch agent-led service and premium introductions.</p>
+          <ul class="tier-list">
+            <li><i class="fa-solid fa-check" aria-hidden="true"></i><span>Agent shortlisting and outreach</span></li>
+            <li><i class="fa-solid fa-check" aria-hidden="true"></i><span>Private introductions and concierge help</span></li>
+            <li><i class="fa-solid fa-check" aria-hidden="true"></i><span>Maximum discretion settings</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="commission-note">
+        <strong class="gold-text">Commission:</strong>
+        SugarDaddy clients pay <strong>1%</strong> of the decided arrangement amount as our commission.
+        SugarBabies are free.
+      </div>
+    </div>
+  </section>
+
+  <section id="verify" class="section-padding verification-section" aria-label="Verification standards">
+    <div class="max-w text-center">
+      <h2>Verification <span class="gold-text">Standards</span></h2>
+      <p class="muted" style="margin-top: 10px;">Select your role to view requirements</p>
+      <div class="divider"></div>
+    </div>
+
+    <div class="tabs-wrapper" aria-label="Verification tabs">
+      <input type="radio" id="tab-daddy" name="verify-tabs" class="tab-input" checked>
+      <input type="radio" id="tab-baby" name="verify-tabs" class="tab-input">
+
+      <div class="tabs-header">
+        <label for="tab-daddy" class="tab-label">For SugarDaddy</label>
+        <label for="tab-baby" class="tab-label">For SugarBaby</label>
+      </div>
+
+      <div class="tab-content content-daddy">
+        <h3 style="color: var(--gold-main); margin-bottom: 16px;">SugarDaddy Verification</h3>
+        <p style="color: #ccc; margin-bottom: 26px;">
+          SugarDaddy access is verified to keep the platform legitimate and protect SugarBabies from fake accounts.
+        </p>
+
+        <ul class="verification-list">
+          <li>
+            <i class="fas fa-passport" aria-hidden="true"></i>
+            <div>
+              <strong style="color: white;">Identity Confirmation</strong>
+              <p style="color: #888; font-size: 0.9rem;">
+                Government ID is required. Sensitive details are never shown to other members.
+              </p>
+            </div>
+          </li>
+
+          <li>
+            <i class="fas fa-user-shield" aria-hidden="true"></i>
+            <div>
+              <strong style="color: white;">Account Screening</strong>
+              <p style="color: #888; font-size: 0.9rem;">
+                We review profile consistency and intent to reduce fraud and time-wasters.
+              </p>
+            </div>
+          </li>
+
+          <li>
+            <i class="fas fa-lock" aria-hidden="true"></i>
+            <div>
+              <strong style="color: white;">Client Login Issued</strong>
+              <p style="color: #888; font-size: 0.9rem;">
+                Client login credentials are shared only after verification is completed.
+              </p>
+            </div>
+          </li>
+        </ul>
+
+        <div class="requirements-box">
+          <p style="color: var(--text-grey); font-style: italic;">
+            “Verification protects both sides and keeps Golden Sugar Dating high quality.”
+          </p>
+        </div>
+      </div>
+
+      <div class="tab-content content-baby">
+        <h3 style="color: var(--gold-main); margin-bottom: 16px;">SugarBaby Verification</h3>
+        <p style="color: #ccc; margin-bottom: 26px;">
+          We verify SugarBaby profiles to reduce impersonation and keep the platform real.
+        </p>
+
+        <ul class="verification-list">
+          <li>
+            <i class="fas fa-camera" aria-hidden="true"></i>
+            <div>
+              <strong style="color: white;">Live Photo Check</strong>
+              <p style="color: #888; font-size: 0.9rem;">
+                A quick selfie prompt to confirm your profile is authentic and current.
+              </p>
+            </div>
+          </li>
+
+          <li>
+            <i class="fas fa-id-card" aria-hidden="true"></i>
+            <div>
+              <strong style="color: white;">Age Verification</strong>
+              <p style="color: #888; font-size: 0.9rem;">
+                You must be 18+. Your personal details remain private.
+              </p>
+            </div>
+          </li>
+
+          <li>
+            <i class="fas fa-user-check" aria-hidden="true"></i>
+            <div>
+              <strong style="color: white;">Profile Review</strong>
+              <p style="color: #888; font-size: 0.9rem;">
+                We approve profiles that are clear, respectful, and match their photos.
+              </p>
+            </div>
+          </li>
+        </ul>
+
+        <div class="requirements-box">
+          <p style="color: var(--text-grey); font-style: italic;">
+            “SugarBaby membership is free. Verification helps keep the community real.”
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="profiles" class="section-padding profiles-section" aria-label="Profiles">
+    <div class="max-w text-center" style="margin-bottom: 44px;">
+      <h2>Recent <span class="gold-text">Profiles</span></h2>
+      <p class="muted" style="margin-top: 10px;">Faces stay blurred for privacy. Login to view full profiles after verification.</p>
+      <div class="divider"></div>
+    </div>
+
+    <div class="max-w">
+      <div class="carousel-container" aria-label="Profile carousel">
+
+        <!-- More varied, realistic images (different angles / lighting / scenes) -->
+        <div class="card">
+          <div class="privacy-badge">SugarBaby • Verifying</div>
+          <div class="card-img-wrapper">
+            <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=2000&auto=format&fit=crop" alt="Profile">
+          </div>
+          <div class="card-overlay">
+            <h3 class="gold-text">Valeria, 24</h3>
+            <div class="profile-meta">
+              <span class="chip">SugarBaby</span><span class="chip">Paris</span><span class="chip">Events</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="privacy-badge">SugarDaddy • Diamond</div>
+          <div class="card-img-wrapper">
+            <img src="https://images.unsplash.com/photo-1556157382-97eda2d62296?q=80&w=2070&auto=format&fit=crop" alt="Profile">
+          </div>
+          <div class="card-overlay">
+            <h3 class="gold-text">Richard, 58</h3>
+            <div class="profile-meta">
+              <span class="chip">SugarDaddy</span><span class="chip">NYC</span><span class="chip">Investment</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="privacy-badge">SugarBaby • Verified</div>
+          <div class="card-img-wrapper">
+            <img src="https://images.unsplash.com/photo-1524503033411-f7a2b8c7f4b5?q=80&w=2000&auto=format&fit=crop" alt="Profile">
+          </div>
+          <div class="card-overlay">
+            <h3 class="gold-text">Elena, 26</h3>
+            <div class="profile-meta">
+              <span class="chip">SugarBaby</span><span class="chip">Barcelona</span><span class="chip">Luxury</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="privacy-badge">SugarDaddy • Platinum</div>
+          <div class="card-img-wrapper">
+            <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=2000&auto=format&fit=crop" alt="Profile">
+          </div>
+          <div class="card-overlay">
+            <h3 class="gold-text">Julian, 46</h3>
+            <div class="profile-meta">
+              <span class="chip">SugarDaddy</span><span class="chip">Zurich</span><span class="chip">Finance</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="privacy-badge">SugarBaby • Verified</div>
+          <div class="card-img-wrapper">
+            <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=2000&auto=format&fit=crop" alt="Profile">
+          </div>
+          <div class="card-overlay">
+            <h3 class="gold-text">Isabella, 24</h3>
+            <div class="profile-meta">
+              <span class="chip">SugarBaby</span><span class="chip">Milan</span><span class="chip">Art</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="privacy-badge">SugarDaddy • Gold</div>
+          <div class="card-img-wrapper">
+            <img src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=1974&auto=format&fit=crop" alt="Profile">
+          </div>
+          <div class="card-overlay">
+            <h3 class="gold-text">Thomas, 50</h3>
+            <div class="profile-meta">
+              <span class="chip">SugarDaddy</span><span class="chip">San Francisco</span><span class="chip">Tech</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="privacy-badge">SugarBaby • Verified</div>
+          <div class="card-img-wrapper">
+            <img src="https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?q=80&w=2000&auto=format&fit=crop" alt="Profile">
+          </div>
+          <div class="card-overlay">
+            <h3 class="gold-text">Nina, 23</h3>
+            <div class="profile-meta">
+              <span class="chip">SugarBaby</span><span class="chip">Berlin</span><span class="chip">Graduate</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="privacy-badge">SugarDaddy • Diamond</div>
+          <div class="card-img-wrapper">
+            <img src="https://images.unsplash.com/photo-1542178243-bc20204b769f?q=80&w=2000&auto=format&fit=crop" alt="Profile">
+          </div>
+          <div class="card-overlay">
+            <h3 class="gold-text">Hassan, 52</h3>
+            <div class="profile-meta">
+              <span class="chip">SugarDaddy</span><span class="chip">Dubai</span><span class="chip">Hospitality</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="privacy-badge">SugarBaby • Verified</div>
+          <div class="card-img-wrapper">
+            <img src="https://images.unsplash.com/photo-1525134479668-1bee5c7c6845?q=80&w=2000&auto=format&fit=crop" alt="Profile">
+          </div>
+          <div class="card-overlay">
+            <h3 class="gold-text">Maya, 22</h3>
+            <div class="profile-meta">
+              <span class="chip">SugarBaby</span><span class="chip">Los Angeles</span><span class="chip">Wellness</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="privacy-badge">SugarDaddy • Platinum</div>
+          <div class="card-img-wrapper">
+            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=2000&auto=format&fit=crop" alt="Profile">
+          </div>
+          <div class="card-overlay">
+            <h3 class="gold-text">Michael, 60</h3>
+            <div class="profile-meta">
+              <span class="chip">SugarDaddy</span><span class="chip">NYC</span><span class="chip">Private Equity</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="privacy-badge">SugarBaby • Verified</div>
+          <div class="card-img-wrapper">
+            <img src="https://images.unsplash.com/photo-1524250502761-1ac6f2e30d43?q=80&w=1976&auto=format&fit=crop" alt="Profile">
+          </div>
+          <div class="card-overlay">
+            <h3 class="gold-text">Sasha, 22</h3>
+            <div class="profile-meta">
+              <span class="chip">SugarBaby</span><span class="chip">Monaco</span><span class="chip">Travel</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="privacy-badge">SugarDaddy • Platinum</div>
+          <div class="card-img-wrapper">
+            <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=2070&auto=format&fit=crop" alt="Profile">
+          </div>
+          <div class="card-overlay">
+            <h3 class="gold-text">William, 62</h3>
+            <div class="profile-meta">
+              <span class="chip">SugarDaddy</span><span class="chip">Dubai</span><span class="chip">Real Estate</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="privacy-badge">SugarBaby • Verifying</div>
+          <div class="card-img-wrapper">
+            <img src="https://images.unsplash.com/photo-1545959783-c553dbbf129d?q=80&w=1974&auto=format&fit=crop" alt="Profile">
+          </div>
+          <div class="card-overlay">
+            <h3 class="gold-text">Anastasia, 23</h3>
+            <div class="profile-meta">
+              <span class="chip">SugarBaby</span><span class="chip">Miami</span><span class="chip">Model</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="privacy-badge">SugarDaddy • Gold</div>
+          <div class="card-img-wrapper">
+            <img src="https://images.unsplash.com/photo-1544723795-3fb6469f5b39?q=80&w=2000&auto=format&fit=crop" alt="Profile">
+          </div>
+          <div class="card-overlay">
+            <h3 class="gold-text">David, 48</h3>
+            <div class="profile-meta">
+              <span class="chip">SugarDaddy</span><span class="chip">London</span><span class="chip">Media</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="privacy-badge">SugarBaby • Verified</div>
+          <div class="card-img-wrapper">
+            <img src="https://images.unsplash.com/photo-1605763240004-7e93b172d754?q=80&w=1974&auto=format&fit=crop" alt="Profile">
+          </div>
+          <div class="card-overlay">
+            <h3 class="gold-text">Monique, 25</h3>
+            <div class="profile-meta">
+              <span class="chip">SugarBaby</span><span class="chip">Paris</span><span class="chip">Fashion</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="privacy-badge">SugarBaby • Verified</div>
+          <div class="card-img-wrapper">
+            <img src="https://images.unsplash.com/photo-1621784563330-caee0b138a00?q=80&w=1974&auto=format&fit=crop" alt="Profile">
+          </div>
+          <div class="card-overlay">
+            <h3 class="gold-text">Chloe, 21</h3>
+            <div class="profile-meta">
+              <span class="chip">SugarBaby</span><span class="chip">London</span><span class="chip">Student</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="profiles-cta">
+<li><a href="#apply" class="btn-gold "><i class="fa-solid fa-pen-to-square"></i> Apply Now</a></li>
+
+        <a href="#verify" class="btn-ghost"><i class="fa-solid fa-shield-heart"></i> Verification Standards</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-padding testimonials-section" aria-label="Testimonials">
+    <div class="max-w text-center">
+      <h2>Member <span class="gold-text">Feedback</span></h2>
+      <p class="muted" style="margin-top: 10px;">Private and anonymised. Shared with permission.</p>
+      <div class="divider"></div>
+    </div>
+
+    <div class="max-w">
+      <div class="testimonials-grid" role="list">
+        <div class="quote-card" role="listitem">
+          <div class="stars" aria-hidden="true">★★★★★</div>
+          <p>“I wanted a real SugarBaby environment with fewer fake profiles. The verification made the difference.”</p>
+          <div class="who">C.L.<span>SugarDaddy, London</span></div>
+        </div>
+
+        <div class="quote-card" role="listitem">
+          <div class="stars" aria-hidden="true">★★★★★</div>
+          <p>“As a SugarBaby, it felt safer. I could control what I revealed and when.”</p>
+          <div class="who">M.S.<span>SugarBaby, Paris</span></div>
+        </div>
+
+        <div class="quote-card" role="listitem">
+          <div class="stars" aria-hidden="true">★★★★★</div>
+          <p>“Straightforward process and respectful people. It feels like a premium platform, not chaos.”</p>
+          <div class="who">J.A.<span>SugarDaddy, NYC</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-padding faq-section" aria-label="FAQ">
+    <div class="max-w text-center">
+      <h2>Frequently Asked <span class="gold-text">Questions</span></h2>
+      <p class="muted" style="margin-top: 10px;">Quick answers before you apply.</p>
+      <div class="divider"></div>
+    </div>
+
+    <div class="faq" aria-label="FAQ list">
+      <details>
+        <summary>Is Golden Sugar Dating for adults only?</summary>
+        <div class="faq-content">
+          Yes. Members must be 18+ to register and complete verification.
+        </div>
+      </details>
+
+      <details>
+        <summary>Is SugarBaby membership really free?</summary>
+        <div class="faq-content">
+          Yes. SugarBaby access is free. Verification is required to keep the community authentic.
+        </div>
+      </details>
+
+      <details>
+        <summary>How does the 1% SugarDaddy commission work?</summary>
+        <div class="faq-content">
+          SugarDaddy clients pay 1% of the decided arrangement amount as our commission.
+          This is only for SugarDaddy clients. SugarBabies are free.
+        </div>
+      </details>
+
+      <details>
+        <summary>When do I get client login credentials?</summary>
+        <div class="faq-content">
+          Client login credentials are only for SugarDaddy clients and are shared after verification is completed.
+        </div>
+      </details>
+
+      <details>
+        <summary>Do you show my identity to other members?</summary>
+        <div class="faq-content">
+          No. Identity checks are used for verification only. Your profile controls what is visible, and you decide what to reveal.
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="cta-section" aria-label="Call to action">
+    <div class="cta-box">
+      <h2>Apply to <span class="gold-text">Golden Sugar Dating</span></h2>
+      <p>
+        Submit your application, complete verification, and unlock a cleaner sugar dating experience built for real SugarDaddy and SugarBaby connections.
+      </p>
+      <div class="cta-actions">
+<li><a href="#apply" class="btn-gold"><i class="fa-solid fa-pen-to-square"></i> Apply Now</a></li>
+
+        <a href="#tiers" class="btn-ghost"><i class="fa-solid fa-gem"></i> View Plans</a>
+      </div>
+    </div>
+  </section>
+
+  <footer aria-label="Footer">
+    <div class="logo" style="justify-content:center;">
+      <span class="logo-mark" aria-hidden="true"></span>
+      <div><span class="gold-text">Golden</span> Sugar Dating</div>
+    </div>
+
+    <div class="footer-links" aria-label="Footer links">
+      <a href="#verify">Verification</a>
+      <a href="#process">Process</a>
+      <a href="#tiers">Plans</a>
+      <a href="#profiles">Profiles</a>
+      <a href="#">Privacy</a>
+      <a href="#">Terms</a>
+      <a href="#">Contact</a>
+    </div>
+
+    <p style="color: #444; font-size: 0.82rem; margin-top: 18px;">
+      &copy; 2026 Golden Sugar Dating. Members must be 18+ to register. <br>
+      Verified access helps keep the platform authentic and respectful.
+    </p>
+  </footer>
+
+  <script>
+    // Header scroll effect + simple mobile menu
+    const header = document.getElementById('siteHeader');
+    const menuBtn = document.getElementById('menuBtn');
+    const mobileNav = document.getElementById('mobileNav');
+
+    function onScroll() {
+      if (window.scrollY > 10) header.classList.add('scrolled');
+      else header.classList.remove('scrolled');
+    }
+    window.addEventListener('scroll', onScroll);
+    onScroll();
+
+    menuBtn.addEventListener('click', () => {
+      const isOpen = mobileNav.style.display === 'block';
+      mobileNav.style.display = isOpen ? 'none' : 'block';
+      menuBtn.setAttribute('aria-label', isOpen ? 'Open menu' : 'Close menu');
+      menuBtn.innerHTML = isOpen ? '<i class="fa-solid fa-bars"></i>' : '<i class="fa-solid fa-xmark"></i>';
+    });
+
+    // Close mobile nav when clicking a link
+    mobileNav.querySelectorAll('a').forEach(a => {
+      a.addEventListener('click', () => {
+        mobileNav.style.display = 'none';
+        menuBtn.setAttribute('aria-label', 'Open menu');
+        menuBtn.innerHTML = '<i class="fa-solid fa-bars"></i>';
+      });
+    });
+
+    // Login modal logic (always incorrect password)
+    const loginBtn = document.getElementById('loginBtn');
+    const loginBtnMobile = document.getElementById('loginBtnMobile');
+    const loginModal = document.getElementById('loginModal');
+    const closeModal = document.getElementById('closeModal');
+    const cancelLogin = document.getElementById('cancelLogin');
+    const loginForm = document.getElementById('loginForm');
+    const loginError = document.getElementById('loginError');
+
+    function openLoginModal(e) {
+      if (e) e.preventDefault();
+      loginError.style.display = 'none';
+      loginModal.style.display = 'flex';
+      loginModal.setAttribute('aria-hidden', 'false');
+      setTimeout(() => document.getElementById('loginEmail').focus(), 0);
+    }
+
+    function closeLoginModal() {
+      loginModal.style.display = 'none';
+      loginModal.setAttribute('aria-hidden', 'true');
+    }
+
+    loginBtn.addEventListener('click', openLoginModal);
+    if (loginBtnMobile) loginBtnMobile.addEventListener('click', openLoginModal);
+
+    closeModal.addEventListener('click', closeLoginModal);
+    cancelLogin.addEventListener('click', closeLoginModal);
+
+    // Close when clicking outside the modal
+    loginModal.addEventListener('click', (e) => {
+      if (e.target === loginModal) closeLoginModal();
+    });
+
+    // ESC to close
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && loginModal.style.display === 'flex') closeLoginModal();
+    });
+
+    // Always show incorrect password on submit
+    loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      loginError.style.display = 'block';
+    });
+// Apply form submission -> Vercel Function (/api/apply)
+const applyForm = document.getElementById('applyForm');
+const applySuccess = document.getElementById('applySuccess');
+const applyError = document.getElementById('applyError');
+const applySubmitBtn = document.getElementById('applySubmitBtn');
+
+function showApplyMessage(elToShow) {
+  [applySuccess, applyError].forEach(el => el.style.display = 'none');
+  elToShow.style.display = 'block';
+}
+
+function cleanPhone(raw) {
+  return String(raw || '').trim();
+}
+
+function calcAge(dobStr) {
+  const d = new Date(dobStr);
+  if (Number.isNaN(d.getTime())) return null;
+  const now = new Date();
+  let age = now.getFullYear() - d.getFullYear();
+  const m = now.getMonth() - d.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
+  return age;
+}
+
+applyForm?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  applySuccess.style.display = 'none';
+  applyError.style.display = 'none';
+
+  // Basic anti-bot honeypot
+  const websiteTrap = document.getElementById('website')?.value;
+  if (websiteTrap && websiteTrap.trim().length > 0) {
+    // silently ignore bots
+    showApplyMessage(applySuccess);
+    applyForm.reset();
+    return;
+  }
+
+  const payload = {
+    role: document.getElementById('role').value,
+    name: document.getElementById('name').value.trim(),
+    whatsapp: cleanPhone(document.getElementById('whatsapp').value),
+    telegram: document.getElementById('telegram').value.trim(),
+    email: document.getElementById('email').value.trim(),
+    country: document.getElementById('country').value.trim(),
+    city: document.getElementById('city').value.trim(),
+    dob: document.getElementById('dob').value,
+    is18: document.getElementById('is18').checked,
+    consent: document.getElementById('consent').checked,
+    about: document.getElementById('about').value.trim(),
+    preference: document.getElementById('preference').value
+  };
+
+  // Extra validation
+  const age = calcAge(payload.dob);
+  if (!payload.is18 || age === null || age < 18) {
+    applyError.textContent = "You must be 18+ to apply.";
+    showApplyMessage(applyError);
+    return;
+  }
+
+  if (!payload.whatsapp || payload.whatsapp.length < 6) {
+    applyError.textContent = "Please enter a valid WhatsApp number (with country code).";
+    showApplyMessage(applyError);
+    return;
+  }
+
+  try {
+    applySubmitBtn.disabled = true;
+    applySubmitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending...';
+
+    const res = await fetch('/api/apply', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) {
+      const msg = await res.text().catch(() => '');
+      applyError.textContent = msg || "Something went wrong. Please try again.";
+      showApplyMessage(applyError);
+      return;
+    }
+
+    showApplyMessage(applySuccess);
+    applyForm.reset();
+  } catch (err) {
+    applyError.textContent = "Network error. Please try again.";
+    showApplyMessage(applyError);
+  } finally {
+    applySubmitBtn.disabled = false;
+    applySubmitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit Application';
+  }
+});
+
+  </script>
+
+</body>
+</html>
