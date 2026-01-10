@@ -7,13 +7,13 @@ export default async function handler(req, res) {
     const body = req.body || {};
 
     // Validate required fields
-    const required = ["role", "name", "whatsapp", "country", "dob", "is18", "consent"];
+    const required = ["role", "name", "whatsapp", "country", "dob", "is18"];
     for (const k of required) {
       if (body[k] === undefined || body[k] === null || body[k] === "") {
         return res.status(400).send(`Missing field: ${k}`);
       }
     }
-    if (body.is18 !== true || body.consent !== true) {
+    if (body.is18 !== true ) {
       return res.status(400).send("18+ confirmation and consent are required.");
     }
 
@@ -24,7 +24,7 @@ export default async function handler(req, res) {
     let age = now.getFullYear() - dob.getFullYear();
     const m = now.getMonth() - dob.getMonth();
     if (m < 0 || (m === 0 && now.getDate() < dob.getDate())) age--;
-    if (age < 18) return res.status(400).send("Applicant must be 18+.");
+
 
     const submission = {
       submittedAt: new Date().toISOString(),
