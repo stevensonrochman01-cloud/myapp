@@ -28,9 +28,6 @@ export default async function handler(req, res) {
     const m = now.getMonth() - dob.getMonth();
     if (m < 0 || (m === 0 && now.getDate() < dob.getDate())) age--;
 
-    if (age < 18) {
-      return res.status(400).send('Applicant must be 18+.');
-    }
 
     // Basic normalization
     const submission = {
