@@ -936,6 +936,74 @@
       .apply-top { flex-direction: column; }
       .apply-close { align-self: flex-end; }
     }
+    /* Make header layout flexible on small screens */
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* Prevent logo from forcing overflow */
+.logo {
+  min-width: 0;
+  max-width: 60%;
+}
+.logo > div {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Keep nav-actions aligned and not shrinking weirdly */
+.nav-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+/* Desktop nav visible by default */
+nav {
+  display: block;
+}
+
+/* Mobile rules */
+@media (max-width: 900px) {
+  /* Hide desktop nav */
+  nav {
+    display: none !important;
+  }
+
+  /* Show hamburger */
+  .menu-btn {
+    display: inline-flex !important;
+  }
+
+  /* Shrink language select a bit so it fits */
+  .lang-select {
+    height: 38px;
+    font-size: 0.85rem;
+    padding: 0 8px;
+  }
+
+  /* Let logo take less width on mobile */
+  .logo {
+    max-width: 65%;
+    font-size: 1.15rem;
+  }
+}
+
+/* Extra small phones */
+@media (max-width: 420px) {
+  .lang-select {
+    display: none; /* optional: hide language picker to make room */
+  }
+  .logo {
+    max-width: 80%;
+  }
+}
+
   </style>
 </head>
 
