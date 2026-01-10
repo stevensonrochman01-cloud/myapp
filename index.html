@@ -1298,9 +1298,7 @@
           Something went wrong. Please try again.
         </div>
 
-        <div class="small-note" data-i18n="apply_tip">
-          Tip: Use real contact details. Fake numbers usually fail verification.
-        </div>
+
       </form>
     </div>
   </section>
@@ -1658,6 +1656,32 @@
       Verified access helps keep the platform authentic and respectful.
     </p>
   </footer>
+<!-- SUBMISSION DIALOG -->
+<div class="modal-overlay" id="submitDialog" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="submitDialogTitle">
+    <div class="modal-header">
+      <div class="modal-title" id="submitDialogTitle">
+        Application Submitted
+      </div>
+      <button class="modal-close" id="closeSubmitDialog" aria-label="Close">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <p style="color: rgba(255,255,255,0.85); font-size: 0.95rem;">
+        Thank you. Your application has been received successfully.
+        An agent will contact you shortly with the next steps.
+      </p>
+
+      <div class="modal-actions" style="margin-top:16px;">
+        <button class="btn-gold" id="submitDialogOk">
+          OK
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
   <script>
     // ---------------------------
@@ -2279,9 +2303,20 @@
       if (e.target === loginModal) closeLoginModal();
     });
 
-    window.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && loginModal.style.display === 'flex') closeLoginModal();
-    });
+window.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+
+  if (submitDialog && submitDialog.style.display === 'flex') {
+    closeSubmitDialogFn();
+    return;
+  }
+
+  if (loginModal && loginModal.style.display === 'flex') {
+    closeLoginModal();
+    return;
+  }
+});
+
 
     loginForm?.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -2377,11 +2412,12 @@
       applyError.style.display = 'none';
 
       const websiteTrap = document.getElementById('website')?.value;
-      if (websiteTrap && websiteTrap.trim().length > 0) {
-        showApplyMessage(applySuccess);
-        applyForm.reset();
-        return;
-      }
+if (websiteTrap && websiteTrap.trim().length > 0) {
+  // bot: silently pretend success
+  applyForm.reset();
+  return;
+}
+
 
       const payload = {
         role: document.getElementById('role').value,
@@ -2403,7 +2439,7 @@
       const lang = currentLang();
       const age = calcAge(payload.dob);
 
-      if (!payload.is18 || (age !== null && age < 18)) {
+      if (!payload.is18) {
         applyError.textContent =
           (lang === "es") ? "Debes tener 18+ para aplicar."
           : (lang === "ru") ? "Вам должно быть 18+ для заявки."
@@ -2444,8 +2480,8 @@
           return;
         }
 
-        showApplyMessage(applySuccess);
-        applyForm.reset();
+openSubmitDialog();
+applyForm.reset();
       } catch (err) {
         applyError.textContent =
           (lang === "es") ? "Error de red. Inténtalo de nuevo."
@@ -2461,6 +2497,35 @@
         applyLanguage(lang);
       }
     });
+
+    // ---------------------------
+// Submission dialog
+// ---------------------------
+const submitDialog = document.getElementById("submitDialog");
+const closeSubmitDialog = document.getElementById("closeSubmitDialog");
+const submitDialogOk = document.getElementById("submitDialogOk");
+
+function openSubmitDialog() {
+  submitDialog.style.display = "flex";
+  submitDialog.setAttribute("aria-hidden", "false");
+}
+
+function closeSubmitDialogFn() {
+  submitDialog.style.display = "none";
+  submitDialog.setAttribute("aria-hidden", "true");
+}
+
+closeSubmitDialog?.addEventListener("click", closeSubmitDialogFn);
+submitDialogOk?.addEventListener("click", () => {
+  closeSubmitDialogFn();
+  closeApplyForm(); // optional, removes the form and shows the launch panel
+});
+
+
+submitDialog?.addEventListener("click", (e) => {
+  if (e.target === submitDialog) closeSubmitDialogFn();
+});
+
   </script>
 
 </body>
