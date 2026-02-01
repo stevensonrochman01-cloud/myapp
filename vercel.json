@@ -1,12 +1,26 @@
 {
   "rewrites": [
     { "source": "/verify", "destination": "/verify_profile.html" },
+    { "source": "/verify_profile", "destination": "/verify_profile.html" },
+
+    { "source": "/verification", "destination": "/verification.html" },
+
     { "source": "/scammer_list", "destination": "/scammers.html" },
+    { "source": "/scammers", "destination": "/scammers.html" },
+
     { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/admin_verification", "destination": "/admin_verification.html" },
 
     { "source": "/(en|es|ru)/verify", "destination": "/verify_profile.html" },
+    { "source": "/(en|es|ru)/verify_profile", "destination": "/verify_profile.html" },
+
+    { "source": "/(en|es|ru)/verification", "destination": "/verification.html" },
+
     { "source": "/(en|es|ru)/scammer_list", "destination": "/scammers.html" },
+    { "source": "/(en|es|ru)/scammers", "destination": "/scammers.html" },
+
     { "source": "/(en|es|ru)/admin", "destination": "/admin.html" },
+    { "source": "/(en|es|ru)/admin_verification", "destination": "/admin_verification.html" },
 
     { "source": "/(en|es|ru)", "destination": "/" },
     { "source": "/(en|es|ru)/(.*)", "destination": "/" }
