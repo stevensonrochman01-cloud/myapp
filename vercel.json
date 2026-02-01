@@ -1,5 +1,13 @@
 {
   "rewrites": [
+    { "source": "/verify", "destination": "/verify_profile.html" },
+    { "source": "/scammer_list", "destination": "/scammers.html" },
+    { "source": "/admin", "destination": "/admin.html" },
+
+    { "source": "/(en|es|ru)/verify", "destination": "/verify_profile.html" },
+    { "source": "/(en|es|ru)/scammer_list", "destination": "/scammers.html" },
+    { "source": "/(en|es|ru)/admin", "destination": "/admin.html" },
+
     { "source": "/(en|es|ru)", "destination": "/" },
     { "source": "/(en|es|ru)/(.*)", "destination": "/" }
   ]
