@@ -1,0 +1,1951 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#050505" />
+  <title>Identity Verification | Golden Sugar Dating</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root{
+      --bg:#050505;
+      --panel: rgba(0,0,0,0.35);
+      --border: rgba(255,255,255,0.10);
+      --border2: rgba(255,255,255,0.14);
+      --gold:#D4AF37;
+      --gold2:#AA8C2C;
+      --txt:#fff;
+      --muted: rgba(255,255,255,0.70);
+      --ok:#2ecc71;
+      --bad:#ff6b6b;
+      --warning:#f39c12;
+      --r: 14px;
+    }
+    *{box-sizing:border-box}
+    
+    html{
+      scroll-behavior: smooth;
+    }
+    
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+    }
+    body{
+      margin:0;
+      font-family: Montserrat, sans-serif;
+      background: var(--bg);
+      color: var(--txt);
+      line-height:1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    
+    /* Touch-friendly improvements */
+    @media (hover: none) and (pointer: coarse) {
+      .btn, .choice button, input[type="file"] {
+        min-height: 44px;
+        touch-action: manipulation;
+      }
+    }
+    h1,h2,h3,h4{font-family:"Playfair Display",serif;margin:0}
+    .container{max-width:1100px;margin:0 auto;padding:90px 5% 70px;padding-top:max(90px, env(safe-area-inset-top));padding-bottom:max(70px, env(safe-area-inset-bottom));padding-left:max(5%, env(safe-area-inset-left));padding-right:max(5%, env(safe-area-inset-right));}
+    
+    .hero{
+      border:1px solid rgba(255,255,255,0.08);
+      border-radius:18px;
+      padding: clamp(24px, 5vw, 38px);
+      background:
+        radial-gradient(1000px 500px at 50% 0%, rgba(212,175,55,0.15), transparent 65%),
+        linear-gradient(to bottom, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
+      backdrop-filter: blur(12px);
+    }
+    
+    .kicker{
+      display:inline-flex;gap:10px;align-items:center;
+      font-size:.75rem;letter-spacing:2px;text-transform:uppercase;
+      color: rgba(255,255,255,0.90);
+      border:1px solid rgba(212,175,55,0.25);
+      padding:10px 16px;
+      background: linear-gradient(135deg, rgba(212,175,55,0.15), rgba(212,175,55,0.05));
+      border-radius:8px;
+      font-weight:600;
+    }
+    
+    .gold-text{
+      background: linear-gradient(to right, #F3E5AB, var(--gold), var(--gold2));
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+      font-weight:700;
+    }
+    
+    .divider{
+      height:1px;
+      background:linear-gradient(to right,transparent, rgba(212,175,55,0.3), transparent);
+      margin:26px 0;
+    }
+
+    /* Info boxes */
+    .info-box{
+      border:1px solid rgba(58, 134, 255, 0.25);
+      background: linear-gradient(135deg, rgba(58, 134, 255, 0.08), rgba(58, 134, 255, 0.03));
+      border-radius: 12px;
+      padding: 16px 18px;
+      margin: 20px 0;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+    
+    .info-box.warning{
+      border-color: rgba(243, 156, 18, 0.30);
+      background: linear-gradient(135deg, rgba(243, 156, 18, 0.10), rgba(243, 156, 18, 0.03));
+    }
+    
+    .info-box.success{
+      border-color: rgba(46, 204, 113, 0.30);
+      background: linear-gradient(135deg, rgba(46, 204, 113, 0.10), rgba(46, 204, 113, 0.03));
+    }
+    
+    .info-box .icon{
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+      background: rgba(0,0,0,0.25);
+      border: 1px solid rgba(255,255,255,0.10);
+      color: #3a86ff;
+      font-size: 1.1rem;
+    }
+    
+    .info-box.warning .icon{color: var(--warning);}
+    .info-box.success .icon{color: var(--ok);}
+    
+    .info-box-content h4{
+      margin: 0 0 6px 0;
+      font-size: 1rem;
+      color: rgba(255,255,255,0.95);
+    }
+    
+    .info-box-content p{
+      margin: 0;
+      color: rgba(255,255,255,0.75);
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+    
+    .info-box-content ul{
+      margin: 8px 0 0 0;
+      padding-left: 20px;
+      color: rgba(255,255,255,0.75);
+      font-size: 0.90rem;
+    }
+    
+    .info-box-content ul li{
+      margin: 4px 0;
+    }
+
+    /* Benefits grid */
+    .benefits{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin: 24px 0;
+    }
+    
+    .benefit-card{
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(0,0,0,0.25);
+      border-radius: 12px;
+      padding: 18px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+    
+    .benefit-card .ico{
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, rgba(212,175,55,0.20), rgba(212,175,55,0.05));
+      border: 1px solid rgba(212,175,55,0.25);
+      color: var(--gold);
+      flex: 0 0 auto;
+      font-size: 1.15rem;
+    }
+    
+    .benefit-card h4{
+      margin: 0 0 6px 0;
+      font-size: 0.95rem;
+      color: rgba(255,255,255,0.95);
+    }
+    
+    .benefit-card p{
+      margin: 0;
+      color: rgba(255,255,255,0.70);
+      font-size: 0.88rem;
+      line-height: 1.4;
+    }
+
+    /* Progress indicator */
+    .progress-steps{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 30px 0;
+      position: relative;
+      padding: 0 10px;
+    }
+    
+    .progress-steps::before{
+      content: '';
+      position: absolute;
+      top: 20px;
+      left: 10%;
+      right: 10%;
+      height: 2px;
+      background: rgba(255,255,255,0.10);
+      z-index: 0;
+    }
+    
+    .progress-step{
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      position: relative;
+      z-index: 1;
+      flex: 1;
+      max-width: 140px;
+    }
+    
+    .progress-step .num{
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.50);
+      border: 2px solid rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.60);
+      font-weight: 700;
+      font-size: 1.05rem;
+      transition: all 0.3s ease;
+    }
+    
+    .progress-step.active .num{
+      background: linear-gradient(135deg, var(--gold), var(--gold2));
+      border-color: var(--gold);
+      color: #000;
+      box-shadow: 0 0 20px rgba(212,175,55,0.35);
+    }
+    
+    .progress-step.completed .num{
+      background: rgba(46, 204, 113, 0.25);
+      border-color: var(--ok);
+      color: var(--ok);
+    }
+    
+    .progress-step span{
+      font-size: 0.82rem;
+      color: rgba(255,255,255,0.65);
+      text-align: center;
+      font-weight: 500;
+    }
+    
+    .progress-step.active span{
+      color: rgba(255,255,255,0.95);
+      font-weight: 600;
+    }
+
+    .panel{
+      border:1px solid var(--border);
+      background: var(--panel);
+      border-radius: var(--r);
+      padding: 24px;
+      backdrop-filter: blur(12px);
+    }
+
+    .step-header{
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    
+    .step-header h2{
+      font-size: 1.75rem;
+      margin-bottom: 6px;
+    }
+    
+    .step-header p{
+      margin: 0;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+    
+    .role-badge{
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, rgba(212,175,55,0.20), rgba(212,175,55,0.08));
+      border: 1px solid rgba(212,175,55,0.30);
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .field{margin-top: 18px}
+    
+    label{
+      display: block;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: rgba(255,255,255,0.85);
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+    
+    label .required{
+      color: var(--bad);
+      margin-left: 4px;
+    }
+    
+    label .optional{
+      color: rgba(255,255,255,0.50);
+      font-size: 0.75rem;
+      text-transform: none;
+      letter-spacing: normal;
+      font-weight: 400;
+      margin-left: 6px;
+    }
+    
+    input, select{
+      width: 100%;
+      padding: 13px 16px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.40);
+      color: rgba(255,255,255,0.95);
+      border-radius: 10px;
+      outline: none;
+      font-size: 0.96rem;
+      font-family: inherit;
+      transition: all 0.2s ease;
+    }
+    
+    input:focus, select:focus{
+      border-color: rgba(212,175,55,0.60);
+      box-shadow: 0 0 0 3px rgba(212,175,55,0.12);
+      background: rgba(0,0,0,0.50);
+    }
+    
+    input::placeholder{
+      color: rgba(255,255,255,0.35);
+    }
+    
+    input[type="file"]{
+      padding: 10px 12px;
+      cursor: pointer;
+      font-size: 0.90rem;
+    }
+    
+    /* Better file input on mobile */
+    @media (max-width: 640px){
+      input[type="file"]{
+        padding: 12px;
+        font-size: 0.88rem;
+      }
+      
+      input[type="file"]::file-selector-button{
+        padding: 8px 14px;
+        background: linear-gradient(135deg, var(--gold), var(--gold2));
+        color: #000;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.82rem;
+        margin-right: 10px;
+      }
+    }
+    
+    .field-hint{
+      margin-top: 8px;
+      color: rgba(255,255,255,0.55);
+      font-size: 0.86rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .field-hint i{
+      font-size: 0.80rem;
+    }
+
+    .row{display: grid; grid-template-columns: 1fr; gap: 18px}
+    @media (min-width:720px){ .row{grid-template-columns: 1fr 1fr;} }
+
+    .actions{
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    
+    .btn{
+      border-radius: 10px;
+      border: 1px solid var(--border2);
+      background: transparent;
+      color: rgba(255,255,255,0.90);
+      padding: 12px 20px;
+      cursor: pointer;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-size: 0.80rem;
+      display: inline-flex;
+      gap: 10px;
+      align-items: center;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+    
+    .btn:hover:not(:disabled){
+      border-color: rgba(212,175,55,0.50);
+      box-shadow: 0 0 20px rgba(212,175,55,0.15);
+      transform: translateY(-1px);
+    }
+    
+    .btn.primary{
+      background: linear-gradient(135deg, var(--gold), var(--gold2));
+      color: #000;
+      border-color: var(--gold);
+    }
+    
+    .btn.primary:hover:not(:disabled){
+      box-shadow: 0 0 25px rgba(212,175,55,0.35);
+    }
+    
+    .btn:disabled{
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .alert{
+      display: none;
+      margin-top: 18px;
+      padding: 14px 16px;
+      border-radius: 10px;
+      border-left: 3px solid var(--gold);
+      background: rgba(0,0,0,0.30);
+      color: rgba(255,255,255,0.85);
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+    
+    .alert.error{
+      border-left-color: var(--bad);
+      background: rgba(255, 107, 107, 0.08);
+      color: #ffb3b3;
+    }
+    
+    .alert.ok{
+      border-left-color: var(--ok);
+      background: rgba(46, 204, 113, 0.08);
+      color: #c7f7d7;
+    }
+    
+    @media (max-width: 640px){
+      .alert{
+        font-size: 0.88rem;
+        padding: 12px 14px;
+        margin-top: 14px;
+      }
+    }
+
+    /* Role modal */
+    .overlay{
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.85);
+      z-index: 999;
+      padding: 20px;
+      padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+      backdrop-filter: blur(8px);
+      overflow-y: auto;
+    }
+    
+    .modal{
+      width: min(680px, 100%);
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(10,10,10,0.95);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 40px 100px rgba(0,0,0,0.70);
+    }
+    
+    .modal-h{
+      padding: 24px 26px;
+      border-bottom: 1px solid rgba(255,255,255,0.10);
+      background: rgba(0,0,0,0.40);
+    }
+    
+    .modal-h h3{
+      font-size: 1.5rem;
+      margin-bottom: 8px;
+    }
+    
+    .modal-h p{
+      margin: 0;
+      color: rgba(255,255,255,0.70);
+      font-size: 0.95rem;
+    }
+    
+    .modal-b{padding: 26px}
+    
+    .choice{
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin-top: 16px;
+    }
+    
+    @media (min-width:640px){
+      .choice{grid-template-columns: 1fr 1fr}
+    }
+    
+    .choice button{
+      width: 100%;
+      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(0,0,0,0.35);
+      color: rgba(255,255,255,0.95);
+      border-radius: 14px;
+      padding: 22px 18px;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.25s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .choice button::before{
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(212,175,55,0.15), rgba(212,175,55,0.05));
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+    
+    .choice button:hover{
+      border-color: rgba(212,175,55,0.40);
+      box-shadow: 0 0 25px rgba(212,175,55,0.18);
+      transform: translateY(-2px);
+    }
+    
+    .choice button:hover::before{
+      opacity: 1;
+    }
+    
+    .choice .btn-icon{
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.40);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: var(--gold);
+      font-size: 1.4rem;
+      margin-bottom: 14px;
+      position: relative;
+    }
+    
+    .choice strong{
+      display: block;
+      font-size: 1.15rem;
+      margin-bottom: 8px;
+      position: relative;
+    }
+    
+    .choice span{
+      display: block;
+      color: rgba(255,255,255,0.68);
+      font-size: 0.90rem;
+      line-height: 1.5;
+      position: relative;
+    }
+    
+    .choice .time-badge{
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 10px;
+      padding: 6px 10px;
+      background: rgba(0,0,0,0.40);
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 6px;
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.75);
+      position: relative;
+    }
+
+    .sample{
+      border: 1px solid rgba(255,255,255,0.12);
+      background: linear-gradient(135deg, rgba(0,0,0,0.35), rgba(0,0,0,0.20));
+      border-radius: 14px;
+      padding: 18px;
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      margin-top: 16px;
+    }
+    
+    .sample .ico{
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(0,0,0,0.30);
+      color: var(--gold);
+      flex: 0 0 auto;
+      font-size: 1.4rem;
+    }
+    
+    .sample b{
+      display: block;
+      font-size: 1.05rem;
+      margin-bottom: 6px;
+      color: rgba(255,255,255,0.95);
+    }
+    
+    .sample p{
+      margin: 0;
+      color: rgba(255,255,255,0.70);
+      font-size: 0.92rem;
+      line-height: 1.4;
+    }
+    
+    .big-emoji{
+      font-size: 2.2rem;
+    }
+    
+    .symbol-highlight{
+      display: inline-block;
+      padding: 4px 12px;
+      background: linear-gradient(135deg, rgba(212,175,55,0.20), rgba(212,175,55,0.08));
+      border: 1px solid rgba(212,175,55,0.30);
+      border-radius: 6px;
+      color: var(--gold);
+      font-weight: 700;
+      margin: 0 4px;
+    }
+
+    /* Success panel */
+    .success-panel{
+      text-align: center;
+      padding: 30px 20px;
+    }
+    
+    .success-icon{
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, rgba(46, 204, 113, 0.20), rgba(46, 204, 113, 0.08));
+      border: 2px solid rgba(46, 204, 113, 0.35);
+      color: var(--ok);
+      font-size: 2.5rem;
+    }
+    
+    .public-id-box{
+      margin: 24px auto;
+      padding: 20px;
+      background: rgba(0,0,0,0.35);
+      border: 1px solid rgba(212,175,55,0.25);
+      border-radius: 12px;
+      max-width: 400px;
+    }
+    
+    .public-id-label{
+      font-size: 0.80rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: rgba(255,255,255,0.65);
+      margin-bottom: 10px;
+    }
+    
+    .public-id-value{
+      font-size: 1.8rem;
+      font-weight: 900;
+      letter-spacing: 2px;
+      color: var(--gold);
+      font-family: 'Courier New', monospace;
+    }
+    
+    .next-steps{
+      margin-top: 30px;
+      text-align: left;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    .next-steps h4{
+      font-size: 1.1rem;
+      margin-bottom: 14px;
+      color: rgba(255,255,255,0.95);
+    }
+    
+    .next-steps ol{
+      margin: 0;
+      padding-left: 24px;
+      color: rgba(255,255,255,0.75);
+      line-height: 1.8;
+    }
+    
+    .next-steps ol li{
+      margin: 8px 0;
+    }
+    
+    .verify-link{
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 20px;
+      padding: 12px 20px;
+      background: linear-gradient(135deg, var(--gold), var(--gold2));
+      color: #000;
+      text-decoration: none;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.90rem;
+      letter-spacing: 0.5px;
+      transition: all 0.2s ease;
+    }
+    
+    .verify-link:hover{
+      box-shadow: 0 0 25px rgba(212,175,55,0.35);
+      transform: translateY(-2px);
+    }
+
+    @media (max-width: 640px){
+      .container{
+        padding: 60px 4% 50px;
+      }
+      
+      .hero{
+        padding: 20px;
+        border-radius: 14px;
+      }
+      
+      h1{
+        font-size: 1.8rem !important;
+      }
+      
+      .kicker{
+        font-size: 0.70rem;
+        padding: 8px 12px;
+      }
+      
+      .progress-steps{
+        flex-direction: column;
+        gap: 12px;
+        margin: 20px 0;
+        padding: 0;
+      }
+      
+      .progress-steps::before{
+        display: none;
+      }
+      
+      .progress-step{
+        flex-direction: row;
+        max-width: 100%;
+        width: 100%;
+        justify-content: flex-start;
+        gap: 12px;
+      }
+      
+      .progress-step .num{
+        width: 36px;
+        height: 36px;
+        font-size: 0.95rem;
+      }
+      
+      .progress-step span{
+        font-size: 0.85rem;
+        text-align: left;
+      }
+      
+      .step-header{
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .step-header h2{
+        font-size: 1.4rem;
+      }
+      
+      .step-header p{
+        font-size: 0.90rem;
+      }
+      
+      .panel{
+        padding: 18px;
+      }
+      
+      .info-box{
+        flex-direction: column;
+        padding: 14px;
+      }
+      
+      .info-box .icon{
+        width: 32px;
+        height: 32px;
+        font-size: 1rem;
+      }
+      
+      .info-box-content h4{
+        font-size: 0.95rem;
+      }
+      
+      .info-box-content p,
+      .info-box-content ul{
+        font-size: 0.88rem;
+      }
+      
+      .benefits{
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      
+      .benefit-card{
+        padding: 14px;
+      }
+      
+      .benefit-card .ico{
+        width: 36px;
+        height: 36px;
+        font-size: 1.05rem;
+      }
+      
+      .benefit-card h4{
+        font-size: 0.90rem;
+      }
+      
+      .benefit-card p{
+        font-size: 0.84rem;
+      }
+      
+      .row{
+        gap: 14px;
+      }
+      
+      .field{
+        margin-top: 14px;
+      }
+      
+      label{
+        font-size: 0.78rem;
+        letter-spacing: 1px;
+      }
+      
+      input, select{
+        padding: 11px 14px;
+        font-size: 0.92rem;
+      }
+      
+      .field-hint{
+        font-size: 0.82rem;
+      }
+      
+      .sample{
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 14px;
+      }
+      
+      .sample .ico{
+        width: 46px;
+        height: 46px;
+        font-size: 1.3rem;
+      }
+      
+      .sample b{
+        font-size: 0.98rem;
+      }
+      
+      .sample p{
+        font-size: 0.88rem;
+      }
+      
+      .big-emoji{
+        font-size: 2rem;
+      }
+      
+      .symbol-highlight{
+        padding: 3px 10px;
+        font-size: 0.90rem;
+      }
+      
+      .actions{
+        flex-direction: column-reverse;
+        gap: 10px;
+        margin-top: 20px;
+        padding-top: 16px;
+      }
+      
+      .btn{
+        width: 100%;
+        justify-content: center;
+        padding: 13px 18px;
+        font-size: 0.78rem;
+      }
+      
+      .modal{
+        width: 100%;
+        margin: 10px;
+        border-radius: 14px;
+      }
+      
+      .modal-h{
+        padding: 18px 20px;
+      }
+      
+      .modal-h h3{
+        font-size: 1.3rem;
+      }
+      
+      .modal-h p{
+        font-size: 0.88rem;
+      }
+      
+      .modal-b{
+        padding: 20px;
+      }
+      
+      .choice{
+        gap: 12px;
+      }
+      
+      .choice button{
+        padding: 18px 16px;
+      }
+      
+      .choice .btn-icon{
+        width: 44px;
+        height: 44px;
+        font-size: 1.3rem;
+      }
+      
+      .choice strong{
+        font-size: 1.05rem;
+      }
+      
+      .choice span{
+        font-size: 0.86rem;
+      }
+      
+      .choice .time-badge{
+        font-size: 0.75rem;
+        padding: 5px 9px;
+      }
+      
+      .success-panel{
+        padding: 24px 16px;
+      }
+      
+      .success-icon{
+        width: 70px;
+        height: 70px;
+        font-size: 2.2rem;
+      }
+      
+      .public-id-box{
+        padding: 16px;
+        margin: 20px auto;
+      }
+      
+      .public-id-label{
+        font-size: 0.75rem;
+      }
+      
+      .public-id-value{
+        font-size: 1.4rem;
+        letter-spacing: 1.5px;
+      }
+      
+      .next-steps{
+        margin-top: 24px;
+      }
+      
+      .next-steps h4{
+        font-size: 1rem;
+      }
+      
+      .next-steps ol{
+        font-size: 0.88rem;
+        line-height: 1.7;
+        padding-left: 20px;
+      }
+      
+      .verify-link{
+        font-size: 0.85rem;
+        padding: 11px 18px;
+      }
+      
+      .divider{
+        margin: 20px 0;
+      }
+      
+      .role-badge{
+        padding: 6px 12px;
+        font-size: 0.80rem;
+      }
+    }
+    
+    @media (max-width: 480px){
+      .container{
+        padding: 50px 3% 40px;
+      }
+      
+      h1{
+        font-size: 1.6rem !important;
+      }
+      
+      .hero{
+        padding: 16px;
+      }
+      
+      .panel{
+        padding: 16px;
+      }
+      
+      .step-header h2{
+        font-size: 1.3rem;
+      }
+      
+      .public-id-value{
+        font-size: 1.2rem;
+        word-break: break-all;
+      }
+      
+      .info-box{
+        padding: 12px;
+      }
+    }
+    
+    /* Landscape phone orientation */
+    @media (max-width: 900px) and (max-height: 500px){
+      .container{
+        padding: 40px 4% 30px;
+      }
+      
+      .hero{
+        padding: 16px;
+      }
+      
+      .progress-steps{
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      
+      .progress-step{
+        flex: 0 0 auto;
+        max-width: 100px;
+      }
+      
+      .progress-steps::before{
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Role Selection Modal -->
+  <div class="overlay" id="roleOverlay">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="modal-h">
+        <h3>Choose Your Verification Type</h3>
+        <p>Select your role to begin the identity verification process</p>
+      </div>
+      <div class="modal-b">
+        <div class="choice">
+          
+          <button id="chooseBaby">
+            <div class="btn-icon">
+              <i class="fa-solid fa-camera"></i>
+            </div>
+            <strong>SugarBaby Verification</strong>
+            <span>Quick photo verification with live selfie and gesture confirmation to verify you're a real person.</span>
+            <div class="time-badge">
+              <i class="fa-regular fa-clock"></i>
+              Usually approved in 1-2 hours
+            </div>
+          </button>
+          
+          <button id="chooseDaddy">
+            <div class="btn-icon">
+              <i class="fa-solid fa-user-tie"></i>
+            </div>
+            <strong>SugarDaddy Verification</strong>
+            <span>Complete identity verification with passport, government ID, and financial documentation to prove authenticity.</span>
+            <div class="time-badge">
+              <i class="fa-regular fa-clock"></i>
+              Usually approved in 1-2 days
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <main class="container">
+    <section class="hero">
+      <!-- Header -->
+      <div class="kicker">
+        <i class="fa-solid fa-shield-check"></i>
+        Identity Verification
+      </div>
+      
+      <h1 style="margin-top:16px;font-size:2.5rem;">
+        Get <span class="gold-text">Verified</span> Today
+      </h1>
+      
+      <p style="margin-top:12px;color:rgba(255,255,255,0.75);max-width:900px;font-size:1.05rem;">
+        Verify your identity to build trust, unlock premium features, and connect with genuine members. Your information is encrypted and handled securely.
+      </p>
+
+
+      <!-- Benefits -->
+      <div class="benefits">
+        <div class="benefit-card">
+          <div class="ico">
+            <i class="fa-solid fa-badge-check"></i>
+          </div>
+          <div>
+            <h4>Verified Badge</h4>
+            <p>Display a gold verification badge on your profile</p>
+          </div>
+        </div>
+        
+        <div class="benefit-card">
+          <div class="ico">
+            <i class="fa-solid fa-star"></i>
+          </div>
+          <div>
+            <h4>Priority Visibility</h4>
+            <p>Appear higher in search results and recommendations</p>
+          </div>
+        </div>
+        
+        <div class="benefit-card">
+          <div class="ico">
+            <i class="fa-solid fa-shield-halved"></i>
+          </div>
+          <div>
+            <h4>Build Trust</h4>
+            <p>Show others you're genuine and serious about connections</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Progress Steps -->
+      <div class="progress-steps">
+        <div class="progress-step active" id="progressStep1">
+          <div class="num">1</div>
+          <span>Choose Type</span>
+        </div>
+        <div class="progress-step" id="progressStep2">
+          <div class="num">2</div>
+          <span>Enter Details</span>
+        </div>
+        <div class="progress-step" id="progressStep3">
+          <div class="num">3</div>
+          <span>Upload Files</span>
+        </div>
+        <div class="progress-step" id="progressStep4">
+          <div class="num">4</div>
+          <span>Submit & Wait</span>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Step 1: Personal Details -->
+      <div class="panel" id="step1">
+        <div class="step-header">
+          <div>
+            <h2>Personal Information</h2>
+            <p>All fields marked with <span style="color:var(--bad)">*</span> are required</p>
+          </div>
+          <div class="role-badge" id="roleBadge" style="display:none;">
+            <i class="fa-solid fa-circle-check"></i>
+            <span id="roleHint">Not Selected</span>
+          </div>
+        </div>
+
+        <div class="info-box warning">
+          <div class="icon">
+            <i class="fa-solid fa-lock"></i>
+          </div>
+          <div class="info-box-content">
+            <h4>Your Privacy is Protected</h4>
+            <p>Your personal information is encrypted and will only be used for verification purposes. We will never share your documents or contact details with other members without your consent.</p>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label for="full_name">
+              Full Name <span class="required">*</span>
+            </label>
+            <input id="full_name" autocomplete="name" placeholder="Enter your full legal name" />
+            <div class="field-hint">
+              <i class="fa-solid fa-info-circle"></i>
+              Must match your ID document
+            </div>
+          </div>
+          
+          <div class="field">
+            <label for="dob">
+              Date of Birth <span class="required">*</span>
+            </label>
+            <input id="dob" type="date" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label for="country">
+              Country <span class="required">*</span>
+            </label>
+            <input id="country" placeholder="e.g., United States" />
+            <div class="field-hint">
+              <i class="fa-solid fa-globe"></i>
+              Country of residence
+            </div>
+          </div>
+          
+          <div class="field">
+            <label for="city">
+              City <span class="required">*</span>
+            </label>
+            <input id="city" placeholder="e.g., New York" />
+            <div class="field-hint">
+              <i class="fa-solid fa-location-dot"></i>
+              Current city location
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:30px;">
+          <h3 style="font-size:1.2rem;margin-bottom:12px;">Contact Information</h3>
+          <p style="color:rgba(255,255,255,0.70);font-size:0.92rem;margin-bottom:20px;">
+            Provide at least one contact method so we can reach you about your verification status <span class="required">*</span>
+          </p>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label for="whatsapp">
+              WhatsApp <span class="optional">(recommended)</span>
+            </label>
+            <input id="whatsapp" placeholder="+1 234 567 8900" />
+            <div class="field-hint">
+              <i class="fa-brands fa-whatsapp"></i>
+              Include country code
+            </div>
+          </div>
+          
+          <div class="field">
+            <label for="telegram">
+              Telegram <span class="optional">(recommended)</span>
+            </label>
+            <input id="telegram" placeholder="@username or t.me/username" />
+            <div class="field-hint">
+              <i class="fa-brands fa-telegram"></i>
+              Your Telegram username or link
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="email">
+            Email Address <span class="optional">(optional)</span>
+          </label>
+          <input id="email" type="email" autocomplete="email" placeholder="your.email@example.com" />
+          <div class="field-hint">
+            <i class="fa-solid fa-envelope"></i>
+            For verification status updates
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn primary" id="toStep2">
+            <span>Continue to Upload</span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+
+        <div class="alert error" id="err1"></div>
+      </div>
+
+      <!-- Step 2: File Uploads -->
+      <div class="panel" id="step2" style="display:none;margin-top:24px;">
+        <div class="step-header">
+          <div>
+            <h2 id="step2Title">Document Upload</h2>
+            <p id="step2Sub">Upload required verification files</p>
+          </div>
+        </div>
+
+        <!-- SugarBaby uploads -->
+        <div id="babyUploads" style="display:none;">
+          <div class="info-box">
+            <div class="icon">
+              <i class="fa-solid fa-lightbulb"></i>
+            </div>
+            <div class="info-box-content">
+              <h4>Photo Requirements</h4>
+              <ul>
+                <li>Take photos in good lighting (natural daylight is best)</li>
+                <li>Make sure your face is clearly visible and in focus</li>
+                <li>No filters, sunglasses, or heavy makeup that obscures your features</li>
+                <li>Photos should be recent (taken within the last 30 days)</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="sample">
+            <div class="ico">
+              <i class="fa-solid fa-camera"></i>
+            </div>
+            <div>
+              <b>1. Take a Live Selfie Photo</b>
+              <p>Take a clear photo of yourself right now. Make sure your face is fully visible, well-lit, and you're looking directly at the camera. This helps us confirm you're a real person.</p>
+            </div>
+          </div>
+          
+          <div class="field">
+            <label for="baby_selfie">
+              Upload Live Selfie <span class="required">*</span>
+            </label>
+            <input id="baby_selfie" type="file" accept="image/*" capture="user" />
+            <div class="field-hint">
+              <i class="fa-solid fa-image"></i>
+              Image only • Maximum 5MB • JPEG or PNG format
+            </div>
+          </div>
+
+          <div class="sample">
+            <div class="ico">
+              <span class="big-emoji" id="symbolEmoji">✌️</span>
+            </div>
+            <div>
+              <b>2. Take a Gesture Photo with: <span class="symbol-highlight" id="symbolText">Peace Sign</span></b>
+              <p>Now take another selfie while making the exact gesture shown above. Hold the gesture clearly next to your face. This proves the photos are being taken right now and you're not using old images.</p>
+            </div>
+          </div>
+          
+          <div class="field">
+            <label for="baby_symbol_selfie">
+              Upload Gesture Selfie <span class="required">*</span>
+            </label>
+            <input id="baby_symbol_selfie" type="file" accept="image/*" capture="user" />
+            <div class="field-hint">
+              <i class="fa-solid fa-hand-peace"></i>
+              Must clearly show the gesture symbol indicated above
+            </div>
+          </div>
+
+          <div class="info-box success" style="margin-top:24px;">
+            <div class="icon">
+              <i class="fa-solid fa-clock"></i>
+            </div>
+            <div class="info-box-content">
+              <h4>Fast Approval Process</h4>
+              <p>SugarBaby photo verification is typically reviewed and approved within 2-6 hours during business hours. You'll receive a notification once your verification is complete.</p>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="btn" id="back1a">
+              <i class="fa-solid fa-arrow-left"></i>
+              <span>Back</span>
+            </button>
+            <button class="btn primary" id="submitBaby">
+              <i class="fa-solid fa-paper-plane"></i>
+              <span>Submit Verification</span>
+            </button>
+          </div>
+          
+          <div class="alert error" id="err2a"></div>
+        </div>
+
+        <!-- SugarDaddy uploads -->
+        <div id="daddyUploads" style="display:none;">
+          <div class="info-box">
+            <div class="icon">
+              <i class="fa-solid fa-lightbulb"></i>
+            </div>
+            <div class="info-box-content">
+              <h4>Document Requirements</h4>
+              <ul>
+                <li>Documents must be clear, readable, and not blurry or cut off</li>
+                <li>All four corners of each document should be visible</li>
+                <li>Text and photos must be legible (no glare or shadows)</li>
+                <li>Documents must be current and not expired</li>
+                <li>Bank statement must be from the last 3 months</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="sample">
+            <div class="ico">
+              <i class="fa-solid fa-passport"></i>
+            </div>
+            <div>
+              <b>1. Passport Photo Page</b>
+              <p>Upload a clear photo of your passport's main photo page. Make sure all text is readable and the photo is not blurry. This is your primary identity document.</p>
+            </div>
+          </div>
+          
+          <div class="field">
+            <label for="daddy_passport">
+              Passport Photo <span class="required">*</span>
+            </label>
+            <input id="daddy_passport" type="file" accept="image/*" />
+            <div class="field-hint">
+              <i class="fa-solid fa-image"></i>
+              Image only • Maximum 5MB • Must be valid
+            </div>
+          </div>
+
+          <div class="sample">
+            <div class="ico">
+              <i class="fa-solid fa-id-card"></i>
+            </div>
+            <div>
+              <b>2. Government-Issued ID</b>
+              <p>Upload a photo of your driver's license, national ID card, or other government-issued identification. This serves as secondary proof of identity.</p>
+            </div>
+          </div>
+          
+          <div class="field">
+            <label for="daddy_id">
+              Government ID <span class="required">*</span>
+            </label>
+            <input id="daddy_id" type="file" accept="image/*" />
+            <div class="field-hint">
+              <i class="fa-solid fa-image"></i>
+              Driver's license, national ID, or state ID • Max 5MB
+            </div>
+          </div>
+
+          <div class="sample">
+            <div class="ico">
+              <i class="fa-solid fa-building-columns"></i>
+            </div>
+            <div>
+              <b>3. Recent Bank Statement</b>
+              <p>Upload a bank statement from the last 3 months showing your name and account information. You may redact account numbers and transaction details for privacy, but your name and bank logo must be visible.</p>
+            </div>
+          </div>
+          
+          <div class="field">
+            <label for="daddy_bank">
+              Bank Statement <span class="required">*</span>
+            </label>
+            <input id="daddy_bank" type="file" accept="image/*" />
+            <div class="field-hint">
+              <i class="fa-solid fa-image"></i>
+              Must be from last 3 months • Max 5MB • You may redact sensitive info
+            </div>
+          </div>
+
+          <div class="info-box warning" style="margin-top:24px;">
+            <div class="icon">
+              <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <div class="info-box-content">
+              <h4>Your Security Matters</h4>
+              <p>All documents are encrypted during upload and stored securely. Our verification team reviews them in a confidential manner, and documents are automatically deleted 90 days after verification is complete.</p>
+            </div>
+          </div>
+
+          <div class="info-box success" style="margin-top:16px;">
+            <div class="icon">
+              <i class="fa-solid fa-clock"></i>
+            </div>
+            <div class="info-box-content">
+              <h4>Verification Timeline</h4>
+              <p>SugarDaddy document verification typically takes 1-2 business days. Our team carefully reviews each submission to ensure authenticity. You'll receive an update via your provided contact method.</p>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="btn" id="back1b">
+              <i class="fa-solid fa-arrow-left"></i>
+              <span>Back</span>
+            </button>
+            <button class="btn primary" id="submitDaddy">
+              <i class="fa-solid fa-paper-plane"></i>
+              <span>Submit Verification</span>
+            </button>
+          </div>
+          
+          <div class="alert error" id="err2b"></div>
+        </div>
+      </div>
+
+      <!-- Success Panel -->
+      <div class="panel success-panel" id="donePanel" style="display:none;margin-top:24px;">
+        <div class="success-icon">
+          <i class="fa-solid fa-circle-check"></i>
+        </div>
+        
+        <h2 style="font-size:2rem;margin-bottom:12px;">Verification Submitted!</h2>
+        <p style="color:rgba(255,255,255,0.75);font-size:1.05rem;max-width:500px;margin:0 auto;" id="doneMsg"></p>
+
+        <div class="public-id-box">
+          <div class="public-id-label">Your Verification ID</div>
+          <div class="public-id-value" id="publicIdOut">-</div>
+        </div>
+
+        <div class="info-box" style="max-width:600px;margin:20px auto;">
+          <div class="icon">
+            <i class="fa-solid fa-bookmark"></i>
+          </div>
+          <div class="info-box-content">
+            <h4>Save Your Verification ID</h4>
+            <p>Write down or screenshot this ID number. You'll need it to check your verification status and once approved, it will appear on your profile as proof of verification.</p>
+          </div>
+        </div>
+
+        <div class="next-steps">
+          <h4><i class="fa-solid fa-list-check"></i> What Happens Next?</h4>
+          <ol>
+            <li>Our verification team will review your submission</li>
+            <li>You'll receive a notification when the review is complete</li>
+            <li>Once approved, your verified badge will appear on your profile</li>
+            <li>You can check your status anytime using your Verification ID</li>
+          </ol>
+        </div>
+
+        <a href="/verify_profile" class="verify-link">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          Check Verification Status
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // Supabase
+    const SUPABASE_URL = "https://efrijmrcuvtwjwgcttou.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_BH_9cL6k97CQ4h1MkVXJjg_edZ2K4iW";
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Cloudinary
+    const CLOUDINARY_CLOUD_NAME = "dcvupaaym";
+    const CLOUDINARY_UPLOAD_PRESET = "verification-uploads";
+
+    const roleOverlay = document.getElementById("roleOverlay");
+    const chooseDaddy = document.getElementById("chooseDaddy");
+    const chooseBaby = document.getElementById("chooseBaby");
+    const roleHint = document.getElementById("roleHint");
+    const roleBadge = document.getElementById("roleBadge");
+
+    const step1 = document.getElementById("step1");
+    const step2 = document.getElementById("step2");
+    const step2Title = document.getElementById("step2Title");
+    const step2Sub = document.getElementById("step2Sub");
+    const babyUploads = document.getElementById("babyUploads");
+    const daddyUploads = document.getElementById("daddyUploads");
+
+    const err1 = document.getElementById("err1");
+    const err2a = document.getElementById("err2a");
+    const err2b = document.getElementById("err2b");
+
+    const donePanel = document.getElementById("donePanel");
+    const doneMsg = document.getElementById("doneMsg");
+    const publicIdOut = document.getElementById("publicIdOut");
+
+    const symbolEmoji = document.getElementById("symbolEmoji");
+    const symbolText = document.getElementById("symbolText");
+
+    const progressStep1 = document.getElementById("progressStep1");
+    const progressStep2 = document.getElementById("progressStep2");
+    const progressStep3 = document.getElementById("progressStep3");
+    const progressStep4 = document.getElementById("progressStep4");
+
+    let selectedRole = null;
+    let chosenSymbol = null;
+
+    const SYMBOLS = [
+      { emoji: "👍", text: "Thumbs Up" },
+      { emoji: "✌️", text: "Peace Sign" },
+      { emoji: "👌", text: "OK Sign" },
+      { emoji: "✋", text: "Open Palm" },
+      { emoji: "🤙", text: "Hang Loose" }
+    ];
+
+    function updateProgress(step) {
+      [progressStep1, progressStep2, progressStep3, progressStep4].forEach((el, idx) => {
+        el.classList.remove('active', 'completed');
+        if (idx + 1 < step) {
+          el.classList.add('completed');
+        } else if (idx + 1 === step) {
+          el.classList.add('active');
+        }
+      });
+    }
+
+    function pickRandomSymbol() {
+      const x = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
+      chosenSymbol = x;
+      symbolEmoji.textContent = x.emoji;
+      symbolText.textContent = x.text;
+    }
+
+    function showError(el, msg) {
+      el.textContent = msg;
+      el.style.display = "block";
+      el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+
+    function clearError(el) {
+      el.textContent = "";
+      el.style.display = "none";
+    }
+
+    function getVal(id) {
+      return (document.getElementById(id).value || "").trim();
+    }
+
+    function ensureOneContact(whatsapp, telegram, email) {
+      return !!(whatsapp || telegram || email);
+    }
+
+    async function uploadImageToCloudinary(file) {
+      const form = new FormData();
+      form.append("file", file);
+      form.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+        method: "POST",
+        body: form
+      });
+
+      if (!res.ok) throw new Error("Upload failed. Please check your internet connection and try again.");
+      const json = await res.json();
+      return json.secure_url;
+    }
+
+    function makePublicId(role) {
+      const prefix = role === "baby" ? "B" : "D";
+      const n = Math.floor(100000 + Math.random() * 900000);
+      return `GSD-${prefix}-${n}`;
+    }
+
+    async function insertRequest(payload) {
+      for (let i = 0; i < 5; i++) {
+        payload.public_id = payload.public_id || makePublicId(payload.role);
+        const { data, error } = await sb
+          .from("verification_requests")
+          .insert([payload])
+          .select("public_id")
+          .single();
+
+        if (!error) return data.public_id;
+
+        if (String(error.message || "").toLowerCase().includes("duplicate") || String(error.code||"") === "23505") {
+          payload.public_id = makePublicId(payload.role);
+          continue;
+        }
+        throw error;
+      }
+      throw new Error("Could not generate a unique ID. Please try again.");
+    }
+
+    // Role selection
+    chooseDaddy.addEventListener("click", () => {
+      selectedRole = "daddy";
+      roleHint.textContent = "SugarDaddy Verification";
+      roleBadge.style.display = "inline-flex";
+      roleOverlay.style.display = "none";
+      pickRandomSymbol();
+      updateProgress(2);
+    });
+
+    chooseBaby.addEventListener("click", () => {
+      selectedRole = "baby";
+      roleHint.textContent = "SugarBaby Verification";
+      roleBadge.style.display = "inline-flex";
+      roleOverlay.style.display = "none";
+      pickRandomSymbol();
+      updateProgress(2);
+    });
+
+    // Step 1 -> Step 2
+    document.getElementById("toStep2").addEventListener("click", () => {
+      clearError(err1);
+
+      if (!selectedRole) {
+        showError(err1, "Please select your verification type first (SugarDaddy or SugarBaby).");
+        roleOverlay.style.display = "flex";
+        return;
+      }
+
+      const full_name = getVal("full_name");
+      const dob = document.getElementById("dob").value;
+      const country = getVal("country");
+      const city = getVal("city");
+      const whatsapp = getVal("whatsapp");
+      const telegram = getVal("telegram");
+      const email = getVal("email");
+
+      if (!full_name || full_name.length < 2) {
+        return showError(err1, "Please enter your full legal name (at least 2 characters).");
+      }
+      if (!dob) {
+        return showError(err1, "Please select your date of birth.");
+      }
+      
+      // Age validation
+      const birthDate = new Date(dob);
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      
+      if (!country) {
+        return showError(err1, "Please enter your country of residence.");
+      }
+      if (!city) {
+        return showError(err1, "Please enter your city.");
+      }
+      if (!ensureOneContact(whatsapp, telegram, email)) {
+        return showError(err1, "Please provide at least one contact method (WhatsApp, Telegram, or Email) so we can notify you about your verification status.");
+      }
+
+      step2.style.display = "block";
+      updateProgress(3);
+      step2.scrollIntoView({ behavior: "smooth", block: "start" });
+
+      if (selectedRole === "baby") {
+        step2Title.textContent = "Photo Verification";
+        step2Sub.textContent = "Take two live photos to verify your identity";
+        babyUploads.style.display = "block";
+        daddyUploads.style.display = "none";
+      } else {
+        step2Title.textContent = "Document Verification";
+        step2Sub.textContent = "Upload official documents to verify your identity and financial status";
+        babyUploads.style.display = "none";
+        daddyUploads.style.display = "block";
+      }
+    });
+
+    document.getElementById("back1a").addEventListener("click", () => {
+      step2.style.display = "none";
+      babyUploads.style.display = "none";
+      updateProgress(2);
+      step1.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
+    document.getElementById("back1b").addEventListener("click", () => {
+      step2.style.display = "none";
+      daddyUploads.style.display = "none";
+      updateProgress(2);
+      step1.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
+    // Submit Baby
+    document.getElementById("submitBaby").addEventListener("click", async () => {
+      clearError(err2a);
+
+      const selfie = document.getElementById("baby_selfie").files?.[0];
+      const sym = document.getElementById("baby_symbol_selfie").files?.[0];
+
+      if (!selfie) {
+        return showError(err2a, "Please upload your live selfie photo.");
+      }
+      if (!sym) {
+        return showError(err2a, "Please upload your gesture selfie photo showing the required hand symbol.");
+      }
+
+      // File size validation
+      const maxSize = 5 * 1024 * 1024;
+      if (selfie.size > maxSize) {
+        return showError(err2a, "Selfie photo is too large. Please upload an image under 5MB.");
+      }
+      if (sym.size > maxSize) {
+        return showError(err2a, "Gesture photo is too large. Please upload an image under 5MB.");
+      }
+
+      try {
+        const submitBtn = document.getElementById("submitBaby");
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading Photos...';
+
+        const selfie_url = await uploadImageToCloudinary(selfie);
+        
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+        const symbol_selfie_url = await uploadImageToCloudinary(sym);
+
+        const payload = {
+          public_id: makePublicId("baby"),
+          role: "baby",
+          full_name: getVal("full_name"),
+          dob: document.getElementById("dob").value,
+          country: getVal("country"),
+          city: getVal("city"),
+          whatsapp: getVal("whatsapp") || null,
+          telegram: getVal("telegram") || null,
+          email: getVal("email") || null,
+          symbol_prompt: `${chosenSymbol?.text || "Gesture"} ${chosenSymbol?.emoji || ""}`,
+          selfie_url,
+          symbol_selfie_url,
+          status: "pending"
+        };
+
+        const publicId = await insertRequest(payload);
+
+        step1.style.display = "none";
+        step2.style.display = "none";
+        donePanel.style.display = "block";
+        publicIdOut.textContent = publicId;
+        doneMsg.textContent = "Thank you for submitting your verification! Our team will review your photos within the next 2-6 hours. You'll receive a notification at your provided contact information once the review is complete.";
+        
+        updateProgress(4);
+        donePanel.scrollIntoView({ behavior: "smooth", block: "start" });
+
+      } catch (e) {
+        showError(err2a, e?.message || "Submission failed. Please check your internet connection and try again.");
+      } finally {
+        document.getElementById("submitBaby").disabled = false;
+        document.getElementById("submitBaby").innerHTML = '<i class="fa-solid fa-paper-plane"></i> <span>Submit Verification</span>';
+      }
+    });
+
+    // Submit Daddy
+    document.getElementById("submitDaddy").addEventListener("click", async () => {
+      clearError(err2b);
+
+      const passport = document.getElementById("daddy_passport").files?.[0];
+      const iddoc = document.getElementById("daddy_id").files?.[0];
+      const bank = document.getElementById("daddy_bank").files?.[0];
+
+      if (!passport) {
+        return showError(err2b, "Please upload your passport photo page.");
+      }
+      if (!iddoc) {
+        return showError(err2b, "Please upload your government-issued ID document.");
+      }
+      if (!bank) {
+        return showError(err2b, "Please upload your recent bank statement (last 3 months).");
+      }
+
+      const max = 5 * 1024 * 1024;
+      if (passport.size > max) {
+        return showError(err2b, "Passport image is too large. Please upload a file under 5MB.");
+      }
+      if (iddoc.size > max) {
+        return showError(err2b, "ID document is too large. Please upload a file under 5MB.");
+      }
+      if (bank.size > max) {
+        return showError(err2b, "Bank statement is too large. Please upload a file under 5MB.");
+      }
+
+      try {
+        const submitBtn = document.getElementById("submitDaddy");
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading Passport...';
+
+        const passport_url = await uploadImageToCloudinary(passport);
+        
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading ID...';
+        const id_doc_url = await uploadImageToCloudinary(iddoc);
+        
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading Bank Statement...';
+        const bank_statement_url = await uploadImageToCloudinary(bank);
+
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Finalizing...';
+
+        const payload = {
+          public_id: makePublicId("daddy"),
+          role: "daddy",
+          full_name: getVal("full_name"),
+          dob: document.getElementById("dob").value,
+          country: getVal("country"),
+          city: getVal("city"),
+          whatsapp: getVal("whatsapp") || null,
+          telegram: getVal("telegram") || null,
+          email: getVal("email") || null,
+          passport_url,
+          id_doc_url,
+          bank_statement_url,
+          status: "pending"
+        };
+
+        const publicId = await insertRequest(payload);
+
+        step1.style.display = "none";
+        step2.style.display = "none";
+        donePanel.style.display = "block";
+        publicIdOut.textContent = publicId;
+        doneMsg.textContent = "Thank you for submitting your documents! Our verification team will carefully review your submission within 1-2 business days. You'll receive a notification at your provided contact information once the verification is complete.";
+
+        updateProgress(4);
+        donePanel.scrollIntoView({ behavior: "smooth", block: "start" });
+
+      } catch (e) {
+        showError(err2b, e?.message || "Submission failed. Please check your internet connection and try again.");
+      } finally {
+        document.getElementById("submitDaddy").disabled = false;
+        document.getElementById("submitDaddy").innerHTML = '<i class="fa-solid fa-paper-plane"></i> <span>Submit Verification</span>';
+      }
+    });
+
+    // Initialize
+    pickRandomSymbol();
+  </script>
+</body>
+</html>

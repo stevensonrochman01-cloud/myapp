@@ -1,0 +1,227 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin - Verification Requests</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; max-width: 1100px; }
+    .card { border: 1px solid #ddd; padding: 12px; border-radius: 10px; margin-bottom: 10px; }
+    input { width: 100%; padding: 10px; margin: 6px 0 12px; }
+    button { padding: 8px 10px; cursor: pointer; margin-right: 8px; }
+    img { max-width: 240px; border-radius: 8px; border: 1px solid #eee; display:block; margin-top:8px; }
+    .row { display:flex; gap: 12px; flex-wrap: wrap; }
+    .pill { display:inline-block; padding: 4px 10px; border-radius: 999px; border: 1px solid #ccc; font-size: 12px; }
+    .muted { color: #666; }
+    a { color: #0a58ca; }
+  </style>
+</head>
+<body>
+
+<h1>Admin Approval - Verification</h1>
+
+<div id="authBox">
+  <h3>Sign in</h3>
+  <input id="email" placeholder="Email" />
+  <input id="password" placeholder="Password" type="password" />
+  <button id="loginBtn">Login</button>
+  <div id="authStatus"></div>
+</div>
+
+<div id="adminBox" style="display:none;">
+  <button id="logoutBtn">Logout</button>
+  <h2>Pending verification requests</h2>
+  <div id="pending"></div>
+</div>
+
+<script>
+  const SUPABASE_URL = "https://efrijmrcuvtwjwgcttou.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_BH_9cL6k97CQ4h1MkVXJjg_edZ2K4iW";
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const authStatus = document.getElementById("authStatus");
+  const authBox = document.getElementById("authBox");
+  const adminBox = document.getElementById("adminBox");
+  const pendingEl = document.getElementById("pending");
+
+  function escapeHtml(s) {
+    return String(s || "")
+      .replaceAll("&","&amp;").replaceAll("<","&lt;")
+      .replaceAll(">","&gt;").replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+
+  async function refreshUI() {
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) {
+      authBox.style.display = "block";
+      adminBox.style.display = "none";
+      return;
+    }
+    authBox.style.display = "none";
+    adminBox.style.display = "block";
+    loadPending();
+  }
+
+  document.getElementById("loginBtn").addEventListener("click", async () => {
+    authStatus.textContent = "Signing in...";
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    authStatus.textContent = error ? (error.message || "Login failed") : "Logged in";
+    refreshUI();
+  });
+
+  document.getElementById("logoutBtn").addEventListener("click", async () => {
+    await sb.auth.signOut();
+    refreshUI();
+  });
+
+  async function loadPending() {
+    pendingEl.innerHTML = "Loading...";
+    const { data, error } = await sb
+      .from("verification_requests")
+      .select("*")
+      .eq("status", "pending")
+      .order("created_at", { ascending: false })
+      .limit(200);
+
+    if (error) {
+      pendingEl.innerHTML = "You may not be an admin (or RLS blocked).";
+      return;
+    }
+
+    if (!data || !data.length) {
+      pendingEl.innerHTML = "No pending requests.";
+      return;
+    }
+
+    pendingEl.innerHTML = data.map(x => {
+      const role = x.role === "daddy" ? "SugarDaddy" : "SugarBaby";
+
+      const docs = x.role === "daddy"
+        ? `
+          <div class="row">
+            ${x.passport_url ? `<div><div class="muted">Passport</div><a href="${escapeHtml(x.passport_url)}" target="_blank" rel="noopener"><img src="${escapeHtml(x.passport_url)}"></a></div>` : ""}
+            ${x.id_doc_url ? `<div><div class="muted">ID</div><a href="${escapeHtml(x.id_doc_url)}" target="_blank" rel="noopener"><img src="${escapeHtml(x.id_doc_url)}"></a></div>` : ""}
+            ${x.bank_statement_url ? `<div><div class="muted">Bank</div><a href="${escapeHtml(x.bank_statement_url)}" target="_blank" rel="noopener"><img src="${escapeHtml(x.bank_statement_url)}"></a></div>` : ""}
+          </div>
+        `
+        : `
+          <div class="row">
+            ${x.selfie_url ? `<div><div class="muted">Selfie</div><a href="${escapeHtml(x.selfie_url)}" target="_blank" rel="noopener"><img src="${escapeHtml(x.selfie_url)}"></a></div>` : ""}
+            ${x.symbol_selfie_url ? `<div><div class="muted">Gesture selfie</div><a href="${escapeHtml(x.symbol_selfie_url)}" target="_blank" rel="noopener"><img src="${escapeHtml(x.symbol_selfie_url)}"></a></div>` : ""}
+          </div>
+          <div class="muted" style="margin-top:6px;">Symbol prompt: ${escapeHtml(x.symbol_prompt || "-")}</div>
+        `;
+
+      return `
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+            <div>
+              <b>${escapeHtml(x.full_name)}</b>
+              <span class="pill">${escapeHtml(role)}</span>
+              <span class="pill">ID: ${escapeHtml(x.public_id)}</span>
+            </div>
+            <div class="muted">${escapeHtml(x.created_at)}</div>
+          </div>
+
+          <div class="muted" style="margin-top:6px;">
+            DOB: ${escapeHtml(x.dob)} • ${escapeHtml(x.city)}, ${escapeHtml(x.country)}
+          </div>
+
+          <div style="margin-top:6px;">
+            WhatsApp: ${escapeHtml(x.whatsapp || "-")} • Telegram: ${escapeHtml(x.telegram || "-")} • Email: ${escapeHtml(x.email || "-")}
+          </div>
+
+          <div style="margin-top:10px;">${docs}</div>
+
+          <div style="margin-top:10px;">
+            <button onclick="approveReq('${x.id}')">Approve</button>
+            <button onclick="rejectReq('${x.id}')">Reject</button>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  async function ensureVerifiedProfile(req) {
+    // Create a verified profile row
+    const { data: vp, error: vpErr } = await sb
+      .from("verified_profiles")
+      .insert([{
+        public_id: req.public_id,
+        role: req.role,
+        full_name: req.full_name,
+        dob: req.dob,
+        country: req.country,
+        city: req.city,
+        address: null,
+        net_worth: null,
+        whatsapp: req.whatsapp,
+        telegram: req.telegram,
+        email: req.email,
+        badge: (req.role === "baby") ? "ordinary" : "ordinary",
+        profile_image_url: null,
+        is_verified: true
+      }])
+      .select("id")
+      .single();
+
+    if (vpErr) throw vpErr;
+
+    // Store proofs to profile_proofs (optional, but lets you view in verify page proofs modal)
+    const proofs = [];
+    if (req.role === "baby") {
+      if (req.selfie_url) proofs.push({ profile_id: vp.id, image_url: req.selfie_url, label: "selfie" });
+      if (req.symbol_selfie_url) proofs.push({ profile_id: vp.id, image_url: req.symbol_selfie_url, label: "gesture_selfie" });
+    } else {
+      if (req.passport_url) proofs.push({ profile_id: vp.id, image_url: req.passport_url, label: "passport" });
+      if (req.id_doc_url) proofs.push({ profile_id: vp.id, image_url: req.id_doc_url, label: "id_document" });
+      if (req.bank_statement_url) proofs.push({ profile_id: vp.id, image_url: req.bank_statement_url, label: "bank_statement" });
+    }
+
+    if (proofs.length) {
+      const { error: pErr } = await sb.from("profile_proofs").insert(proofs);
+      if (pErr) throw pErr;
+    }
+  }
+
+  window.approveReq = async (id) => {
+    // fetch request
+    const { data: req, error } = await sb.from("verification_requests").select("*").eq("id", id).single();
+    if (error) return alert(error.message || "Load request failed");
+
+    try {
+      await ensureVerifiedProfile(req);
+
+      const { error: uErr } = await sb
+        .from("verification_requests")
+        .update({ status: "approved", reviewed_at: new Date().toISOString() })
+        .eq("id", id);
+
+      if (uErr) throw uErr;
+      loadPending();
+    } catch (e) {
+      alert(e?.message || "Approve failed");
+    }
+  };
+
+  window.rejectReq = async (id) => {
+    const note = prompt("Optional reject note:");
+    const { error } = await sb
+      .from("verification_requests")
+      .update({ status: "rejected", reviewed_at: new Date().toISOString(), review_note: note || null })
+      .eq("id", id);
+
+    if (error) alert(error.message || "Reject failed");
+    loadPending();
+  };
+
+  refreshUI();
+</script>
+</body>
+</html>

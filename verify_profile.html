@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#050505" />
   <title>Verify Profile | Golden Sugar Dating</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
@@ -25,10 +26,26 @@
       --shadow-gold: 0 0 22px rgba(212, 175, 55, 0.18);
       --radius-soft: 12px;
       --radius-card: 10px;
+      --ok: #2ecc71;
+      --bad: #ff6b6b;
+      --ink: rgba(255,255,255,0.92);
+      --ink-soft: rgba(255,255,255,0.70);
     }
 
     * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
+    
+    html { 
+      scroll-behavior: smooth;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+    }
+    
     body {
       margin: 0;
       background: var(--bg-color);
@@ -54,6 +71,7 @@
       justify-content: space-between;
       align-items: center;
       padding: 16px 5%;
+      padding: 16px max(5%, env(safe-area-inset-left)) 16px max(5%, env(safe-area-inset-right));
       position: fixed;
       top: 0;
       left: 0;
@@ -124,6 +142,7 @@
       font-size: 0.78rem;
       transition: all 0.2s ease;
       white-space: nowrap;
+      font-family: inherit;
     }
     .btn-gold:hover {
       background: transparent;
@@ -149,6 +168,7 @@
       font-size: 0.78rem;
       transition: all 0.2s ease;
       white-space: nowrap;
+      font-family: inherit;
     }
     .btn-ghost:hover {
       border-color: var(--gold-main);
@@ -159,6 +179,7 @@
 
     .container {
       padding: 90px 5% 70px;
+      padding: max(90px, env(safe-area-inset-top)) max(5%, env(safe-area-inset-left)) max(70px, env(safe-area-inset-bottom)) max(5%, env(safe-area-inset-right));
       max-width: 1300px;
       margin: 0 auto;
     }
@@ -208,17 +229,12 @@
       margin: 22px 0;
     }
 
-.grid {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  margin-top: 22px;
-}
-/* 
-  @media (min-width: 1024px) {
-  .grid { grid-template-columns: 0.95fr 1.6fr; }
-} */
-
+    .grid {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      margin-top: 22px;
+    }
 
     .panel {
       border: 1px solid rgba(255,255,255,0.10);
@@ -298,6 +314,114 @@
       background: rgba(0,0,0,0.22);
     }
 
+    .result-shell{
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 16px;
+      overflow: hidden;
+      background: rgba(0,0,0,0.25);
+    }
+
+    .status-banner{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      background:
+        radial-gradient(900px 200px at 20% 0%, rgba(46,204,113,0.10), transparent 60%),
+        linear-gradient(to bottom, rgba(255,255,255,0.03), rgba(0,0,0,0.20));
+    }
+
+    .status-left{
+      display:flex;
+      align-items:center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .status-icon{
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.30);
+    }
+
+    .status-title{
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+      color: var(--ink);
+    }
+
+    .status-sub{
+      margin-top: 2px;
+      color: var(--ink-soft);
+      font-size: 0.88rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 820px;
+    }
+
+    .status-right{
+      display:flex;
+      gap: 10px;
+      align-items:center;
+      flex-wrap: wrap;
+      justify-content:flex-end;
+    }
+
+    .seal{
+      display:inline-flex;
+      align-items:center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px dashed rgba(255,255,255,0.16);
+      background: rgba(0,0,0,0.18);
+      color: rgba(255,255,255,0.78);
+      font-size: 0.82rem;
+      white-space: nowrap;
+    }
+
+    .seal i{ color: var(--gold-main); }
+
+    .verified-pill{
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-weight: 800;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      font-size: 0.78rem;
+      border: 1px solid rgba(46,204,113,0.35);
+      background: rgba(46,204,113,0.08);
+      color: var(--ok);
+    }
+
+    .unverified-pill{
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-weight: 800;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      font-size: 0.78rem;
+      border: 1px solid rgba(255,107,107,0.35);
+      background: rgba(255,107,107,0.08);
+      color: var(--bad);
+    }
+
     .profile-head {
       padding: 18px;
       border-bottom: 1px solid rgba(255,255,255,0.08);
@@ -349,7 +473,7 @@
       border: 1px solid rgba(212,175,55,0.40);
       background: radial-gradient(900px 180px at 30% 0%, rgba(212,175,55,0.18), rgba(0,0,0,0.25));
       box-shadow: 0 0 24px rgba(212,175,55,0.20);
-      font-weight: 700;
+      font-weight: 900;
       letter-spacing: 1px;
       text-transform: uppercase;
       font-size: 0.78rem;
@@ -374,7 +498,7 @@
       height: 10px;
       border-radius: 50%;
       border: 1px solid rgba(255,255,255,0.18);
-      background: linear-gradient(135deg, var(--gold-main), var(--gold-dark));
+      background: var(--gold-main);
       box-shadow: 0 0 18px rgba(212,175,55,0.35);
     }
 
@@ -421,10 +545,10 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      border: 1px solid rgba(255,255,255,0.10);
+      border: 1px solid rgba(46,204,113,0.25);
       background: rgba(0,0,0,0.25);
       flex: 0 0 auto;
-      color: var(--gold-main);
+      color: var(--ok);
     }
     .doc-text strong {
       display: block;
@@ -453,14 +577,22 @@
       white-space: nowrap;
       flex: 0 0 auto;
     }
-    .doc-status.ok { border-color: rgba(212,175,55,0.35); }
-    .doc-status.pending { border-color: rgba(255,255,255,0.12); opacity: 0.9; }
+    .doc-status.ok { 
+      border-color: rgba(46,204,113,0.35);
+      color: rgba(255,255,255,0.88);
+    }
+    .doc-status.ok i { color: var(--ok) !important; }
+    .doc-status.pending { 
+      border-color: rgba(255,255,255,0.12);
+      opacity: 0.9;
+    }
+    .doc-status.pending i { color: rgba(255,255,255,0.70) !important; }
 
     /* Key/Value box */
     .kv {
       border: 1px solid rgba(255,255,255,0.10);
       border-radius: 12px;
-      background: rgba(0,0,0,0.22);
+      background: rgba(0,0,0,0.18);
       overflow: hidden;
     }
     .kv-row {
@@ -471,16 +603,56 @@
       border-top: 1px solid rgba(255,255,255,0.06);
     }
     .kv-row:first-child { border-top: none; }
+    .kv-row:nth-child(odd) { background: rgba(255,255,255,0.02); }
     .kv-key {
-      color: rgba(255,255,255,0.65);
+      color: rgba(255,255,255,0.60);
       font-size: 0.85rem;
       text-transform: uppercase;
       letter-spacing: 1.5px;
     }
-    .kv-val { color: rgba(255,255,255,0.88); font-size: 0.95rem; word-break: break-word; }
+    .kv-val { 
+      color: rgba(255,255,255,0.88);
+      font-size: 0.95rem;
+      word-break: break-word;
+    }
+
+    /* Contact links */
+    .contact-links {
+      display: inline-flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .contact-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.20);
+      color: rgba(255,255,255,0.88);
+      font-size: 0.9rem;
+      transition: 0.2s ease;
+    }
+
+    .contact-btn:hover {
+      border-color: rgba(212,175,55,0.35);
+      box-shadow: 0 0 18px rgba(212,175,55,0.12);
+      transform: translateY(-1px);
+    }
+
+    .contact-btn i {
+      font-size: 1rem;
+    }
+
+    .contact-btn.whatsapp i { color: #25D366; }
+    .contact-btn.telegram i { color: #2AABEE; }
 
     /* Proofs */
     .proofs {
+      display: none;
       margin-top: 14px;
       border: 1px solid rgba(255,255,255,0.10);
       border-radius: 12px;
@@ -543,7 +715,9 @@
       justify-content: center;
       z-index: 999;
       padding: 20px;
+      padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
       backdrop-filter: blur(4px);
+      overflow-y: auto;
     }
     .modal {
       width: min(950px, 100%);
@@ -586,6 +760,7 @@
       border-radius: 10px;
       flex-shrink: 0;
       transition: all 0.2s ease;
+      font-family: inherit;
     }
     .modal-close:hover {
       border-color: var(--gold-main);
@@ -606,191 +781,396 @@
       background: rgba(0,0,0,0.30);
     }
 
-    /* Mobile improvements */
+    /* ========================= */
+    /* MOBILE RESPONSIVE STYLES  */
+    /* ========================= */
+    
     @media (max-width: 820px) {
       nav { display: none; }
+      
+      header {
+        padding: 12px 4%;
+        gap: 8px;
+      }
+      
+      .logo {
+        font-size: 1rem;
+        letter-spacing: 1.5px;
+      }
+      
+      .nav-actions {
+        gap: 8px;
+      }
+      
+      .nav-actions .btn-ghost span,
+      .nav-actions .btn-gold span {
+        display: none;
+      }
+      
+      .btn-gold, .btn-ghost {
+        padding: 10px 12px;
+        font-size: 0.75rem;
+      }
+      
+      .container {
+        padding: 80px 4% 60px;
+      }
+      
+      .hero {
+        padding: 18px;
+      }
+      
+      .hero h1 {
+        font-size: 1.8rem;
+      }
+      
+      .grid {
+        gap: 16px;
+      }
+      
+      .panel {
+        padding: 16px;
+      }
+      
+      .profile-body {
+        gap: 16px;
+      }
+      
+      .proofs-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+      }
     }
+    
     @media (max-width: 560px) {
-      .kv-row { grid-template-columns: 1fr; gap: 6px; }
-      .kv-key { font-size: 0.78rem; letter-spacing: 1.2px; }
-      .head-left h3 { font-size: 1.35rem; }
-      .badges { justify-content: flex-start; }
-      .proof-thumb img { height: 140px; }
+      header {
+        padding: 10px 3%;
+      }
+      
+      .logo {
+        font-size: 0.90rem;
+        gap: 8px;
+      }
+      
+      .logo-mark {
+        width: 8px;
+        height: 8px;
+      }
+      
+      .nav-actions .btn-ghost {
+        display: none;
+      }
+      
+      .btn-gold {
+        padding: 9px 14px;
+      }
+      
+      .btn-gold i {
+        font-size: 1rem;
+      }
+      
+      .container {
+        padding: 70px 3% 50px;
+      }
+      
+      .hero {
+        padding: 16px;
+        border-radius: 12px;
+      }
+      
+      .kicker {
+        font-size: 0.70rem;
+        padding: 8px 12px;
+        letter-spacing: 1.5px;
+      }
+      
+      .hero h1 {
+        font-size: 1.6rem;
+        margin-top: 12px;
+      }
+      
+      .hero p {
+        font-size: 0.90rem;
+        margin-top: 10px;
+      }
+      
+      .divider {
+        margin: 18px 0;
+      }
+      
+      .panel {
+        padding: 14px;
+      }
+      
+      .panel h2 {
+        font-size: 1.2rem;
+      }
+      
+      .panel-sub {
+        font-size: 0.88rem;
+      }
+      
+      .field label {
+        font-size: 0.72rem;
+        letter-spacing: 1.5px;
+      }
+      
+      .field input {
+        padding: 11px 12px;
+        font-size: 0.92rem;
+      }
+      
+      .actions {
+        flex-direction: column-reverse;
+        gap: 8px;
+      }
+      
+      .actions button {
+        width: 100%;
+        justify-content: center;
+      }
+      
+      .alert {
+        font-size: 0.88rem;
+        padding: 12px 14px;
+      }
+      
+      .kv-row { 
+        grid-template-columns: 1fr; 
+        gap: 6px;
+        padding: 10px 12px;
+      }
+      
+      .kv-key { 
+        font-size: 0.75rem; 
+        letter-spacing: 1.2px; 
+      }
+      
+      .kv-val {
+        font-size: 0.92rem;
+      }
+      
+      .head-left h3 { 
+        font-size: 1.3rem; 
+      }
+      
+      .head-left .sub {
+        font-size: 0.88rem;
+        margin-top: 6px;
+      }
+      
+      .badges { 
+        justify-content: flex-start; 
+      }
+      
+      .chip {
+        font-size: 0.78rem;
+        padding: 6px 10px;
+      }
+      
+      .badge-pill {
+        font-size: 0.75rem;
+        padding: 8px 11px;
+      }
+      
+      .proof-thumb img { 
+        height: 130px; 
+      }
+      
+      .proof-thumb span {
+        font-size: 0.82rem;
+        padding: 8px;
+      }
+      
+      .proofs-grid {
+        padding: 12px;
+        gap: 8px;
+      }
+      
+      .docs-head,
+      .proofs-head {
+        padding: 10px 12px;
+        font-size: 0.90rem;
+      }
+      
+      .docs-body {
+        padding: 12px;
+      }
+      
+      .doc-item {
+        padding: 10px 0;
+        flex-wrap: wrap;
+      }
+      
+      .doc-icon {
+        width: 26px;
+        height: 26px;
+        font-size: 0.90rem;
+      }
+      
+      .doc-text strong {
+        font-size: 0.90rem;
+      }
+      
+      .doc-text span {
+        font-size: 0.84rem;
+      }
+      
+      .doc-status {
+        width: 100%;
+        margin-left: 0;
+        margin-top: 8px;
+        justify-content: center;
+        font-size: 0.80rem;
+      }
+      
+      .status-banner {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 12px 14px;
+      }
+      
+      .status-left {
+        gap: 10px;
+      }
+      
+      .status-icon {
+        width: 32px;
+        height: 32px;
+      }
+      
+      .status-title {
+        font-size: 0.82rem;
+      }
+      
+      .status-sub {
+        font-size: 0.84rem;
+        white-space: normal;
+        max-width: 100%;
+      }
+      
+      .status-right {
+        justify-content: flex-start;
+        width: 100%;
+        flex-wrap: wrap;
+      }
+      
+      .seal {
+        font-size: 0.78rem;
+        padding: 6px 10px;
+      }
+      
+      .verified-pill,
+      .unverified-pill {
+        font-size: 0.75rem;
+        padding: 6px 10px;
+      }
+      
+      .profile-head {
+        padding: 14px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+      
+      .contact-links {
+        flex-direction: column;
+        align-items: flex-start;
+        width: 100%;
+        gap: 8px;
+      }
+      
+      .contact-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 10px 14px;
+        font-size: 0.88rem;
+      }
+      
+      .modal {
+        margin: 10px;
+        max-height: 95vh;
+      }
+      
+      .modal-header {
+        padding: 12px 16px;
+      }
+      
+      .modal-title {
+        font-size: 1.05rem;
+      }
+      
+      .modal-close {
+        width: 36px;
+        height: 36px;
+      }
+      
+      .modal-body {
+        padding: 14px;
+      }
+      
+      .modal-body img {
+        max-height: 60vh;
+      }
+      
+      .modal-body > div {
+        margin-top: 12px;
+      }
     }
-    :root{
-  --ok: #2ecc71;
-  --bad: #ff6b6b;
-  --ink: rgba(255,255,255,0.92);
-  --ink-soft: rgba(255,255,255,0.70);
-}
-
-.result-shell{
-  border: 1px solid rgba(255,255,255,0.10);
-  border-radius: 16px;
-  overflow: hidden;
-  background: rgba(0,0,0,0.25);
-}
-
-.status-banner{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap: 12px;
-  padding: 14px 16px;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-  background:
-    radial-gradient(900px 200px at 20% 0%, rgba(46,204,113,0.10), transparent 60%),
-    linear-gradient(to bottom, rgba(255,255,255,0.03), rgba(0,0,0,0.20));
-}
-
-.status-left{
-  display:flex;
-  align-items:center;
-  gap: 12px;
-  min-width: 0;
-}
-
-.status-icon{
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  border: 1px solid rgba(255,255,255,0.12);
-  background: rgba(0,0,0,0.30);
-}
-
-.status-title{
-  font-weight: 800;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  font-size: 0.85rem;
-  color: var(--ink);
-}
-
-.status-sub{
-  margin-top: 2px;
-  color: var(--ink-soft);
-  font-size: 0.88rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 820px;
-}
-
-.status-right{
-  display:flex;
-  gap: 10px;
-  align-items:center;
-  flex-wrap: wrap;
-  justify-content:flex-end;
-}
-
-.seal{
-  display:inline-flex;
-  align-items:center;
-  gap: 10px;
-  padding: 8px 12px;
-  border-radius: 999px;
-  border: 1px dashed rgba(255,255,255,0.16);
-  background: rgba(0,0,0,0.18);
-  color: rgba(255,255,255,0.78);
-  font-size: 0.82rem;
-  white-space: nowrap;
-}
-
-.seal i{ color: var(--gold-main); }
-
-.verified-pill{
-  display:inline-flex;
-  align-items:center;
-  gap: 8px;
-  padding: 8px 12px;
-  border-radius: 999px;
-  font-weight: 800;
-  letter-spacing: 0.6px;
-  text-transform: uppercase;
-  font-size: 0.78rem;
-  border: 1px solid rgba(46,204,113,0.35);
-  background: rgba(46,204,113,0.08);
-  color: var(--ok);
-}
-
-.unverified-pill{
-  display:inline-flex;
-  align-items:center;
-  gap: 8px;
-  padding: 8px 12px;
-  border-radius: 999px;
-  font-weight: 800;
-  letter-spacing: 0.6px;
-  text-transform: uppercase;
-  font-size: 0.78rem;
-  border: 1px solid rgba(255,107,107,0.35);
-  background: rgba(255,107,107,0.08);
-  color: var(--bad);
-}
-
-.badge-pill{
-  font-weight: 900;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-}
-
-.badge-dot{
-  background: var(--gold-main);
-}
-
-/* Make doc checks green and more official */
-.doc-icon{ color: var(--ok); border-color: rgba(46,204,113,0.25); }
-.doc-status.ok{ border-color: rgba(46,204,113,0.35); color: rgba(255,255,255,0.88); }
-.doc-status.ok i{ color: var(--ok) !important; }
-.doc-status.pending i{ color: rgba(255,255,255,0.70) !important; }
-
-/* More certificate-like KV */
-.kv { background: rgba(0,0,0,0.18); }
-.kv-row:nth-child(odd){ background: rgba(255,255,255,0.02); }
-.kv-key{ color: rgba(255,255,255,0.60); }
-
-/* Mobile tighten */
-@media (max-width:560px){
-  .status-banner{ flex-direction: column; align-items:flex-start; }
-  .status-right{ justify-content:flex-start; width: 100%; }
-}
-.contact-links {
-  display: inline-flex;
-  gap: 10px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.contact-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.12);
-  background: rgba(0,0,0,0.20);
-  color: rgba(255,255,255,0.88);
-  font-size: 0.9rem;
-  transition: 0.2s ease;
-}
-
-.contact-btn:hover {
-  border-color: rgba(212,175,55,0.35);
-  box-shadow: 0 0 18px rgba(212,175,55,0.12);
-  transform: translateY(-1px);
-}
-
-.contact-btn i {
-  font-size: 1rem;
-}
-
-.contact-btn.whatsapp i { color: #25D366; }   /* WhatsApp green */
-.contact-btn.telegram i { color: #2AABEE; }   /* Telegram blue */
-
+    
+    @media (max-width: 380px) {
+      .hero h1 {
+        font-size: 1.4rem;
+      }
+      
+      .panel h2 {
+        font-size: 1.1rem;
+      }
+      
+      .proofs-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .proof-thumb img {
+        height: 180px;
+      }
+      
+      .badge-pill,
+      .chip {
+        font-size: 0.72rem;
+      }
+    }
+    
+    /* Touch-friendly improvements */
+    @media (hover: none) and (pointer: coarse) {
+      .btn-gold,
+      .btn-ghost,
+      .proof-thumb,
+      .modal-close,
+      .contact-btn {
+        min-height: 44px;
+        touch-action: manipulation;
+      }
+      
+      input {
+        font-size: 16px; /* Prevents zoom on iOS */
+      }
+    }
+    
+    /* Landscape phone orientation */
+    @media (max-width: 900px) and (max-height: 500px) {
+      .container {
+        padding: 60px 3% 40px;
+      }
+      
+      .modal {
+        max-height: 90vh;
+      }
+      
+      .modal-body img {
+        max-height: 55vh;
+      }
+    }
   </style>
 </head>
 
@@ -829,8 +1209,8 @@
     </h1>
 
     <p>
-      Enter the profile ID to confirm it’s real and view verified details and badge level.
-      If you’re unsure, do not send any money upfront. Use this page to confirm who you’re dealing with.
+      Enter the profile ID to confirm it's real and view verified details and badge level.
+      If you're unsure, do not send any money upfront. Use this page to confirm who you're dealing with.
     </p>
 
     <div class="divider"></div>
@@ -1021,28 +1401,42 @@
       return `${day} ${month} ${year}`;
     } catch { return "-"; }
   }
-function badgeLabel(b, role) {
-  const r = String(role || "").toLowerCase();
 
-  // Force SugarBaby to show Normal Account
-  if (r === "baby") return "Normal Account";
+  function badgeLabel(b, role) {
+    const r = String(role || "").toLowerCase();
+    if (r === "baby") return "Normal Account";
+    const v = String(b || "").toLowerCase();
+    if (v === "premium") return "Premium";
+    if (v === "platinum") return "Platinum";
+    return "Ordinary";
+  }
 
-  const v = String(b || "").toLowerCase();
-  if (v === "premium") return "Premium";
-  if (v === "platinum") return "Platinum";
-  return "Ordinary";
-}
-function badgeClass(b, role) {
-  const r = String(role || "").toLowerCase();
+  function badgeClass(b, role) {
+    const r = String(role || "").toLowerCase();
+    if (r === "baby") return "ordinary";
+    const v = String(b || "").toLowerCase();
+    if (v === "premium") return "premium";
+    if (v === "platinum") return "platinum";
+    return "ordinary";
+  }
 
-  // Force SugarBaby badge style
-  if (r === "baby") return "ordinary";
+  function normalizeTelegramLink(value) {
+    const s = String(value || "").trim();
+    if (!s) return null;
+    if (s.startsWith("http://") || s.startsWith("https://")) return s;
+    if (s.startsWith("t.me/")) return "https://" + s;
+    if (s.startsWith("@")) return "https://t.me/" + s.slice(1);
+    if (/^[a-zA-Z0-9_]{3,}$/.test(s)) return "https://t.me/" + s;
+    return null;
+  }
 
-  const v = String(b || "").toLowerCase();
-  if (v === "premium") return "premium";
-  if (v === "platinum") return "platinum";
-  return "ordinary";
-}
+  function normalizeWhatsAppLink(value) {
+    const s = String(value || "").trim();
+    if (!s) return null;
+    const digits = s.replace(/[^\d]/g, "");
+    if (digits.length < 7) return null;
+    return "https://wa.me/" + digits;
+  }
 
   // ---------------------------
   // Modal (proof images only)
@@ -1095,11 +1489,11 @@ function badgeClass(b, role) {
 
   const docsStatus = document.getElementById("docsStatus");
   const docsBody = document.getElementById("docsBody");
-const statusTitle = document.getElementById("statusTitle");
-const statusSub = document.getElementById("statusSub");
-const statusPill = document.getElementById("statusPill");
-const statusPillBad = document.getElementById("statusPillBad");
-const statusIconI = document.getElementById("statusIconI");
+  const statusTitle = document.getElementById("statusTitle");
+  const statusSub = document.getElementById("statusSub");
+  const statusPill = document.getElementById("statusPill");
+  const statusPillBad = document.getElementById("statusPillBad");
+  const statusIconI = document.getElementById("statusIconI");
 
   let currentProfile = null;
 
@@ -1120,153 +1514,127 @@ const statusIconI = document.getElementById("statusIconI");
     errAlert.style.display = "none";
   }
 
-function renderDocs(profile) {
-  const verified = !!profile.is_verified;
+  function renderDocs(profile) {
+    const verified = !!profile.is_verified;
+    const isDaddy = String(profile.role || "").toLowerCase() === "daddy";
+    const titleEl = document.querySelector("#docsBox .docs-head span");
+    if (titleEl) {
+      titleEl.textContent = isDaddy ? "Document Verification" : "Photo & Liveliness Verification";
+    }
 
-  // Title changes based on role
-  const isDaddy = String(profile.role || "").toLowerCase() === "daddy";
-  const titleEl = document.querySelector("#docsBox .docs-head span");
-  if (titleEl) {
-    titleEl.textContent = isDaddy ? "Document Verification" : "Photo & Liveliness Verification";
+    docsStatus.textContent = verified ? "Approved" : "Pending";
+
+    const mk = (icon, title, desc, ok) => {
+      const statusText = ok ? "Done" : "Pending";
+      const statusIcon = ok
+        ? '<i class="fa-solid fa-circle-check" style="color: var(--ok);"></i>'
+        : '<i class="fa-regular fa-clock" style="color: rgba(255,255,255,0.70);"></i>';
+
+      return `
+        <div class="doc-item">
+          <div class="doc-icon"><i class="${escapeHtml(icon)}"></i></div>
+          <div class="doc-text">
+            <strong>${escapeHtml(title)}</strong>
+            <span>${escapeHtml(desc)}</span>
+          </div>
+          <div class="doc-status ${ok ? "ok" : "pending"}">
+            ${statusIcon} ${escapeHtml(statusText)}
+          </div>
+        </div>
+      `;
+    };
+
+    if (isDaddy) {
+      docsBody.innerHTML =
+        mk("fa-solid fa-id-card", "Identity Document", "Verified with official checks.", verified) +
+        mk("fa-solid fa-building-columns", "Financial Statement", "Checked with bank / supporting evidence.", verified);
+    } else {
+      docsBody.innerHTML =
+        mk("fa-solid fa-camera", "Live Photo Check", "Selfie prompt matched to profile photos.", verified) +
+        mk("fa-solid fa-face-smile", "Liveliness Verification", "Liveness checks completed successfully.", verified);
+    }
   }
 
-  docsStatus.textContent = verified ? "Approved" : "Pending";
+  function renderKV(profile) {
+    const age = calcAge(profile.dob);
+    const roleLabel = (profile.role === "daddy") ? "SugarDaddy" : "SugarBaby";
+    const since = profile.created_at ? fmtMemberSince(profile.created_at) : "-";
+    const netWorthVal = profile.net_worth != null ? fmtMoney(profile.net_worth) : "-";
 
-  const mk = (icon, title, desc, ok) => {
-    const statusText = ok ? "Done" : "Pending";
-    const statusIcon = ok
-      ? '<i class="fa-solid fa-circle-check" style="color: var(--ok);"></i>'
-      : '<i class="fa-regular fa-clock" style="color: rgba(255,255,255,0.70);"></i>';
+    const waHtml = (() => {
+      const raw = (profile.whatsapp || "").trim();
+      if (!raw) return "-";
+      const link = normalizeWhatsAppLink(raw);
+      if (!link) return escapeHtml(raw);
 
-    return `
-      <div class="doc-item">
-        <div class="doc-icon"><i class="${escapeHtml(icon)}"></i></div>
-        <div class="doc-text">
-          <strong>${escapeHtml(title)}</strong>
-          <span>${escapeHtml(desc)}</span>
-        </div>
-        <div class="doc-status ${ok ? "ok" : "pending"}">
-          ${statusIcon} ${escapeHtml(statusText)}
-        </div>
+      return `
+        <span class="contact-links">
+          <span style="color: rgba(255,255,255,0.70);">${escapeHtml(raw)}</span>
+          
+          <a class="contact-btn whatsapp" href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">
+            <i class="fa-brands fa-whatsapp"></i> WhatsApp
+          </a>
+        </span>
+      `;
+    })();
+
+    const tgHtml = (() => {
+      const raw = (profile.telegram || "").trim();
+      if (!raw) return "-";
+      const link = normalizeTelegramLink(raw);
+      if (!link) return escapeHtml(raw);
+
+      return `
+        <span class="contact-links">
+          <span style="color: rgba(255,255,255,0.70);">${escapeHtml(raw)}</span>
+          <a class="contact-btn telegram" href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">
+            <i class="fa-brands fa-telegram"></i> Telegram
+          </a>
+        </span>
+      `;
+    })();
+
+    const rows = [
+      ["Profile ID", profile.public_id || "-", false],
+      ["Role", roleLabel, false],
+      ["Badge", badgeLabel(profile.badge, profile.role), false],
+      ["Verified", profile.is_verified ? "Yes" : "No", false],
+      ["Age", (age != null ? String(age) : "-"), false],
+      ["Country", profile.country || "-", false],
+      ["City", profile.city || "-", false],
+      ["Address", profile.address || "-", false],
+      ["Net worth", netWorthVal, false],
+      ["WhatsApp", waHtml, true],
+      ["Telegram", tgHtml, true],
+      ["Email", profile.email || "-", false],
+      ["Member since", since, false]
+    ];
+
+    kvBox.innerHTML = rows.map(([k, v, isHtml]) => `
+      <div class="kv-row">
+        <div class="kv-key">${escapeHtml(k)}</div>
+        <div class="kv-val">${isHtml ? v : escapeHtml(v)}</div>
       </div>
-    `;
-  };
-
-  if (isDaddy) {
-    docsBody.innerHTML =
-      mk("fa-solid fa-id-card", "Identity Document", "Verified with official checks.", verified) +
-      mk("fa-solid fa-building-columns", "Financial Statement", "Checked with bank / supporting evidence.", verified);
-  } else {
-    docsBody.innerHTML =
-      mk("fa-solid fa-camera", "Live Photo Check", "Selfie prompt matched to profile photos.", verified) +
-      mk("fa-solid fa-face-smile", "Liveliness Verification", "Liveness checks completed successfully.", verified);
-     }
-}
-
-  function normalizeTelegramLink(value) {
-  const s = String(value || "").trim();
-  if (!s) return null;
-
-  if (s.startsWith("http://") || s.startsWith("https://")) return s;
-  if (s.startsWith("t.me/")) return "https://" + s;
-  if (s.startsWith("@")) return "https://t.me/" + s.slice(1);
-  if (/^[a-zA-Z0-9_]{3,}$/.test(s)) return "https://t.me/" + s;
-
-  return null;
-}
-
-function normalizeWhatsAppLink(value) {
-  const s = String(value || "").trim();
-  if (!s) return null;
-
-  const digits = s.replace(/[^\d]/g, "");
-  if (digits.length < 7) return null;
-
-  return "https://wa.me/" + digits;
-}
-
-function renderKV(profile) {
-  const age = calcAge(profile.dob);
-  const roleLabel = (profile.role === "daddy") ? "SugarDaddy" : "SugarBaby";
-  const since = profile.created_at ? fmtMemberSince(profile.created_at) : "-";
-  const netWorthVal = profile.net_worth != null ? fmtMoney(profile.net_worth) : "-";
-
-  const waHtml = (() => {
-    const raw = (profile.whatsapp || "").trim();
-    if (!raw) return "-";
-    const link = normalizeWhatsAppLink(raw);
-    if (!link) return escapeHtml(raw);
-
-    return `
-      <span class="contact-links">
-        <span style="color: rgba(255,255,255,0.70);">${escapeHtml(raw)}</span>
-        
-        <a class="contact-btn whatsapp" href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">
-          <i class="fa-brands fa-whatsapp"></i> WhatsApp
-        </a>
-      </span>
-    `;
-  })();
-
-  const tgHtml = (() => {
-    const raw = (profile.telegram || "").trim();
-    if (!raw) return "-";
-    const link = normalizeTelegramLink(raw);
-    if (!link) return escapeHtml(raw);
-
-    return `
-      <span class="contact-links">
-        <span style="color: rgba(255,255,255,0.70);">${escapeHtml(raw)}</span>
-        <a class="contact-btn telegram" href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">
-          <i class="fa-brands fa-telegram"></i> Telegram
-        </a>
-      </span>
-    `;
-  })();
-
-  // third value = isHtml (true/false)
-  const rows = [
-    ["Profile ID", profile.public_id || "-", false],
-    ["Role", roleLabel, false],
-    ["Badge", badgeLabel(profile.badge), false],
-    ["Verified", profile.is_verified ? "Yes" : "No", false],
-    ["Age", (age != null ? String(age) : "-"), false],
-    ["Country", profile.country || "-", false],
-    ["City", profile.city || "-", false],
-    ["Address", profile.address || "-", false],
-    ["Net worth", netWorthVal, false],
-    ["WhatsApp", waHtml, true],
-    ["Telegram", tgHtml, true],
-    ["Email", profile.email || "-", false],
-    ["Member since", since, false]
-  ];
-
-  kvBox.innerHTML = rows.map(([k, v, isHtml]) => `
-    <div class="kv-row">
-      <div class="kv-key">${escapeHtml(k)}</div>
-      <div class="kv-val">${isHtml ? v : escapeHtml(v)}</div>
-    </div>
-  `).join("");
-}
+    `).join("");
+  }
 
   function renderBadges(profile) {
     const roleChip = `<span class="chip"><i class="fa-solid fa-user"></i> ${profile.role === "daddy" ? "SugarDaddy" : "SugarBaby"}</span>`;
-const badge = badgeLabel(profile.badge, profile.role);
-const badgePill = `
-  <span class="badge-pill ${badgeClass(profile.badge, profile.role)}">
+    const badge = badgeLabel(profile.badge, profile.role);
+    const badgePill = `
+      <span class="badge-pill ${badgeClass(profile.badge, profile.role)}">
         <span class="badge-dot" aria-hidden="true"></span>
         ${escapeHtml(badge)}
       </span>
     `;
 
-const verifiedChip = profile.is_verified
-  ? `<span class="chip" style="border-color: rgba(46,204,113,0.35);">
-       <i class="fa-solid fa-circle-check" style="color: var(--ok);"></i> Verified
-     </span>`
-  : `<span class="chip" style="border-color: rgba(255,107,107,0.35);">
-       <i class="fa-solid fa-circle-xmark" style="color: var(--bad);"></i> Not verified
-     </span>`;
-
+    const verifiedChip = profile.is_verified
+      ? `<span class="chip" style="border-color: rgba(46,204,113,0.35);">
+           <i class="fa-solid fa-circle-check" style="color: var(--ok);"></i> Verified
+         </span>`
+      : `<span class="chip" style="border-color: rgba(255,107,107,0.35);">
+           <i class="fa-solid fa-circle-xmark" style="color: var(--bad);"></i> Not verified
+         </span>`;
 
     pBadges.innerHTML = badgePill + roleChip + verifiedChip;
   }
@@ -1288,7 +1656,7 @@ const verifiedChip = profile.is_verified
     const proofs = data || [];
     if (!proofs.length) return;
 
-    proofsBox.style.display = "block";
+    proofsBox.style.display = "none";
     proofCount.textContent = `${proofs.length} image${proofs.length === 1 ? "" : "s"}`;
 
     proofGrid.innerHTML = proofs.map(p => {
@@ -1307,43 +1675,42 @@ const verifiedChip = profile.is_verified
       });
     });
   }
-function showProfile(profile) {
-  currentProfile = profile;
 
-  emptyState.style.display = "none";
-  profileCard.style.display = "block";
+  function showProfile(profile) {
+    currentProfile = profile;
 
-  const age = calcAge(profile.dob);
-  const roleTxt = profile.role === "daddy" ? "SugarDaddy" : "SugarBaby";
-  const sinceTxt = profile.created_at ? fmtMemberSince(profile.created_at) : "-";
-  const checkedNow = new Date().toLocaleString();
+    emptyState.style.display = "none";
+    profileCard.style.display = "block";
 
-  pName.textContent = profile.full_name || "-";
-  pSubtitle.textContent = `${profile.public_id} • ${roleTxt} • ${age != null ? age + " yrs" : "Age -"} • Member since ${sinceTxt}`;
+    const age = calcAge(profile.dob);
+    const roleTxt = profile.role === "daddy" ? "SugarDaddy" : "SugarBaby";
+    const sinceTxt = profile.created_at ? fmtMemberSince(profile.created_at) : "-";
+    const checkedNow = new Date().toLocaleString();
 
-  // banner
-  if (profile.is_verified) {
-    statusTitle.textContent = "Verified Profile";
-    statusSub.textContent = `Verified in system • Last checked: ${checkedNow}`;
-    statusPill.style.display = "inline-flex";
-    statusPillBad.style.display = "none";
-    statusIconI.className = "fa-solid fa-circle-check";
-    statusIconI.style.color = "var(--ok)";
-  } else {
-    statusTitle.textContent = "Not Verified";
-    statusSub.textContent = `This ID is not verified • Last checked: ${checkedNow}`;
-    statusPill.style.display = "none";
-    statusPillBad.style.display = "inline-flex";
-    statusIconI.className = "fa-solid fa-circle-xmark";
-    statusIconI.style.color = "var(--bad)";
+    pName.textContent = profile.full_name || "-";
+    pSubtitle.textContent = `${profile.public_id} • ${roleTxt} • ${age != null ? age + " yrs" : "Age -"} • Member since ${sinceTxt}`;
+
+    if (profile.is_verified) {
+      statusTitle.textContent = "Verified Profile";
+      statusSub.textContent = `Verified in system • Last checked: ${checkedNow}`;
+      statusPill.style.display = "inline-flex";
+      statusPillBad.style.display = "none";
+      statusIconI.className = "fa-solid fa-circle-check";
+      statusIconI.style.color = "var(--ok)";
+    } else {
+      statusTitle.textContent = "Not Verified";
+      statusSub.textContent = `This ID is not verified • Last checked: ${checkedNow}`;
+      statusPill.style.display = "none";
+      statusPillBad.style.display = "inline-flex";
+      statusIconI.className = "fa-solid fa-circle-xmark";
+      statusIconI.style.color = "var(--bad)";
+    }
+
+    renderBadges(profile);
+    renderDocs(profile);
+    renderKV(profile);
+    loadProofs(profile.id);
   }
-
-  renderBadges(profile);
-  renderDocs(profile);
-  renderKV(profile);
-  loadProofs(profile.id);
-}
-
 
   function hideProfile() {
     currentProfile = null;
@@ -1357,12 +1724,11 @@ function showProfile(profile) {
     docsBody.innerHTML = "";
     docsStatus.textContent = "-";
     statusTitle.textContent = "Verification Status";
-statusSub.textContent = "Enter an ID to verify.";
-statusPill.style.display = "none";
-statusPillBad.style.display = "none";
-statusIconI.className = "fa-solid fa-circle-check";
-statusIconI.style.color = "rgba(255,255,255,0.35)";
-
+    statusSub.textContent = "Enter an ID to verify.";
+    statusPill.style.display = "none";
+    statusPillBad.style.display = "none";
+    statusIconI.className = "fa-solid fa-circle-check";
+    statusIconI.style.color = "rgba(255,255,255,0.35)";
   }
 
   async function lookupProfile() {
@@ -1410,7 +1776,6 @@ statusIconI.style.color = "rgba(255,255,255,0.35)";
 
   lookupBtn.addEventListener("click", lookupProfile);
 
-  // Enter key support
   publicIdEl.addEventListener("keydown", (e) => {
     if (e.key === "Enter") lookupProfile();
   });
@@ -1420,31 +1785,6 @@ statusIconI.style.color = "rgba(255,255,255,0.35)";
     clearAlerts();
     hideProfile();
   });
-  function normalizeTelegramLink(value) {
-  const s = String(value || "").trim();
-  if (!s) return null;
-
-  if (s.startsWith("http://") || s.startsWith("https://")) return s;
-  if (s.startsWith("t.me/")) return "https://" + s;
-  if (s.startsWith("@")) return "https://t.me/" + s.slice(1);
-
-  // if user typed username without @
-  if (/^[a-zA-Z0-9_]{3,}$/.test(s)) return "https://t.me/" + s;
-
-  return null;
-}
-
-function normalizeWhatsAppLink(value) {
-  const s = String(value || "").trim();
-  if (!s) return null;
-
-  // Keep digits only
-  const digits = s.replace(/[^\d]/g, "");
-  if (digits.length < 7) return null;
-
-  return "https://wa.me/" + digits;
-}
-
 </script>
 
 </body>
