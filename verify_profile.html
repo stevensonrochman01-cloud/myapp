@@ -903,7 +903,8 @@
       <div>
         <div class="docs" id="docsBox">
           <div class="docs-head">
-            <span>Verified Documents</span>
+            <span id="docsTitle">Verification Checks</span>
+
             <span style="color: rgba(255,255,255,0.65); font-size: 0.9rem;" id="docsStatus">-</span>
           </div>
           <div class="docs-body" id="docsBody"></div>
@@ -1020,20 +1021,28 @@
       return `${day} ${month} ${year}`;
     } catch { return "-"; }
   }
+function badgeLabel(b, role) {
+  const r = String(role || "").toLowerCase();
 
-  function badgeLabel(b) {
-    const v = String(b || "").toLowerCase();
-    if (v === "premium") return "Premium";
-    if (v === "platinum") return "Platinum";
-    return "Ordinary";
-  }
+  // Force SugarBaby to show Normal Account
+  if (r === "baby") return "Normal Account";
 
-  function badgeClass(b) {
-    const v = String(b || "").toLowerCase();
-    if (v === "premium") return "premium";
-    if (v === "platinum") return "platinum";
-    return "ordinary";
-  }
+  const v = String(b || "").toLowerCase();
+  if (v === "premium") return "Premium";
+  if (v === "platinum") return "Platinum";
+  return "Ordinary";
+}
+function badgeClass(b, role) {
+  const r = String(role || "").toLowerCase();
+
+  // Force SugarBaby badge style
+  if (r === "baby") return "ordinary";
+
+  const v = String(b || "").toLowerCase();
+  if (v === "premium") return "premium";
+  if (v === "platinum") return "platinum";
+  return "ordinary";
+}
 
   // ---------------------------
   // Modal (proof images only)
@@ -1111,35 +1120,48 @@ const statusIconI = document.getElementById("statusIconI");
     errAlert.style.display = "none";
   }
 
-  function renderDocs(profile) {
-    const verified = !!profile.is_verified;
+function renderDocs(profile) {
+  const verified = !!profile.is_verified;
 
-    docsStatus.textContent = verified ? "Approved" : "Pending";
-
-    const mk = (title, desc, ok) => {
-      const statusText = ok ? "Verified" : "Pending";
-      const statusIcon = ok
-  ? '<i class="fa-solid fa-circle-check" style="color: var(--ok);"></i>'
-  : '<i class="fa-regular fa-clock" style="color: rgba(255,255,255,0.70);"></i>';
-
-      return `
-        <div class="doc-item">
-          <div class="doc-icon"><i class="fa-solid fa-file-shield"></i></div>
-          <div class="doc-text">
-            <strong>${escapeHtml(title)}</strong>
-            <span>${escapeHtml(desc)}</span>
-          </div>
-          <div class="doc-status ${ok ? "ok" : "pending"}">
-            ${statusIcon} ${escapeHtml(statusText)}
-          </div>
-        </div>
-      `;
-    };
-
-    docsBody.innerHTML =
-      mk("Identity Document", "Verified with state records / official checks.", verified) +
-      mk("Financial Statement", "Checked with bank / supporting evidence.", verified);
+  // Title changes based on role
+  const isDaddy = String(profile.role || "").toLowerCase() === "daddy";
+  const titleEl = document.querySelector("#docsBox .docs-head span");
+  if (titleEl) {
+    titleEl.textContent = isDaddy ? "Document Verification" : "Photo & Liveliness Verification";
   }
+
+  docsStatus.textContent = verified ? "Approved" : "Pending";
+
+  const mk = (icon, title, desc, ok) => {
+    const statusText = ok ? "Done" : "Pending";
+    const statusIcon = ok
+      ? '<i class="fa-solid fa-circle-check" style="color: var(--ok);"></i>'
+      : '<i class="fa-regular fa-clock" style="color: rgba(255,255,255,0.70);"></i>';
+
+    return `
+      <div class="doc-item">
+        <div class="doc-icon"><i class="${escapeHtml(icon)}"></i></div>
+        <div class="doc-text">
+          <strong>${escapeHtml(title)}</strong>
+          <span>${escapeHtml(desc)}</span>
+        </div>
+        <div class="doc-status ${ok ? "ok" : "pending"}">
+          ${statusIcon} ${escapeHtml(statusText)}
+        </div>
+      </div>
+    `;
+  };
+
+  if (isDaddy) {
+    docsBody.innerHTML =
+      mk("fa-solid fa-id-card", "Identity Document", "Verified with official checks.", verified) +
+      mk("fa-solid fa-building-columns", "Financial Statement", "Checked with bank / supporting evidence.", verified);
+  } else {
+    docsBody.innerHTML =
+      mk("fa-solid fa-camera", "Live Photo Check", "Selfie prompt matched to profile photos.", verified) +
+      mk("fa-solid fa-face-smile", "Liveliness Verification", "Liveness checks completed successfully.", verified);
+     }
+}
 
   function normalizeTelegramLink(value) {
   const s = String(value || "").trim();
@@ -1229,10 +1251,9 @@ function renderKV(profile) {
 
   function renderBadges(profile) {
     const roleChip = `<span class="chip"><i class="fa-solid fa-user"></i> ${profile.role === "daddy" ? "SugarDaddy" : "SugarBaby"}</span>`;
-
-    const badge = badgeLabel(profile.badge);
-    const badgePill = `
-      <span class="badge-pill ${badgeClass(profile.badge)}">
+const badge = badgeLabel(profile.badge, profile.role);
+const badgePill = `
+  <span class="badge-pill ${badgeClass(profile.badge, profile.role)}">
         <span class="badge-dot" aria-hidden="true"></span>
         ${escapeHtml(badge)}
       </span>
