@@ -1,0 +1,1430 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Verify Profile | Golden Sugar Dating</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Supabase JS -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root {
+      --bg-color: #050505;
+      --gold-light: #F3E5AB;
+      --gold-main: #D4AF37;
+      --gold-dark: #AA8C2C;
+      --text-white: #ffffff;
+      --text-grey: #a0a0a0;
+      --muted: #666;
+      --border: rgba(255,255,255,0.08);
+      --border-strong: rgba(255,255,255,0.14);
+      --shadow-gold: 0 0 22px rgba(212, 175, 55, 0.18);
+      --radius-soft: 12px;
+      --radius-card: 10px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg-color);
+      color: var(--text-white);
+      font-family: 'Montserrat', sans-serif;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    h1, h2, h3 { font-family: 'Playfair Display', serif; margin: 0; }
+    a { color: inherit; text-decoration: none; }
+
+    .gold-text {
+      background: linear-gradient(to right, var(--gold-light), var(--gold-main), var(--gold-dark));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-weight: 700;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 5%;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 50;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      background: linear-gradient(to bottom, rgba(0,0,0,0.88), rgba(0,0,0,0.35));
+      backdrop-filter: blur(10px);
+      transition: all 0.25s ease;
+      gap: 12px;
+    }
+    header.scrolled {
+      background: rgba(0,0,0,0.92);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      letter-spacing: 2px;
+      font-size: 1.15rem;
+      flex-shrink: 0;
+      min-width: 0;
+    }
+    .logo-mark {
+      width: 10px; height: 10px;
+      border: 1px solid rgba(212,175,55,0.8);
+      box-shadow: var(--shadow-gold);
+      transform: rotate(45deg);
+      flex-shrink: 0;
+    }
+
+    nav ul {
+      display: flex;
+      gap: 18px;
+      align-items: center;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    nav a {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: rgba(255,255,255,0.88);
+      transition: color 0.2s ease;
+    }
+    nav a:hover { color: var(--gold-main); }
+
+    .nav-actions { display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
+
+    .btn-gold {
+      background: linear-gradient(135deg, var(--gold-main), var(--gold-dark));
+      color: #000;
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border: 1px solid var(--gold-main);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      user-select: none;
+      font-size: 0.78rem;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+    .btn-gold:hover {
+      background: transparent;
+      color: var(--gold-main);
+      box-shadow: 0 0 20px rgba(212, 175, 55, 0.35);
+      transform: translateY(-1px);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-white);
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border: 1px solid var(--border-strong);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      user-select: none;
+      font-size: 0.78rem;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+    .btn-ghost:hover {
+      border-color: var(--gold-main);
+      color: var(--gold-main);
+      box-shadow: var(--shadow-gold);
+      transform: translateY(-1px);
+    }
+
+    .container {
+      padding: 90px 5% 70px;
+      max-width: 1300px;
+      margin: 0 auto;
+    }
+
+    .hero {
+      border: 1px solid rgba(255,255,255,0.08);
+      background:
+        radial-gradient(1100px 520px at 50% 0%, rgba(212,175,55,0.12), transparent 60%),
+        linear-gradient(to bottom, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: clamp(20px, 4vw, 32px);
+    }
+
+    .kicker {
+      display: inline-flex;
+      gap: 10px;
+      align-items: center;
+      font-size: 0.75rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.85);
+      border: 1px solid rgba(255,255,255,0.12);
+      padding: 10px 14px;
+      background: rgba(0,0,0,0.25);
+      backdrop-filter: blur(10px);
+      border-radius: 6px;
+      width: fit-content;
+    }
+
+    .hero h1 {
+      font-size: clamp(1.8rem, 5vw, 2.8rem);
+      margin-top: 16px;
+      line-height: 1.2;
+    }
+
+    .hero p {
+      margin-top: 12px;
+      color: rgba(255,255,255,0.72);
+      font-size: clamp(0.95rem, 2vw, 1.05rem);
+      max-width: 900px;
+    }
+
+    .divider {
+      height: 1px;
+      background: linear-gradient(to right, transparent, rgba(212,175,55,0.25), transparent);
+      margin: 22px 0;
+    }
+
+.grid {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-top: 22px;
+}
+/* 
+  @media (min-width: 1024px) {
+  .grid { grid-template-columns: 0.95fr 1.6fr; }
+} */
+
+
+    .panel {
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(0,0,0,0.35);
+      backdrop-filter: blur(12px);
+      border-radius: 14px;
+      padding: clamp(16px, 3vw, 22px);
+    }
+
+    .panel h2 {
+      font-size: clamp(1.2rem, 3vw, 1.5rem);
+      margin-bottom: 8px;
+    }
+
+    .panel-sub {
+      color: rgba(255,255,255,0.70);
+      font-size: 0.92rem;
+    }
+
+    .field { margin-top: 14px; }
+    .field label {
+      display: block;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: rgba(255,255,255,0.78);
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+    .field input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.35);
+      color: rgba(255,255,255,0.92);
+      outline: none;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      transition: all 0.2s ease;
+    }
+    .field input:focus {
+      border-color: rgba(212,175,55,0.55);
+      box-shadow: 0 0 0 3px rgba(212,175,55,0.12);
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+
+    .alert {
+      margin-top: 14px;
+      display: none;
+      padding: 14px 16px;
+      border-left: 3px solid var(--gold-main);
+      background: rgba(0,0,0,0.25);
+      color: rgba(255,255,255,0.78);
+      border-radius: 10px;
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+    .alert.error {
+      border-left-color: #ff6b6b;
+      color: #ffb3b3;
+    }
+
+    /* Result card */
+    .profile-card {
+      display: none;
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 14px;
+      overflow: hidden;
+      background: rgba(0,0,0,0.22);
+    }
+
+    .profile-head {
+      padding: 18px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      background: radial-gradient(800px 300px at 30% 0%, rgba(212,175,55,0.12), transparent 60%);
+    }
+
+    .head-left { min-width: 0; }
+    .head-left h3 { font-size: 1.5rem; line-height: 1.15; }
+    .head-left .sub {
+      margin-top: 8px;
+      color: rgba(255,255,255,0.72);
+      font-size: 0.95rem;
+      word-break: break-word;
+    }
+
+    .badges {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid rgba(255,255,255,0.10);
+      padding: 8px 12px;
+      background: rgba(0,0,0,0.25);
+      border-radius: 999px;
+      font-size: 0.82rem;
+      color: rgba(255,255,255,0.86);
+      white-space: nowrap;
+    }
+
+    /* Better badge (highlight) */
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(212,175,55,0.40);
+      background: radial-gradient(900px 180px at 30% 0%, rgba(212,175,55,0.18), rgba(0,0,0,0.25));
+      box-shadow: 0 0 24px rgba(212,175,55,0.20);
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-size: 0.78rem;
+    }
+
+    .badge-pill.premium {
+      border-color: rgba(212,175,55,0.55);
+      box-shadow: 0 0 26px rgba(212,175,55,0.25);
+    }
+    .badge-pill.platinum {
+      border-color: rgba(243,229,171,0.55);
+      box-shadow: 0 0 26px rgba(243,229,171,0.18);
+    }
+    .badge-pill.ordinary {
+      border-color: rgba(255,255,255,0.16);
+      box-shadow: none;
+      opacity: 0.95;
+    }
+
+    .badge-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: linear-gradient(135deg, var(--gold-main), var(--gold-dark));
+      box-shadow: 0 0 18px rgba(212,175,55,0.35);
+    }
+
+    .profile-body {
+      padding: 18px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+    }
+    @media (min-width: 980px) {
+      .profile-body { grid-template-columns: 0.95fr 1.05fr; }
+    }
+
+    /* Verification documents block */
+    .docs {
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 12px;
+      background: rgba(0,0,0,0.22);
+      overflow: hidden;
+    }
+    .docs-head {
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      font-weight: 700;
+    }
+    .docs-body { padding: 14px; }
+    .doc-item {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 12px 0;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .doc-item:first-child { border-top: none; }
+    .doc-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(0,0,0,0.25);
+      flex: 0 0 auto;
+      color: var(--gold-main);
+    }
+    .doc-text strong {
+      display: block;
+      color: rgba(255,255,255,0.92);
+      font-size: 0.95rem;
+      line-height: 1.2;
+    }
+    .doc-text span {
+      display: block;
+      margin-top: 4px;
+      color: rgba(255,255,255,0.70);
+      font-size: 0.88rem;
+      line-height: 1.4;
+    }
+    .doc-status {
+      margin-left: auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(0,0,0,0.25);
+      font-size: 0.82rem;
+      color: rgba(255,255,255,0.82);
+      white-space: nowrap;
+      flex: 0 0 auto;
+    }
+    .doc-status.ok { border-color: rgba(212,175,55,0.35); }
+    .doc-status.pending { border-color: rgba(255,255,255,0.12); opacity: 0.9; }
+
+    /* Key/Value box */
+    .kv {
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 12px;
+      background: rgba(0,0,0,0.22);
+      overflow: hidden;
+    }
+    .kv-row {
+      display: grid;
+      grid-template-columns: 170px 1fr;
+      gap: 12px;
+      padding: 12px 14px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .kv-row:first-child { border-top: none; }
+    .kv-key {
+      color: rgba(255,255,255,0.65);
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+    .kv-val { color: rgba(255,255,255,0.88); font-size: 0.95rem; word-break: break-word; }
+
+    /* Proofs */
+    .proofs {
+      margin-top: 14px;
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 12px;
+      background: rgba(0,0,0,0.22);
+      overflow: hidden;
+    }
+    .proofs-head {
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      font-weight: 700;
+    }
+    .proofs-grid {
+      padding: 14px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    @media (min-width: 900px) {
+      .proofs-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    .proof-thumb {
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 10px;
+      overflow: hidden;
+      background: rgba(0,0,0,0.25);
+      cursor: pointer;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+    .proof-thumb:hover {
+      transform: translateY(-2px);
+      border-color: rgba(212,175,55,0.35);
+      box-shadow: 0 0 18px rgba(212,175,55,0.10);
+    }
+    .proof-thumb img {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+      display: block;
+    }
+    .proof-thumb span {
+      display: block;
+      padding: 10px;
+      color: rgba(255,255,255,0.75);
+      font-size: 0.85rem;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.82);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      padding: 20px;
+      backdrop-filter: blur(4px);
+    }
+    .modal {
+      width: min(950px, 100%);
+      max-height: 90vh;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(10,10,10,0.95);
+      backdrop-filter: blur(14px);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 30px 90px rgba(0,0,0,0.65);
+      display: flex;
+      flex-direction: column;
+    }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      background: rgba(0,0,0,0.35);
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .modal-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.2rem;
+      letter-spacing: 1px;
+      min-width: 0;
+    }
+    .modal-close {
+      width: 40px;
+      height: 40px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.25);
+      color: rgba(255,255,255,0.85);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      flex-shrink: 0;
+      transition: all 0.2s ease;
+    }
+    .modal-close:hover {
+      border-color: var(--gold-main);
+      color: var(--gold-main);
+      box-shadow: var(--shadow-gold);
+    }
+    .modal-body {
+      padding: 18px;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .modal-body img {
+      width: 100%;
+      max-height: 70vh;
+      object-fit: contain;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(0,0,0,0.30);
+    }
+
+    /* Mobile improvements */
+    @media (max-width: 820px) {
+      nav { display: none; }
+    }
+    @media (max-width: 560px) {
+      .kv-row { grid-template-columns: 1fr; gap: 6px; }
+      .kv-key { font-size: 0.78rem; letter-spacing: 1.2px; }
+      .head-left h3 { font-size: 1.35rem; }
+      .badges { justify-content: flex-start; }
+      .proof-thumb img { height: 140px; }
+    }
+    :root{
+  --ok: #2ecc71;
+  --bad: #ff6b6b;
+  --ink: rgba(255,255,255,0.92);
+  --ink-soft: rgba(255,255,255,0.70);
+}
+
+.result-shell{
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 16px;
+  overflow: hidden;
+  background: rgba(0,0,0,0.25);
+}
+
+.status-banner{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  background:
+    radial-gradient(900px 200px at 20% 0%, rgba(46,204,113,0.10), transparent 60%),
+    linear-gradient(to bottom, rgba(255,255,255,0.03), rgba(0,0,0,0.20));
+}
+
+.status-left{
+  display:flex;
+  align-items:center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.status-icon{
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(0,0,0,0.30);
+}
+
+.status-title{
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  color: var(--ink);
+}
+
+.status-sub{
+  margin-top: 2px;
+  color: var(--ink-soft);
+  font-size: 0.88rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 820px;
+}
+
+.status-right{
+  display:flex;
+  gap: 10px;
+  align-items:center;
+  flex-wrap: wrap;
+  justify-content:flex-end;
+}
+
+.seal{
+  display:inline-flex;
+  align-items:center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px dashed rgba(255,255,255,0.16);
+  background: rgba(0,0,0,0.18);
+  color: rgba(255,255,255,0.78);
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.seal i{ color: var(--gold-main); }
+
+.verified-pill{
+  display:inline-flex;
+  align-items:center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  border: 1px solid rgba(46,204,113,0.35);
+  background: rgba(46,204,113,0.08);
+  color: var(--ok);
+}
+
+.unverified-pill{
+  display:inline-flex;
+  align-items:center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  border: 1px solid rgba(255,107,107,0.35);
+  background: rgba(255,107,107,0.08);
+  color: var(--bad);
+}
+
+.badge-pill{
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.badge-dot{
+  background: var(--gold-main);
+}
+
+/* Make doc checks green and more official */
+.doc-icon{ color: var(--ok); border-color: rgba(46,204,113,0.25); }
+.doc-status.ok{ border-color: rgba(46,204,113,0.35); color: rgba(255,255,255,0.88); }
+.doc-status.ok i{ color: var(--ok) !important; }
+.doc-status.pending i{ color: rgba(255,255,255,0.70) !important; }
+
+/* More certificate-like KV */
+.kv { background: rgba(0,0,0,0.18); }
+.kv-row:nth-child(odd){ background: rgba(255,255,255,0.02); }
+.kv-key{ color: rgba(255,255,255,0.60); }
+
+/* Mobile tighten */
+@media (max-width:560px){
+  .status-banner{ flex-direction: column; align-items:flex-start; }
+  .status-right{ justify-content:flex-start; width: 100%; }
+}
+.contact-links {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.contact-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(0,0,0,0.20);
+  color: rgba(255,255,255,0.88);
+  font-size: 0.9rem;
+  transition: 0.2s ease;
+}
+
+.contact-btn:hover {
+  border-color: rgba(212,175,55,0.35);
+  box-shadow: 0 0 18px rgba(212,175,55,0.12);
+  transform: translateY(-1px);
+}
+
+.contact-btn i {
+  font-size: 1rem;
+}
+
+.contact-btn.whatsapp i { color: #25D366; }   /* WhatsApp green */
+.contact-btn.telegram i { color: #2AABEE; }   /* Telegram blue */
+
+  </style>
+</head>
+
+<body>
+
+<header id="siteHeader" aria-label="Site header">
+  <a class="logo" href="/index.html" aria-label="Brand home">
+    <span class="logo-mark" aria-hidden="true"></span>
+    <div><span class="gold-text">Golden</span> Sugar Dating</div>
+  </a>
+
+  <nav aria-label="Primary navigation">
+    <ul>
+      <li><a href="/index.html#apply">Apply</a></li>
+      <li><a href="/index.html#verify">Verification</a></li>
+      <li><a href="/index.html#tiers">Plans</a></li>
+      <li><a href="/scammers.html">Scammer List</a></li>
+    </ul>
+  </nav>
+
+  <div class="nav-actions">
+    <a class="btn-ghost" href="/index.html#apply"><i class="fa-solid fa-pen-to-square"></i><span>Apply Now</span></a>
+    <a class="btn-gold" href="#lookup"><i class="fa-solid fa-user-shield"></i><span>Verify Profile</span></a>
+  </div>
+</header>
+
+<main class="container">
+  <section class="hero" aria-label="Verify profile hero">
+    <div class="kicker">
+      <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+      <span>Verify Profile</span>
+    </div>
+
+    <h1>
+      Check a <span class="gold-text">SugarDaddy</span> or <span class="gold-text">SugarBaby</span> ID
+    </h1>
+
+    <p>
+      Enter the profile ID to confirm it’s real and view verified details and badge level.
+      If you’re unsure, do not send any money upfront. Use this page to confirm who you’re dealing with.
+    </p>
+
+    <div class="divider"></div>
+
+    <div class="grid" id="lookup" aria-label="Verify profile grid">
+      <!-- Lookup panel -->
+      <div class="panel">
+        <h2>Lookup</h2>
+        <div class="panel-sub">Enter the profile ID exactly as provided.</div>
+
+        <div class="field">
+          <label for="publicId">Profile ID</label>
+          <input id="publicId" placeholder="Example: GSD-10293" autocomplete="off" />
+        </div>
+
+        <div class="actions">
+          <button class="btn-ghost" id="clearBtn" type="button">
+            <i class="fa-solid fa-eraser"></i> Clear
+          </button>
+          <button class="btn-gold" id="lookupBtn" type="button">
+            <i class="fa-solid fa-magnifying-glass"></i> Verify
+          </button>
+        </div>
+
+        <div class="alert" id="okAlert"></div>
+        <div class="alert error" id="errAlert"></div>
+      </div>
+
+      <!-- Result panel -->
+      <div class="panel">
+        <h2>Result</h2>
+        <div class="panel-sub">Verified profiles will show details and proof (if available).</div>
+
+<div class="profile-card" id="profileCard">
+  <div class="result-shell">
+
+    <!-- Authentic status banner -->
+    <div class="status-banner" id="statusBanner">
+      <div class="status-left">
+        <div class="status-icon" id="statusIcon">
+          <i class="fa-solid fa-circle-check" id="statusIconI"></i>
+        </div>
+        <div style="min-width:0;">
+          <div class="status-title" id="statusTitle">Verification Status</div>
+          <div class="status-sub" id="statusSub">Enter an ID to verify.</div>
+        </div>
+      </div>
+
+      <div class="status-right">
+        <span class="seal"><i class="fa-solid fa-shield-halved"></i> Security Check</span>
+        <span id="statusPill" class="verified-pill" style="display:none;">
+          <i class="fa-solid fa-check"></i> Verified
+        </span>
+        <span id="statusPillBad" class="unverified-pill" style="display:none;">
+          <i class="fa-solid fa-xmark"></i> Not Verified
+        </span>
+      </div>
+    </div>
+
+    <div class="profile-head">
+      <div class="head-left">
+        <h3 id="pName" class="gold-text">-</h3>
+        <div class="sub" id="pSubtitle">-</div>
+      </div>
+
+      <div class="badges" id="pBadges"></div>
+    </div>
+
+    <div class="profile-body">
+      <div>
+        <div class="docs" id="docsBox">
+          <div class="docs-head">
+            <span>Verified Documents</span>
+            <span style="color: rgba(255,255,255,0.65); font-size: 0.9rem;" id="docsStatus">-</span>
+          </div>
+          <div class="docs-body" id="docsBody"></div>
+        </div>
+
+        <div class="proofs" id="proofsBox" style="display:none;">
+          <div class="proofs-head">
+            <span>Proof Images</span>
+            <span style="color: rgba(255,255,255,0.65); font-size: 0.9rem;" id="proofCount">0</span>
+          </div>
+          <div class="proofs-grid" id="proofGrid"></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="kv" id="kvBox"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+        <div class="alert" id="emptyState" style="display:block;">
+          Enter a Profile ID and click Verify.
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- Image Modal (for proof images only) -->
+<div class="modal-overlay" id="imgModal" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="imgTitle">
+    <div class="modal-header">
+      <div class="modal-title" id="imgTitle">Image</div>
+      <button class="modal-close" id="closeImgModal" aria-label="Close image">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <img id="modalImg" alt="image preview" src="" />
+      <div style="margin-top:16px; display:flex; justify-content:flex-end;">
+        <a class="btn-ghost" id="openImgNewTab" href="#" target="_blank" rel="noopener">
+          <i class="fa-solid fa-up-right-from-square"></i> Open in new tab
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Header scroll
+  const header = document.getElementById('siteHeader');
+  function onScroll() {
+    if (window.scrollY > 10) header.classList.add('scrolled');
+    else header.classList.remove('scrolled');
+  }
+  window.addEventListener('scroll', onScroll);
+  onScroll();
+
+  // ---------------------------
+  // CONFIG
+  // ---------------------------
+  const SUPABASE_URL = "https://efrijmrcuvtwjwgcttou.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_BH_9cL6k97CQ4h1MkVXJjg_edZ2K4iW";
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // ---------------------------
+  // Helpers
+  // ---------------------------
+  function escapeHtml(s) {
+    return String(s || "")
+      .replaceAll("&","&amp;").replaceAll("<","&lt;")
+      .replaceAll(">","&gt;").replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+
+  function calcAge(dobStr) {
+    const d = new Date(dobStr);
+    if (Number.isNaN(d.getTime())) return null;
+    const now = new Date();
+    let age = now.getFullYear() - d.getFullYear();
+    const m = now.getMonth() - d.getMonth();
+    if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
+    return age;
+  }
+
+  function fmtMoney(n) {
+    const num = Number(n);
+    if (!Number.isFinite(num)) return "-";
+    try {
+      return new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(num);
+    } catch {
+      return String(num);
+    }
+  }
+
+  function ordinal(n) {
+    const num = Number(n);
+    if (!Number.isFinite(num)) return String(n);
+    const s = ["th","st","nd","rd"];
+    const v = num % 100;
+    return num + (s[(v-20)%10] || s[v] || s[0]);
+  }
+
+  function fmtMemberSince(iso) {
+    try {
+      const d = new Date(iso);
+      if (Number.isNaN(d.getTime())) return "-";
+      const day = ordinal(d.getDate());
+      const month = d.toLocaleString(undefined, { month: "long" });
+      const year = d.getFullYear();
+      return `${day} ${month} ${year}`;
+    } catch { return "-"; }
+  }
+
+  function badgeLabel(b) {
+    const v = String(b || "").toLowerCase();
+    if (v === "premium") return "Premium";
+    if (v === "platinum") return "Platinum";
+    return "Ordinary";
+  }
+
+  function badgeClass(b) {
+    const v = String(b || "").toLowerCase();
+    if (v === "premium") return "premium";
+    if (v === "platinum") return "platinum";
+    return "ordinary";
+  }
+
+  // ---------------------------
+  // Modal (proof images only)
+  // ---------------------------
+  const imgModal = document.getElementById("imgModal");
+  const closeImgModal = document.getElementById("closeImgModal");
+  const modalImg = document.getElementById("modalImg");
+  const openImgNewTab = document.getElementById("openImgNewTab");
+
+  function openImage(url, title) {
+    document.getElementById("imgTitle").textContent = title || "Image";
+    modalImg.src = url;
+    openImgNewTab.href = url;
+    imgModal.style.display = "flex";
+    imgModal.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+  }
+  function closeImage() {
+    imgModal.style.display = "none";
+    imgModal.setAttribute("aria-hidden", "true");
+    modalImg.src = "";
+    openImgNewTab.href = "#";
+    document.body.style.overflow = "";
+  }
+  closeImgModal.addEventListener("click", closeImage);
+  imgModal.addEventListener("click", (e) => { if (e.target === imgModal) closeImage(); });
+  window.addEventListener("keydown", (e) => { if (e.key === "Escape") closeImage(); });
+
+  // ---------------------------
+  // UI refs
+  // ---------------------------
+  const publicIdEl = document.getElementById("publicId");
+  const lookupBtn = document.getElementById("lookupBtn");
+  const clearBtn = document.getElementById("clearBtn");
+
+  const okAlert = document.getElementById("okAlert");
+  const errAlert = document.getElementById("errAlert");
+
+  const profileCard = document.getElementById("profileCard");
+  const emptyState = document.getElementById("emptyState");
+
+  const pName = document.getElementById("pName");
+  const pSubtitle = document.getElementById("pSubtitle");
+  const pBadges = document.getElementById("pBadges");
+  const kvBox = document.getElementById("kvBox");
+
+  const proofsBox = document.getElementById("proofsBox");
+  const proofGrid = document.getElementById("proofGrid");
+  const proofCount = document.getElementById("proofCount");
+
+  const docsStatus = document.getElementById("docsStatus");
+  const docsBody = document.getElementById("docsBody");
+const statusTitle = document.getElementById("statusTitle");
+const statusSub = document.getElementById("statusSub");
+const statusPill = document.getElementById("statusPill");
+const statusPillBad = document.getElementById("statusPillBad");
+const statusIconI = document.getElementById("statusIconI");
+
+  let currentProfile = null;
+
+  function showOk(msg) {
+    okAlert.textContent = msg || "";
+    okAlert.style.display = msg ? "block" : "none";
+    errAlert.style.display = "none";
+  }
+
+  function showErr(msg) {
+    errAlert.textContent = msg || "Something went wrong.";
+    errAlert.style.display = "block";
+    okAlert.style.display = "none";
+  }
+
+  function clearAlerts() {
+    okAlert.style.display = "none";
+    errAlert.style.display = "none";
+  }
+
+  function renderDocs(profile) {
+    const verified = !!profile.is_verified;
+
+    docsStatus.textContent = verified ? "Approved" : "Pending";
+
+    const mk = (title, desc, ok) => {
+      const statusText = ok ? "Verified" : "Pending";
+      const statusIcon = ok
+  ? '<i class="fa-solid fa-circle-check" style="color: var(--ok);"></i>'
+  : '<i class="fa-regular fa-clock" style="color: rgba(255,255,255,0.70);"></i>';
+
+      return `
+        <div class="doc-item">
+          <div class="doc-icon"><i class="fa-solid fa-file-shield"></i></div>
+          <div class="doc-text">
+            <strong>${escapeHtml(title)}</strong>
+            <span>${escapeHtml(desc)}</span>
+          </div>
+          <div class="doc-status ${ok ? "ok" : "pending"}">
+            ${statusIcon} ${escapeHtml(statusText)}
+          </div>
+        </div>
+      `;
+    };
+
+    docsBody.innerHTML =
+      mk("Identity Document", "Verified with state records / official checks.", verified) +
+      mk("Financial Statement", "Checked with bank / supporting evidence.", verified);
+  }
+
+  function normalizeTelegramLink(value) {
+  const s = String(value || "").trim();
+  if (!s) return null;
+
+  if (s.startsWith("http://") || s.startsWith("https://")) return s;
+  if (s.startsWith("t.me/")) return "https://" + s;
+  if (s.startsWith("@")) return "https://t.me/" + s.slice(1);
+  if (/^[a-zA-Z0-9_]{3,}$/.test(s)) return "https://t.me/" + s;
+
+  return null;
+}
+
+function normalizeWhatsAppLink(value) {
+  const s = String(value || "").trim();
+  if (!s) return null;
+
+  const digits = s.replace(/[^\d]/g, "");
+  if (digits.length < 7) return null;
+
+  return "https://wa.me/" + digits;
+}
+
+function renderKV(profile) {
+  const age = calcAge(profile.dob);
+  const roleLabel = (profile.role === "daddy") ? "SugarDaddy" : "SugarBaby";
+  const since = profile.created_at ? fmtMemberSince(profile.created_at) : "-";
+  const netWorthVal = profile.net_worth != null ? fmtMoney(profile.net_worth) : "-";
+
+  const waHtml = (() => {
+    const raw = (profile.whatsapp || "").trim();
+    if (!raw) return "-";
+    const link = normalizeWhatsAppLink(raw);
+    if (!link) return escapeHtml(raw);
+
+    return `
+      <span class="contact-links">
+        <span style="color: rgba(255,255,255,0.70);">${escapeHtml(raw)}</span>
+        
+        <a class="contact-btn whatsapp" href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">
+          <i class="fa-brands fa-whatsapp"></i> WhatsApp
+        </a>
+      </span>
+    `;
+  })();
+
+  const tgHtml = (() => {
+    const raw = (profile.telegram || "").trim();
+    if (!raw) return "-";
+    const link = normalizeTelegramLink(raw);
+    if (!link) return escapeHtml(raw);
+
+    return `
+      <span class="contact-links">
+        <span style="color: rgba(255,255,255,0.70);">${escapeHtml(raw)}</span>
+        <a class="contact-btn telegram" href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">
+          <i class="fa-brands fa-telegram"></i> Telegram
+        </a>
+      </span>
+    `;
+  })();
+
+  // third value = isHtml (true/false)
+  const rows = [
+    ["Profile ID", profile.public_id || "-", false],
+    ["Role", roleLabel, false],
+    ["Badge", badgeLabel(profile.badge), false],
+    ["Verified", profile.is_verified ? "Yes" : "No", false],
+    ["Age", (age != null ? String(age) : "-"), false],
+    ["Country", profile.country || "-", false],
+    ["City", profile.city || "-", false],
+    ["Address", profile.address || "-", false],
+    ["Net worth", netWorthVal, false],
+    ["WhatsApp", waHtml, true],
+    ["Telegram", tgHtml, true],
+    ["Email", profile.email || "-", false],
+    ["Member since", since, false]
+  ];
+
+  kvBox.innerHTML = rows.map(([k, v, isHtml]) => `
+    <div class="kv-row">
+      <div class="kv-key">${escapeHtml(k)}</div>
+      <div class="kv-val">${isHtml ? v : escapeHtml(v)}</div>
+    </div>
+  `).join("");
+}
+
+  function renderBadges(profile) {
+    const roleChip = `<span class="chip"><i class="fa-solid fa-user"></i> ${profile.role === "daddy" ? "SugarDaddy" : "SugarBaby"}</span>`;
+
+    const badge = badgeLabel(profile.badge);
+    const badgePill = `
+      <span class="badge-pill ${badgeClass(profile.badge)}">
+        <span class="badge-dot" aria-hidden="true"></span>
+        ${escapeHtml(badge)}
+      </span>
+    `;
+
+const verifiedChip = profile.is_verified
+  ? `<span class="chip" style="border-color: rgba(46,204,113,0.35);">
+       <i class="fa-solid fa-circle-check" style="color: var(--ok);"></i> Verified
+     </span>`
+  : `<span class="chip" style="border-color: rgba(255,107,107,0.35);">
+       <i class="fa-solid fa-circle-xmark" style="color: var(--bad);"></i> Not verified
+     </span>`;
+
+
+    pBadges.innerHTML = badgePill + roleChip + verifiedChip;
+  }
+
+  async function loadProofs(profileId) {
+    proofGrid.innerHTML = "";
+    proofsBox.style.display = "none";
+    proofCount.textContent = "0";
+
+    const { data, error } = await sb
+      .from("profile_proofs")
+      .select("id, image_url, label, created_at")
+      .eq("profile_id", profileId)
+      .order("created_at", { ascending: false })
+      .limit(60);
+
+    if (error) return;
+
+    const proofs = data || [];
+    if (!proofs.length) return;
+
+    proofsBox.style.display = "block";
+    proofCount.textContent = `${proofs.length} image${proofs.length === 1 ? "" : "s"}`;
+
+    proofGrid.innerHTML = proofs.map(p => {
+      const label = p.label ? p.label : "Proof";
+      return `
+        <div class="proof-thumb" data-url="${escapeHtml(p.image_url)}" data-title="${escapeHtml(label)}">
+          <img src="${escapeHtml(p.image_url)}" alt="proof" />
+          <span>${escapeHtml(label)}</span>
+        </div>
+      `;
+    }).join("");
+
+    document.querySelectorAll(".proof-thumb").forEach(el => {
+      el.addEventListener("click", () => {
+        openImage(el.getAttribute("data-url"), el.getAttribute("data-title"));
+      });
+    });
+  }
+function showProfile(profile) {
+  currentProfile = profile;
+
+  emptyState.style.display = "none";
+  profileCard.style.display = "block";
+
+  const age = calcAge(profile.dob);
+  const roleTxt = profile.role === "daddy" ? "SugarDaddy" : "SugarBaby";
+  const sinceTxt = profile.created_at ? fmtMemberSince(profile.created_at) : "-";
+  const checkedNow = new Date().toLocaleString();
+
+  pName.textContent = profile.full_name || "-";
+  pSubtitle.textContent = `${profile.public_id} • ${roleTxt} • ${age != null ? age + " yrs" : "Age -"} • Member since ${sinceTxt}`;
+
+  // banner
+  if (profile.is_verified) {
+    statusTitle.textContent = "Verified Profile";
+    statusSub.textContent = `Verified in system • Last checked: ${checkedNow}`;
+    statusPill.style.display = "inline-flex";
+    statusPillBad.style.display = "none";
+    statusIconI.className = "fa-solid fa-circle-check";
+    statusIconI.style.color = "var(--ok)";
+  } else {
+    statusTitle.textContent = "Not Verified";
+    statusSub.textContent = `This ID is not verified • Last checked: ${checkedNow}`;
+    statusPill.style.display = "none";
+    statusPillBad.style.display = "inline-flex";
+    statusIconI.className = "fa-solid fa-circle-xmark";
+    statusIconI.style.color = "var(--bad)";
+  }
+
+  renderBadges(profile);
+  renderDocs(profile);
+  renderKV(profile);
+  loadProofs(profile.id);
+}
+
+
+  function hideProfile() {
+    currentProfile = null;
+    profileCard.style.display = "none";
+    emptyState.style.display = "block";
+    kvBox.innerHTML = "";
+    pBadges.innerHTML = "";
+    proofGrid.innerHTML = "";
+    proofsBox.style.display = "none";
+    proofCount.textContent = "0";
+    docsBody.innerHTML = "";
+    docsStatus.textContent = "-";
+    statusTitle.textContent = "Verification Status";
+statusSub.textContent = "Enter an ID to verify.";
+statusPill.style.display = "none";
+statusPillBad.style.display = "none";
+statusIconI.className = "fa-solid fa-circle-check";
+statusIconI.style.color = "rgba(255,255,255,0.35)";
+
+  }
+
+  async function lookupProfile() {
+    clearAlerts();
+
+    const publicId = (publicIdEl.value || "").trim();
+    if (!publicId) {
+      showErr("Please enter a profile ID.");
+      return;
+    }
+
+    lookupBtn.disabled = true;
+    lookupBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verifying...';
+
+    try {
+      const { data, error } = await sb
+        .from("verified_profiles")
+        .select("*")
+        .eq("public_id", publicId)
+        .maybeSingle();
+
+      if (error) {
+        showErr("Lookup failed. Check your Supabase/RLS settings.");
+        hideProfile();
+        return;
+      }
+
+      if (!data) {
+        showErr("No profile found for that ID.");
+        hideProfile();
+        return;
+      }
+
+      showOk("Profile found.");
+      showProfile(data);
+
+    } catch (e) {
+      showErr(e?.message || "Unexpected error.");
+      hideProfile();
+    } finally {
+      lookupBtn.disabled = false;
+      lookupBtn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> Verify';
+    }
+  }
+
+  lookupBtn.addEventListener("click", lookupProfile);
+
+  // Enter key support
+  publicIdEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") lookupProfile();
+  });
+
+  clearBtn.addEventListener("click", () => {
+    publicIdEl.value = "";
+    clearAlerts();
+    hideProfile();
+  });
+  function normalizeTelegramLink(value) {
+  const s = String(value || "").trim();
+  if (!s) return null;
+
+  if (s.startsWith("http://") || s.startsWith("https://")) return s;
+  if (s.startsWith("t.me/")) return "https://" + s;
+  if (s.startsWith("@")) return "https://t.me/" + s.slice(1);
+
+  // if user typed username without @
+  if (/^[a-zA-Z0-9_]{3,}$/.test(s)) return "https://t.me/" + s;
+
+  return null;
+}
+
+function normalizeWhatsAppLink(value) {
+  const s = String(value || "").trim();
+  if (!s) return null;
+
+  // Keep digits only
+  const digits = s.replace(/[^\d]/g, "");
+  if (digits.length < 7) return null;
+
+  return "https://wa.me/" + digits;
+}
+
+</script>
+
+</body>
+</html>
