@@ -2,7 +2,7 @@
 import { createClient } from "@supabase/supabase-js";
 
   const SUPABASE_URL = "https://efrijmrcuvtwjwgcttou.supabase.co";
-  const SUPABASE_SERVICE_ROLE_KEY = "sb_publishable_BH_9cL6k97CQ4h1MkVXJjg_edZ2K4iW";
+  const SUPABASE_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVmcmlqbXJjdXZ0d2p3Z2N0dG91Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2OTgxMzA3OSwiZXhwIjoyMDg1Mzg5MDc5fQ.krH9FGamxlGGF8a3yZQjstZXBs2Y9Q0KY5VH36TqP3o";
 
 // Use service role for server-side lookups, never expose it in the browser.
 
