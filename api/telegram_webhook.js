@@ -31,10 +31,12 @@ export default async function handler(req, res) {
     const botToken = '8111507659:AAHtUZCkKPXNmLSxii02hlUaf3-qRfSDHxg';
     const verifyLink = process.env.VERIFY_LINK || "http://golden-sugar-daddy.vercel.app/verification";
 
-    const text =
-      `@${username}, unverified profile.\n` +
-      `Verify your profile to avoid being scammed.\n` +
-      `${verifyLink}`;
+const text =
+  `@${username} ⚠️ Unverified profile.\n` +
+  `Please verify your profile to avoid scams.\n\n` +
+  `Verification link:\n` +
+  `${verifyLink}`;
+
 
     const sendUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
     await fetch(sendUrl, {
