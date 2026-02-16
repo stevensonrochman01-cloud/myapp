@@ -1,8 +1,9 @@
 // myapp/api/verify.js
 import { createClient } from "@supabase/supabase-js";
 
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY; 
+  const SUPABASE_URL = "https://efrijmrcuvtwjwgcttou.supabase.co";
+  const SUPABASE_SERVICE_ROLE_KEY = "sb_publishable_BH_9cL6k97CQ4h1MkVXJjg_edZ2K4iW";
+
 // Use service role for server-side lookups, never expose it in the browser.
 
 const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
