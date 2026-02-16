@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@supabase/supabase-js": "^2.95.3",
     "googleapis": "^170.0.0"
   }
 }
