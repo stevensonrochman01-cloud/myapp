@@ -52,7 +52,18 @@
       .replaceAll(">","&gt;").replaceAll('"',"&quot;")
       .replaceAll("'","&#039;");
   }
+  function normalizeTelegramHandle(value) {
+    const s = String(value || "").trim();
+    if (!s) return "";
 
+    // If it’s a URL like https://t.me/Name -> extract "Name"
+    const m = s.match(/(?:https?:\/\/)?t\.me\/([a-zA-Z0-9_]{3,})/);
+    if (m && m[1]) return "@" + m[1].toLowerCase();
+
+    // If it's "@Name" or "Name" -> normalize
+    const handle = s.startsWith("@") ? s.slice(1) : s;
+    return "@" + handle.toLowerCase();
+  }
   async function refreshUI() {
     const { data: { user } } = await sb.auth.getUser();
     if (!user) {
@@ -162,7 +173,7 @@
         address: null,
         net_worth: null,
         whatsapp: req.whatsapp,
-        telegram: req.telegram,
+       telegram: normalizeTelegramHandle(req.telegram),
         email: req.email,
         badge: (req.role === "baby") ? "ordinary" : "ordinary",
         profile_image_url: null,
@@ -225,3 +236,4 @@
 </script>
 </body>
 </html>
+
