@@ -9,68 +9,81 @@ import { createClient } from "@supabase/supabase-js";
 const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 export default async function handler(req, res) {
-  // Allow GET or POST
-  const method = req.method;
-  if (method !== "GET" && method !== "POST") {
-    return res.status(405).send("Method Not Allowed");
-  }
+  res.setHeader("Cache-Control", "no-store");
+
+  if (req.method !== "GET") return res.status(405).send("Method Not Allowed");
+
+  const usernameRaw = (req.query.username || "").toString().trim();
+  if (!usernameRaw) return res.status(400).json({ ok: false, error: "Missing username" });
+
+  const u = usernameRaw.startsWith("@") ? usernameRaw.slice(1) : usernameRaw;
+  const username = u.toLowerCase();
+
+  // try common formats people store in DB
+  const candidates = [
+    username,
+    "@" + username,
+    "https://t.me/" + username,
+    "http://t.me/" + username,
+    "t.me/" + username,
+  ];
 
   try {
-    const input = method === "GET" ? req.query : (req.body || {});
-    let username = (input.username || "").toString().trim();
-    const user_id = (input.user_id || "").toString().trim(); // optional fallback
+    // 1) prove we can read the table at all
+    const probe = await sb
+      .from("verified_profiles")
+      .select("id, telegram")
+      .limit(5);
 
-    if (!username && !user_id) {
-      return res.status(400).json({ ok: false, error: "Missing username or user_id" });
-    }
+    // 2) try to match using different stored formats
+    let match = null;
+    let matchedValue = null;
 
-    // Normalize username: remove leading @, lower-case
-    if (username.startsWith("@")) username = username.slice(1);
-    username = username.toLowerCase();
+    for (const val of candidates) {
+      const { data, error } = await sb
+        .from("verified_profiles")
+        .select("id, public_id, full_name, role, badge, is_verified, telegram")
+        .eq("telegram", val)
+        .maybeSingle();
 
-    // IMPORTANT:
-    // Change "telegram_username" below to the real column in your "verified_profiles" table.
-    // If your column is named "telegram" and stores @handles, change it accordingly.
-    let query = sb.from("verified_profiles").select("id, public_id, full_name, role, badge, is_verified, telegram");
-
-    let data = null;
-
-    if (username) {
-      // Try matching without @
-      const r1 = await query.eq("telegram", username).maybeSingle();
-      if (r1.error) throw r1.error;
-      data = r1.data;
-
-      // If you store telegram as "@name" in DB, try that too
-      if (!data) {
-        const r2 = await query.eq("telegram", "@" + username).maybeSingle();
-        if (r2.error) throw r2.error;
-        data = r2.data;
+      if (error) throw error;
+      if (data) {
+        match = data;
+        matchedValue = val;
+        break;
       }
     }
 
-    // Optional fallback if you store telegram user_id in another column:
-    // if (!data && user_id) { ... }
-
-    if (!data) {
-      // Not found = unverified (or "unknown"). Your choice.
+    if (!match) {
       return res.status(200).json({
         ok: true,
         verified: false,
-        reason: "not_found"
+        reason: "not_found",
+        debug: {
+          input: usernameRaw,
+          normalized: username,
+          tried: candidates,
+          probe_error: probe.error ? String(probe.error.message || probe.error) : null,
+          probe_sample: probe.data || null,
+        },
       });
     }
 
     return res.status(200).json({
       ok: true,
-      verified: !!data.is_verified,
-      public_id: data.public_id || null,
-      badge: data.badge || null,
-      role: data.role || null,
-      name: data.full_name || null
+      verified: !!match.is_verified,
+      public_id: match.public_id || null,
+      badge: match.badge || null,
+      role: match.role || null,
+      name: match.full_name || null,
+      debug: { matchedValue, dbTelegram: match.telegram },
     });
   } catch (e) {
     console.error("verify_error", e);
-    return res.status(500).json({ ok: false, error: "Server error" });
+    return res.status(500).json({
+      ok: false,
+      error: "Server error",
+      detail: String(e?.message || e),
+    });
   }
 }
