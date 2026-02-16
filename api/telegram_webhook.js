@@ -29,7 +29,7 @@ export default async function handler(req, res) {
 
     // If unverified, reply (quote their message)
     const botToken = '8111507659:AAHtUZCkKPXNmLSxii02hlUaf3-qRfSDHxg';
-    const verifyLink = process.env.VERIFY_LINK || "https://myapp-git-main-stebes-projects.vercel.app/verify_profile.html";
+    const verifyLink = process.env.VERIFY_LINK || "http://golden-sugar-daddy.vercel.app/verification";
 
     const text =
       `@${username}, unverified profile.\n` +
