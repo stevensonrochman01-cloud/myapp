@@ -3,7 +3,7 @@ import { Redis } from "@upstash/redis";
 
 const redis = new Redis({
   url: "https://loyal-peacock-6620.upstash.io",
-  token: "AhncAAIgcDEYt2k1btBty1s0PCWMoat4ZvBLK1KJOT9obDGXWrmiiA"
+  token: "ARncAAImcDFjZTVmMTQ0M2IzMTY0ZjM2YjAxNmRmNjhiZGZiNDc5NHAxNjYyMA"
 });
 
 const botToken = '8111507659:AAHtUZCkKPXNmLSxii02hlUaf3-qRfSDHxg';
