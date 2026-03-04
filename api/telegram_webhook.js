@@ -14,9 +14,9 @@ const VERIFY_LINK =
 const ADMIN_USERNAME = "SugarBabyAdmin";
 
 // ─── Timing Config ────────────────────────────────────────────────
-const UNVERIFIED_COOLDOWN_SEC  = 600;   // 10 min per-user warning cooldown
-const SCHEDULED_CHECK_SEC      = 3600;  // check for broadcast every 1 hour
-const SCHEDULED_MIN_MSG_GAP    = 10;    // only broadcast if 10+ msgs since last bot msg
+const UNVERIFIED_COOLDOWN_SEC  = 600;
+const SCHEDULED_CHECK_SEC      = 3600;
+const SCHEDULED_MIN_MSG_GAP    = 10;
 
 // ─── Rotating Broadcast Messages ──────────────────────────────────
 const SCHEDULED_MESSAGES = [
@@ -62,6 +62,21 @@ const SCHEDULED_MESSAGES = [
   }
 ];
 
+// ══════════════════════════════════════════════════════════════════
+// LOGGER — structured, timestamped, emoji-prefixed
+// ══════════════════════════════════════════════════════════════════
+const log = {
+  _ts: () => new Date().toISOString(),
+
+  info:  (tag, data) => console.log( `[${log._ts()}] ℹ️  [${tag}]`, typeof data === "object" ? JSON.stringify(data) : data),
+  ok:    (tag, data) => console.log( `[${log._ts()}] ✅ [${tag}]`, typeof data === "object" ? JSON.stringify(data) : data),
+  warn:  (tag, data) => console.warn(`[${log._ts()}] ⚠️  [${tag}]`, typeof data === "object" ? JSON.stringify(data) : data),
+  error: (tag, data) => console.error(`[${log._ts()}] ❌ [${tag}]`, typeof data === "object" ? JSON.stringify(data) : data),
+  skip:  (tag, data) => console.log( `[${log._ts()}] ⏭️  [${tag}]`, typeof data === "object" ? JSON.stringify(data) : data),
+  tg:    (tag, data) => console.log( `[${log._ts()}] 📨 [${tag}]`, typeof data === "object" ? JSON.stringify(data) : data),
+  redis: (tag, data) => console.log( `[${log._ts()}] 🗄️  [${tag}]`, typeof data === "object" ? JSON.stringify(data) : data),
+};
+
 // ─── Helpers ──────────────────────────────────────────────────────
 function escapeHtml(s = "") {
   return String(s)
@@ -80,13 +95,21 @@ function verifyButton(label = "✅ Verify Now (FREE)") {
   return { inline_keyboard: [[{ text: label, url: VERIFY_LINK }]] };
 }
 
+// ─── Telegram API wrapper ─────────────────────────────────────────
 async function tgApi(method, body) {
+  log.tg(`TG_REQUEST → ${method}`, body);
   const resp = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/${method}`, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(body)
   });
-  return resp.json().catch(() => ({}));
+  const json = await resp.json().catch(() => ({}));
+  if (json?.ok) {
+    log.ok(`TG_RESPONSE ← ${method}`, json);
+  } else {
+    log.error(`TG_RESPONSE ← ${method}`, json);
+  }
+  return json;
 }
 
 async function tgSendMessage({ chat_id, text, reply_to_message_id, parse_mode = "HTML", reply_markup }) {
@@ -100,38 +123,84 @@ async function tgSendMessage({ chat_id, text, reply_to_message_id, parse_mode = 
   });
 }
 
+// ─── Verify API ───────────────────────────────────────────────────
 async function verifyUsernameApi(username) {
   const url = `${VERIFY_API_BASE}?username=${encodeURIComponent(username)}`;
-  const r = await fetch(url, { method: "GET" });
-  return r.json().catch(() => ({}));
+  log.info("VERIFY_API_REQUEST", { url });
+  try {
+    const r = await fetch(url, { method: "GET" });
+    const json = await r.json();
+    log.info("VERIFY_API_RESPONSE", { username, result: json });
+    return json;
+  } catch (e) {
+    log.error("VERIFY_API_FAILED", { username, error: e.message });
+    return {};
+  }
 }
 
-// ─── Username → User ID cache (needed for title assignment) ───────
-// Telegram does not allow looking up user IDs by username via Bot API.
-// We cache every user's ID the moment they send a message in the group.
+// ─── Redis: username → user ID cache ─────────────────────────────
 async function storeUserId(username, userId) {
   if (!username || !userId) return;
-  await redis.set(`uid:${username.toLowerCase()}`, String(userId), {
-    ex: 60 * 60 * 24 * 30 // cache for 30 days
-  });
+  try {
+    await redis.set(`uid:${username.toLowerCase()}`, String(userId), {
+      ex: 60 * 60 * 24 * 30
+    });
+    log.redis("STORE_USER_ID", { username, userId });
+  } catch (e) {
+    log.error("STORE_USER_ID_FAILED", { username, userId, error: e.message });
+  }
 }
 
 async function getUserIdByUsername(username) {
-  const val = await redis.get(`uid:${username.toLowerCase()}`);
-  return val ? parseInt(val, 10) : null;
+  try {
+    const val = await redis.get(`uid:${username.toLowerCase()}`);
+    const userId = val ? parseInt(val, 10) : null;
+    log.redis("GET_USER_ID", { username, userId, found: !!userId });
+    return userId;
+  } catch (e) {
+    log.error("GET_USER_ID_FAILED", { username, error: e.message });
+    return null;
+  }
 }
 
-// ─── Admin check ──────────────────────────────────────────────────
+// ─── Redis: last bot message ID ──────────────────────────────────
+async function saveBotMsgId(chatId, messageId) {
+  if (!messageId) return;
+  try {
+    await redis.set(`lastbotmsg:${chatId}`, messageId);
+    log.redis("SAVE_BOT_MSG_ID", { chatId, messageId });
+  } catch (e) {
+    log.error("SAVE_BOT_MSG_ID_FAILED", { chatId, messageId, error: e.message });
+  }
+}
+
+async function getLastBotMsgId(chatId) {
+  try {
+    const v = await redis.get(`lastbotmsg:${chatId}`);
+    const msgId = v ? parseInt(v, 10) : null;
+    log.redis("GET_LAST_BOT_MSG_ID", { chatId, msgId });
+    return msgId;
+  } catch (e) {
+    log.error("GET_LAST_BOT_MSG_ID_FAILED", { chatId, error: e.message });
+    return null;
+  }
+}
+
+// ─── Admin status check ───────────────────────────────────────────
 async function isGroupAdmin(chatId, userId) {
+  log.info("CHECK_ADMIN", { chatId, userId });
   const res = await tgApi("getChatMember", { chat_id: chatId, user_id: userId });
-  return ["administrator", "creator"].includes(res?.result?.status);
+  const status = res?.result?.status;
+  const isAdmin = ["administrator", "creator"].includes(status);
+  log.info("CHECK_ADMIN_RESULT", { userId, status, isAdmin });
+  return isAdmin;
 }
 
-// ─── Promote silently + set custom title ──────────────────────────
-// Telegram requires a user to be an admin before a custom title can be set.
-// We promote them with zero permissions so they get only the visual title tag.
+// ─── Promote + assign custom title ───────────────────────────────
 async function assignVerifiedTitle(chatId, userId, role) {
-  // Step 1: Promote with no special permissions — purely for title eligibility
+  log.info("ASSIGN_TITLE_START", { chatId, userId, role });
+
+  // Step 1: Promote with zero permissions (required before title can be set)
   const promoteRes = await tgApi("promoteChatMember", {
     chat_id: chatId,
     user_id: userId,
@@ -146,22 +215,27 @@ async function assignVerifiedTitle(chatId, userId, role) {
     can_manage_video_chats: false
   });
 
-  console.log("PROMOTE_RESULT:", JSON.stringify(promoteRes));
-
   if (!promoteRes?.ok) {
+    log.error("PROMOTE_FAILED", { chatId, userId, response: promoteRes });
     return {
       ok: false,
       description: `promoteChatMember failed: ${promoteRes?.description || "Unknown error"}`
     };
   }
 
-  // Step 2: Set the custom title
-  // Telegram custom titles: plain text only, max 16 chars
+  log.ok("PROMOTE_SUCCESS", { chatId, userId });
+
+  // Step 2: Wait for Telegram to propagate the promotion
+  log.info("PROMOTE_DELAY", "Waiting 1500ms for Telegram to propagate promotion...");
+  await new Promise(resolve => setTimeout(resolve, 1500));
+
+  // Step 3: Set the custom title (max 16 chars, plain text only)
   const titleMap = {
     sugarbaby:  "Verified SugarBaby",
     sugardaddy: "Verified SugarDaddy"
   };
   const title = titleMap[role] || "Verified Member";
+  log.info("SET_TITLE_ATTEMPT", { chatId, userId, title });
 
   const titleRes = await tgApi("setChatAdministratorCustomTitle", {
     chat_id: chatId,
@@ -169,17 +243,16 @@ async function assignVerifiedTitle(chatId, userId, role) {
     custom_title: title
   });
 
-  console.log("SET_TITLE_RESULT:", JSON.stringify(titleRes));
+  if (titleRes?.ok) {
+    log.ok("SET_TITLE_SUCCESS", { chatId, userId, title });
+  } else {
+    log.error("SET_TITLE_FAILED", { chatId, userId, title, response: titleRes });
+  }
 
   return titleRes;
 }
 
 // ─── Command parsers ──────────────────────────────────────────────
-// NOTE: In Telegram groups, commands arrive as "/verify@BotName args"
-// so all regexes use (?:@\S+)? to absorb the optional bot-name suffix.
-
-// Admin version: /verify @username sugarbaby   OR   /verify @username sugardaddy
-// Also handles:  /verify@BotName @username sugardaddy
 function parseAdminVerifyCommand(text) {
   if (!text) return null;
   const m = text
@@ -189,25 +262,12 @@ function parseAdminVerifyCommand(text) {
   return { username: m[1], role: m[2].toLowerCase() };
 }
 
-// Public lookup: /verify @username  (no role = status check only)
-// Also handles:  /verify@BotName @username
 function parsePublicVerifyCommand(text) {
   if (!text) return null;
-  // Must NOT have a role word at the end — that belongs to the admin command
   const m = text
     .trim()
     .match(/^(?:\/verify(?:@\S+)?|verify)\s+@?([a-zA-Z0-9_]{4,32})\s*$/i);
   return m ? m[1] : null;
-}
-
-// ─── Last bot message tracking ────────────────────────────────────
-async function saveBotMsgId(chatId, messageId) {
-  if (messageId) await redis.set(`lastbotmsg:${chatId}`, messageId);
-}
-
-async function getLastBotMsgId(chatId) {
-  const v = await redis.get(`lastbotmsg:${chatId}`);
-  return v ? parseInt(v, 10) : null;
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -219,48 +279,86 @@ export default async function handler(req, res) {
 
   try {
     const update = req.body || {};
+    log.info("WEBHOOK_RECEIVED", { update_id: update.update_id });
+
     const message = update.message || update.edited_message;
-    if (!message) return res.status(200).send("ok");
+    if (!message) {
+      log.skip("NO_MESSAGE", "Update has no message — skipping");
+      return res.status(200).send("ok");
+    }
 
     const chat = message.chat;
     const from = message.from;
 
-    if (!chat) return res.status(200).send("ok");
-    if (chat.type !== "group" && chat.type !== "supergroup")
+    log.info("MESSAGE_RECEIVED", {
+      chat_id: chat?.id,
+      chat_type: chat?.type,
+      from_id: from?.id,
+      from_username: from?.username,
+      msg_id: message.message_id,
+      text: message.text || "(no text)",
+      is_bot: from?.is_bot
+    });
+
+    if (!chat) {
+      log.skip("NO_CHAT", "No chat object — skipping");
       return res.status(200).send("ok");
-    if (from?.is_bot) return res.status(200).send("ok");
+    }
+    if (chat.type !== "group" && chat.type !== "supergroup") {
+      log.skip("NOT_A_GROUP", { chat_type: chat.type });
+      return res.status(200).send("ok");
+    }
+    if (from?.is_bot) {
+      log.skip("FROM_BOT", { from_id: from?.id });
+      return res.status(200).send("ok");
+    }
 
     const currentMsgId = message.message_id;
 
-    // Cache sender's user ID on every message received
+    // Cache sender's user ID on every message
     if (from?.username && from?.id) {
-      storeUserId(from.username, from.id); // fire-and-forget
+      await storeUserId(from.username, from.id);
     }
 
     // ══════════════════════════════════════════════════════════
-    // (A) WELCOME — new members
+    // (A) WELCOME — new members joining
     // ══════════════════════════════════════════════════════════
     if (message.new_chat_members?.length) {
-      for (const member of message.new_chat_members) {
-        if (member.is_bot) continue;
+      log.info("NEW_MEMBERS", { count: message.new_chat_members.length });
 
-        // Cache new member's ID immediately
-        if (member.username && member.id) storeUserId(member.username, member.id);
+      for (const member of message.new_chat_members) {
+        if (member.is_bot) {
+          log.skip("NEW_MEMBER_IS_BOT", { id: member.id });
+          continue;
+        }
+
+        log.info("PROCESSING_NEW_MEMBER", { id: member.id, username: member.username });
+
+        if (member.username && member.id) {
+          await storeUserId(member.username, member.id);
+        }
 
         const m = mentionUser(member);
         let isVerified = false;
+
         if (member.username) {
           const v = await verifyUsernameApi(member.username);
           isVerified = v?.verified === true;
+        } else {
+          log.warn("NEW_MEMBER_NO_USERNAME", { id: member.id });
         }
 
+        log.info("NEW_MEMBER_VERIFIED_STATUS", { username: member.username, isVerified });
+
         if (isVerified) {
+          log.ok("WELCOME_VERIFIED", { username: member.username });
           const r = await tgSendMessage({
             chat_id: chat.id,
             text: `👑 Welcome ${m}! You're already <b>verified</b> — enjoy the group! ✅`
           });
           await saveBotMsgId(chat.id, r?.result?.message_id);
         } else {
+          log.warn("WELCOME_UNVERIFIED", { username: member.username });
           const r = await tgSendMessage({
             chat_id: chat.id,
             text:
@@ -272,14 +370,18 @@ export default async function handler(req, res) {
           });
           await saveBotMsgId(chat.id, r?.result?.message_id);
 
-          // Silent DM — fails quietly if user never started the bot
+          // Silent DM attempt
+          log.info("DM_ATTEMPT", { member_id: member.id });
           tgSendMessage({
             chat_id: member.id,
             text:
               `Hi ${escapeHtml(member.first_name || "")} 👋\n\n` +
               `Verify your profile to stay in the group — it's <b>completely FREE</b>! 🎉`,
             reply_markup: verifyButton("✅ Verify Me Now")
-          }).catch(() => {});
+          }).then(r => {
+            if (r?.ok) log.ok("DM_SENT", { member_id: member.id });
+            else log.warn("DM_FAILED", { member_id: member.id, response: r });
+          }).catch(e => log.warn("DM_EXCEPTION", { member_id: member.id, error: e.message }));
         }
       }
       return res.status(200).send("ok");
@@ -287,14 +389,16 @@ export default async function handler(req, res) {
 
     // ══════════════════════════════════════════════════════════
     // (B) ADMIN COMMAND: /verify @username sugarbaby|sugardaddy
-    //     Only group admins can use this.
-    //     Assigns a visible title tag next to the member's name.
     // ══════════════════════════════════════════════════════════
     const adminCmd = parseAdminVerifyCommand(message.text);
-    if (adminCmd) {
-      const senderIsAdmin = await isGroupAdmin(chat.id, from.id);
+    log.info("PARSE_ADMIN_CMD", { text: message.text, parsed: adminCmd });
 
+    if (adminCmd) {
+      log.info("ADMIN_CMD_DETECTED", adminCmd);
+
+      const senderIsAdmin = await isGroupAdmin(chat.id, from.id);
       if (!senderIsAdmin) {
+        log.warn("ADMIN_CMD_REJECTED_NOT_ADMIN", { from_id: from.id, username: from.username });
         await tgSendMessage({
           chat_id: chat.id,
           text: `🚫 Only group admins can assign verification tags.`,
@@ -307,6 +411,7 @@ export default async function handler(req, res) {
       const targetUserId = await getUserIdByUsername(username);
 
       if (!targetUserId) {
+        log.warn("ADMIN_CMD_USER_NOT_CACHED", { username });
         await tgSendMessage({
           chat_id: chat.id,
           text:
@@ -318,11 +423,13 @@ export default async function handler(req, res) {
         return res.status(200).send("ok");
       }
 
+      log.info("ADMIN_CMD_ASSIGNING_TITLE", { username, userId: targetUserId, role });
       const result = await assignVerifiedTitle(chat.id, targetUserId, role);
 
       if (result?.ok) {
         const emoji = role === "sugardaddy" ? "💎" : "🌸";
         const label = role === "sugardaddy" ? "Verified SugarDaddy" : "Verified SugarBaby";
+        log.ok("TITLE_ASSIGNED", { username, role, label });
 
         const r = await tgSendMessage({
           chat_id: chat.id,
@@ -335,6 +442,7 @@ export default async function handler(req, res) {
         });
         await saveBotMsgId(chat.id, r?.result?.message_id);
       } else {
+        log.error("TITLE_ASSIGN_FAILED", { username, result });
         await tgSendMessage({
           chat_id: chat.id,
           text:
@@ -352,19 +460,22 @@ export default async function handler(req, res) {
     }
 
     // ══════════════════════════════════════════════════════════
-    // (C) PUBLIC LOOKUP: /verify @username  (status check only)
+    // (C) PUBLIC LOOKUP: /verify @username
     // ══════════════════════════════════════════════════════════
     const verifyTarget = parsePublicVerifyCommand(message.text);
+    log.info("PARSE_PUBLIC_VERIFY", { text: message.text, target: verifyTarget });
+
     if (verifyTarget) {
+      log.info("PUBLIC_VERIFY_START", { target: verifyTarget });
       const v = await verifyUsernameApi(verifyTarget);
       let reply, markup;
 
       if (v?.verified) {
+        log.ok("PUBLIC_VERIFY_VERIFIED", { target: verifyTarget });
         const name  = escapeHtml(v?.name || verifyTarget);
         const pub   = escapeHtml(v?.public_id || "N/A");
         const role  = escapeHtml(v?.role || "N/A");
         const badge = escapeHtml(v?.badge || "✨");
-
         reply =
           `✅ <b>Verified Member</b>\n\n` +
           `👤 @${escapeHtml(verifyTarget)}\n` +
@@ -373,6 +484,7 @@ export default async function handler(req, res) {
           `🎭 Role: ${role}\n` +
           `🏅 Badge: ${badge}`;
       } else {
+        log.warn("PUBLIC_VERIFY_NOT_VERIFIED", { target: verifyTarget });
         reply =
           `❌ <b>Not Verified</b> — @${escapeHtml(verifyTarget)}\n\n` +
           `⚠️ Proceed with caution. Unverified users may be scammers.`;
@@ -393,6 +505,7 @@ export default async function handler(req, res) {
     // (D) COMMAND: /scam
     // ══════════════════════════════════════════════════════════
     if (message.text?.match(/^\/scam(@\S+)?$/i)) {
+      log.info("CMD_SCAM", { from: from.username, chat_id: chat.id });
       const r = await tgSendMessage({
         chat_id: chat.id,
         text:
@@ -409,6 +522,7 @@ export default async function handler(req, res) {
     // (E) COMMAND: /rules
     // ══════════════════════════════════════════════════════════
     if (message.text?.match(/^\/rules(@\S+)?$/i)) {
+      log.info("CMD_RULES", { from: from.username, chat_id: chat.id });
       const r = await tgSendMessage({
         chat_id: chat.id,
         text:
@@ -427,55 +541,80 @@ export default async function handler(req, res) {
     }
 
     // ══════════════════════════════════════════════════════════
-    // (F) HOURLY SCHEDULED BROADCAST (rotating messages)
+    // (F) HOURLY SCHEDULED BROADCAST
     // ══════════════════════════════════════════════════════════
     const schedCheckKey = `sched:lastcheck:${chat.id}`;
     const schedIndexKey = `sched:index:${chat.id}`;
     const lastCheckTs   = await redis.get(schedCheckKey);
     const nowTs         = Math.floor(Date.now() / 1000);
+    const secSinceCheck = lastCheckTs ? nowTs - parseInt(lastCheckTs, 10) : SCHEDULED_CHECK_SEC + 1;
 
-    if (!lastCheckTs || nowTs - parseInt(lastCheckTs, 10) >= SCHEDULED_CHECK_SEC) {
+    log.info("SCHED_CHECK", {
+      chat_id: chat.id,
+      sec_since_last_check: secSinceCheck,
+      threshold: SCHEDULED_CHECK_SEC,
+      due: secSinceCheck >= SCHEDULED_CHECK_SEC
+    });
+
+    if (secSinceCheck >= SCHEDULED_CHECK_SEC) {
       await redis.set(schedCheckKey, nowTs);
 
       const lastBotMsgId = await getLastBotMsgId(chat.id);
-      const msgGap = lastBotMsgId
-        ? currentMsgId - lastBotMsgId
-        : SCHEDULED_MIN_MSG_GAP + 1;
+      const msgGap = lastBotMsgId ? currentMsgId - lastBotMsgId : SCHEDULED_MIN_MSG_GAP + 1;
+
+      log.info("SCHED_GAP_CHECK", {
+        currentMsgId,
+        lastBotMsgId,
+        msgGap,
+        threshold: SCHEDULED_MIN_MSG_GAP,
+        will_post: msgGap >= SCHEDULED_MIN_MSG_GAP
+      });
 
       if (msgGap >= SCHEDULED_MIN_MSG_GAP) {
         const idx       = parseInt((await redis.get(schedIndexKey)) || "0", 10);
         const scheduled = SCHEDULED_MESSAGES[idx % SCHEDULED_MESSAGES.length];
         await redis.set(schedIndexKey, (idx + 1) % SCHEDULED_MESSAGES.length);
 
+        log.ok("SCHED_POSTING", { idx, next_idx: (idx + 1) % SCHEDULED_MESSAGES.length });
+
         const markup = scheduled.button ? verifyButton(scheduled.button) : undefined;
-        const r = await tgSendMessage({
-          chat_id: chat.id,
-          text: scheduled.text,
-          reply_markup: markup
-        });
+        const r = await tgSendMessage({ chat_id: chat.id, text: scheduled.text, reply_markup: markup });
         await saveBotMsgId(chat.id, r?.result?.message_id);
         return res.status(200).send("ok");
+      } else {
+        log.skip("SCHED_SKIPPED_TOO_SOON", { msgGap, needed: SCHEDULED_MIN_MSG_GAP });
       }
     }
 
     // ══════════════════════════════════════════════════════════
-    // (G) UNVERIFIED USER WARNING (2-line, 10-min cooldown)
+    // (G) UNVERIFIED USER WARNING
     // ══════════════════════════════════════════════════════════
     const username    = from?.username;
     const identity    = username ? `@${username}` : `id:${from.id}`;
     const cooldownKey = `cooldown:unverified:${chat.id}:${identity}`;
 
     const inCooldown = await redis.get(cooldownKey);
-    if (inCooldown) return res.status(200).send("ok");
+    log.info("UNVERIFIED_CHECK", { identity, inCooldown: !!inCooldown });
+
+    if (inCooldown) {
+      log.skip("UNVERIFIED_IN_COOLDOWN", { identity });
+      return res.status(200).send("ok");
+    }
 
     let isVerified = false;
     if (username) {
       const v = await verifyUsernameApi(username);
       isVerified = v?.verified === true;
+    } else {
+      log.warn("USER_NO_USERNAME", { from_id: from.id });
     }
+
+    log.info("UNVERIFIED_STATUS", { identity, isVerified });
 
     if (!isVerified) {
       await redis.set(cooldownKey, "1", { ex: UNVERIFIED_COOLDOWN_SEC });
+      log.warn("UNVERIFIED_WARNING_SENT", { identity, cooldown_sec: UNVERIFIED_COOLDOWN_SEC });
+
       const m = mentionUser(from);
       const r = await tgSendMessage({
         chat_id: chat.id,
@@ -486,11 +625,14 @@ export default async function handler(req, res) {
         reply_markup: verifyButton()
       });
       await saveBotMsgId(chat.id, r?.result?.message_id);
+    } else {
+      log.ok("USER_IS_VERIFIED", { identity });
     }
 
     return res.status(200).send("ok");
+
   } catch (e) {
-    console.error("telegram_webhook_error", e);
+    log.error("UNHANDLED_EXCEPTION", { message: e.message, stack: e.stack });
     return res.status(200).send("ok");
   }
 }
