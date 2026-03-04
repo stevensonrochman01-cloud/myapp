@@ -131,8 +131,8 @@ async function isGroupAdmin(chatId, userId) {
 // Telegram requires a user to be an admin before a custom title can be set.
 // We promote them with zero permissions so they get only the visual title tag.
 async function assignVerifiedTitle(chatId, userId, role) {
-  // Promote with no special permissions — purely for title eligibility
-  await tgApi("promoteChatMember", {
+  // Step 1: Promote with no special permissions — purely for title eligibility
+  const promoteRes = await tgApi("promoteChatMember", {
     chat_id: chatId,
     user_id: userId,
     is_anonymous: false,
@@ -146,6 +146,16 @@ async function assignVerifiedTitle(chatId, userId, role) {
     can_manage_video_chats: false
   });
 
+  console.log("PROMOTE_RESULT:", JSON.stringify(promoteRes));
+
+  if (!promoteRes?.ok) {
+    return {
+      ok: false,
+      description: `promoteChatMember failed: ${promoteRes?.description || "Unknown error"}`
+    };
+  }
+
+  // Step 2: Set the custom title
   // Telegram custom titles: plain text only, max 16 chars
   const titleMap = {
     sugarbaby:  "Verified SugarBaby",
@@ -153,11 +163,15 @@ async function assignVerifiedTitle(chatId, userId, role) {
   };
   const title = titleMap[role] || "Verified Member";
 
-  return tgApi("setChatAdministratorCustomTitle", {
+  const titleRes = await tgApi("setChatAdministratorCustomTitle", {
     chat_id: chatId,
     user_id: userId,
     custom_title: title
   });
+
+  console.log("SET_TITLE_RESULT:", JSON.stringify(titleRes));
+
+  return titleRes;
 }
 
 // ─── Command parsers ──────────────────────────────────────────────
@@ -170,7 +184,7 @@ function parseAdminVerifyCommand(text) {
   if (!text) return null;
   const m = text
     .trim()
-    .match(/^\/verify(?:@\S+)?\s+@?([a-zA-Z0-9_]{4,32})\s+(sugarbaby|sugardaddy)\s*$/i);
+    .match(/^(?:\/verify(?:@\S+)?|verify)\s+@?([a-zA-Z0-9_]{4,32})\s+(sugarbaby|sugardaddy)\s*$/i);
   if (!m) return null;
   return { username: m[1], role: m[2].toLowerCase() };
 }
@@ -276,10 +290,6 @@ export default async function handler(req, res) {
     //     Only group admins can use this.
     //     Assigns a visible title tag next to the member's name.
     // ══════════════════════════════════════════════════════════
-    // Debug: log every command so we can trace parsing in Vercel logs
-    console.log("MSG_TEXT:", JSON.stringify(message.text));
-    console.log("ADMIN_CMD_PARSE:", JSON.stringify(parseAdminVerifyCommand(message.text)));
-
     const adminCmd = parseAdminVerifyCommand(message.text);
     if (adminCmd) {
       const senderIsAdmin = await isGroupAdmin(chat.id, from.id);
