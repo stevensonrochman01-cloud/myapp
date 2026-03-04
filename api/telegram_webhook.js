@@ -161,22 +161,29 @@ async function assignVerifiedTitle(chatId, userId, role) {
 }
 
 // ─── Command parsers ──────────────────────────────────────────────
+// NOTE: In Telegram groups, commands arrive as "/verify@BotName args"
+// so all regexes use (?:@\S+)? to absorb the optional bot-name suffix.
 
 // Admin version: /verify @username sugarbaby   OR   /verify @username sugardaddy
+// Also handles:  /verify@BotName @username sugardaddy
 function parseAdminVerifyCommand(text) {
   if (!text) return null;
   const m = text
     .trim()
-    .match(/^\/verify\s+@?([a-zA-Z0-9_]{4,32})\s+(sugarbaby|sugardaddy)\s*$/i);
+    .match(/^\/verify(?:@\S+)?\s+@?([a-zA-Z0-9_]{4,32})\s+(sugarbaby|sugardaddy)\s*$/i);
   if (!m) return null;
   return { username: m[1], role: m[2].toLowerCase() };
 }
 
-// Public lookup: /verify @username  (or: verify @username)
+// Public lookup: /verify @username  (no role = status check only)
+// Also handles:  /verify@BotName @username
 function parsePublicVerifyCommand(text) {
   if (!text) return null;
-  const m = text.trim().match(/^(\/verify|verify)\s+@?([a-zA-Z0-9_]{4,32})\s*$/i);
-  return m ? m[2] : null;
+  // Must NOT have a role word at the end — that belongs to the admin command
+  const m = text
+    .trim()
+    .match(/^(?:\/verify(?:@\S+)?|verify)\s+@?([a-zA-Z0-9_]{4,32})\s*$/i);
+  return m ? m[1] : null;
 }
 
 // ─── Last bot message tracking ────────────────────────────────────
@@ -269,6 +276,10 @@ export default async function handler(req, res) {
     //     Only group admins can use this.
     //     Assigns a visible title tag next to the member's name.
     // ══════════════════════════════════════════════════════════
+    // Debug: log every command so we can trace parsing in Vercel logs
+    console.log("MSG_TEXT:", JSON.stringify(message.text));
+    console.log("ADMIN_CMD_PARSE:", JSON.stringify(parseAdminVerifyCommand(message.text)));
+
     const adminCmd = parseAdminVerifyCommand(message.text);
     if (adminCmd) {
       const senderIsAdmin = await isGroupAdmin(chat.id, from.id);
