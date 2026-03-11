@@ -24,7 +24,6 @@ const BAN_STRIKE_THRESHOLD    = 5;   // Auto-ban if target is also unverified
 const MUTE_DURATION_SEC       = 3600; // 1 hour mute
 
 // ─── Timing Config ────────────────────────────────────────────────
-const UNVERIFIED_COOLDOWN_SEC  = 600;
 const SCHEDULED_CHECK_SEC      = 3600;
 const SCHEDULED_MIN_MSG_GAP    = 10;
 
@@ -343,6 +342,39 @@ async function removeFromBlacklist(username) {
   }
 }
 
+// ─── Redis: departure feedback pending ───────────────────────────
+async function setFeedbackPending(userId, meta = {}) {
+  try {
+    await redis.set(
+      `feedback:pending:${userId}`,
+      JSON.stringify({ ...meta, askedAt: Date.now() }),
+      { ex: 60 * 60 * 48 } // expires after 48 hours
+    );
+    log.redis("FEEDBACK_PENDING_SET", { userId });
+  } catch (e) {
+    log.error("FEEDBACK_PENDING_SET_FAILED", { userId, error: e.message });
+  }
+}
+
+async function getFeedbackPending(userId) {
+  try {
+    const raw = await redis.get(`feedback:pending:${userId}`);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    log.error("FEEDBACK_PENDING_GET_FAILED", { userId, error: e.message });
+    return null;
+  }
+}
+
+async function clearFeedbackPending(userId) {
+  try {
+    await redis.del(`feedback:pending:${userId}`);
+    log.redis("FEEDBACK_PENDING_CLEARED", { userId });
+  } catch (e) {
+    log.error("FEEDBACK_PENDING_CLEAR_FAILED", { userId, error: e.message });
+  }
+}
+
 // ─── Mute a user ──────────────────────────────────────────────────
 async function muteUser(chatId, userId, durationSec = MUTE_DURATION_SEC) {
   const untilDate = Math.floor(Date.now() / 1000) + durationSec;
@@ -537,12 +569,65 @@ export default async function handler(req, res) {
       log.skip("NO_CHAT", "No chat object — skipping");
       return res.status(200).send("ok");
     }
-    if (chat.type !== "group" && chat.type !== "supergroup") {
-      log.skip("NOT_A_GROUP", { chat_type: chat.type });
-      return res.status(200).send("ok");
-    }
     if (from?.is_bot) {
       log.skip("FROM_BOT", { from_id: from?.id });
+      return res.status(200).send("ok");
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // (PRIVATE) DEPARTURE FEEDBACK — DM reply from a user who left
+    // Must be checked BEFORE the group-only guard so private
+    // messages can still reach this path.
+    // ══════════════════════════════════════════════════════════
+    if (chat.type === "private" && from?.id && message.text) {
+      const pending = await getFeedbackPending(from.id);
+
+      if (pending) {
+        log.info("FEEDBACK_RECEIVED", { from_id: from.id, text: message.text });
+        await clearFeedbackPending(from.id);
+
+        const firstName   = escapeHtml(from.first_name || "");
+        const lastName    = escapeHtml(from.last_name  || "");
+        const displayName = [firstName, lastName].filter(Boolean).join(" ") || "Unknown";
+        const username    = from.username ? `@${escapeHtml(from.username)}` : `(no username)`;
+
+        // Thank the user
+        await tgSendMessage({
+          chat_id: from.id,
+          text:
+            `💛 Thank you for your feedback, ${firstName}!\n\n` +
+            `Our team will review it and use it to improve the group. We hope to see you back someday! 🙏`
+        });
+
+        // Forward feedback to admin
+        if (ADMIN_LOG_CHAT_ID) {
+          await tgSendMessage({
+            chat_id: ADMIN_LOG_CHAT_ID,
+            text:
+              `📩 <b>Departure Feedback Received</b>\n\n` +
+              `👤 Name: ${displayName}\n` +
+              `🔗 Username: ${username}\n` +
+              `🪪 User ID: <code>${from.id}</code>\n` +
+              `🏘️ Left group: ${escapeHtml(pending.chatTitle || "Unknown")}\n` +
+              `📅 Left at: ${new Date(pending.leftAt || Date.now()).toUTCString()}\n\n` +
+              `💬 <b>Their reason:</b>\n${escapeHtml(message.text)}`
+          });
+          log.ok("FEEDBACK_FORWARDED_TO_ADMIN", { from_id: from.id });
+        } else {
+          log.warn("FEEDBACK_NO_ADMIN_CHANNEL", "ADMIN_LOG_CHAT_ID not set — feedback not forwarded");
+        }
+
+        return res.status(200).send("ok");
+      }
+
+      // Private message but no pending feedback — ignore silently
+      log.skip("PRIVATE_NO_PENDING_FEEDBACK", { from_id: from.id });
+      return res.status(200).send("ok");
+    }
+
+    // From here on, only process group / supergroup messages
+    if (chat.type !== "group" && chat.type !== "supergroup") {
+      log.skip("NOT_A_GROUP", { chat_type: chat.type });
       return res.status(200).send("ok");
     }
 
@@ -571,7 +656,16 @@ export default async function handler(req, res) {
           await storeUserId(member.username, member.id);
         }
 
-        const m = mentionUser(member);
+        // Build a friendly display name — prefer @username, fall back to First [Last] name
+        const fullName = [member.first_name, member.last_name].filter(Boolean).join(" ").trim() || "there";
+        const displayName = member.username
+          ? `@${member.username}`
+          : `<b>${escapeHtml(fullName)}</b>`;
+        // Linked mention (clickable) for inline use
+        const m = member.username
+          ? `@${member.username}`
+          : `<a href="tg://user?id=${member.id}">${escapeHtml(fullName)}</a>`;
+
         let isVerified = false;
 
         if (member.username) {
@@ -579,13 +673,12 @@ export default async function handler(req, res) {
           const blacklisted = await isBlacklisted(member.username);
           if (blacklisted) {
             log.warn("BLACKLISTED_USER_JOINED", { username: member.username });
-            const userId = member.id;
-            await banUser(chat.id, userId);
+            await banUser(chat.id, member.id);
             await tgSendMessage({
               chat_id: chat.id,
               text:
                 `🚫 <b>Banned on entry</b>\n\n` +
-                `@${escapeHtml(member.username)} is on the <b>global scammer blacklist</b> and has been automatically removed. 🔐`
+                `${displayName} is on the <b>global scammer blacklist</b> and has been automatically removed. 🔐`
             });
             continue;
           }
@@ -593,10 +686,10 @@ export default async function handler(req, res) {
           const v = await verifyUsernameApi(member.username);
           isVerified = v?.verified === true;
         } else {
-          log.warn("NEW_MEMBER_NO_USERNAME", { id: member.id });
+          log.warn("NEW_MEMBER_NO_USERNAME", { id: member.id, name: fullName });
         }
 
-        log.info("NEW_MEMBER_VERIFIED_STATUS", { username: member.username, isVerified });
+        log.info("NEW_MEMBER_VERIFIED_STATUS", { username: member.username, name: fullName, isVerified });
 
         if (isVerified) {
           log.ok("WELCOME_VERIFIED", { username: member.username });
@@ -606,14 +699,21 @@ export default async function handler(req, res) {
           });
           await saveBotMsgId(chat.id, r?.result?.message_id);
         } else {
-          log.warn("WELCOME_UNVERIFIED", { username: member.username });
+          log.warn("WELCOME_UNVERIFIED", { username: member.username, name: fullName });
+
+          // Build context-aware welcome text
+          const noUsernameNote = !member.username
+            ? `\n\n<i>💡 Tip: Set a Telegram username in your profile settings so others can verify you.</i>`
+            : "";
+
           const r = await tgSendMessage({
             chat_id: chat.id,
             text:
-              `👋 Welcome ${m}!\n\n` +
+              `👋 Welcome, ${m}!\n\n` +
               `This is a <b>verified-only</b> group 🛡️\n` +
               `Please verify yourself to stay — it's <b>FREE</b> for all Sugar Babies! 💸\n\n` +
-              `⚠️ <i>Anyone asking for money or vouchers first is a scammer.</i>`,
+              `⚠️ <i>Anyone asking for money or vouchers first is a scammer.</i>` +
+              noUsernameNote,
             reply_markup: verifyButton("🔗 Tap to Verify (FREE)")
           });
           await saveBotMsgId(chat.id, r?.result?.message_id);
@@ -635,6 +735,50 @@ export default async function handler(req, res) {
       return res.status(200).send("ok");
     }
 
+    // ══════════════════════════════════════════════════════════
+    // (A2) DEPARTURE — member left or was removed
+    // ══════════════════════════════════════════════════════════
+    if (message.left_chat_member) {
+      const leaver = message.left_chat_member;
+
+      if (leaver.is_bot) {
+        log.skip("LEFT_MEMBER_IS_BOT", { id: leaver.id });
+        return res.status(200).send("ok");
+      }
+
+      const fullName    = [leaver.first_name, leaver.last_name].filter(Boolean).join(" ").trim() || "there";
+      const firstName   = escapeHtml(leaver.first_name || fullName);
+      const chatTitle   = escapeHtml(chat.title || "the group");
+
+      log.info("MEMBER_LEFT", { id: leaver.id, username: leaver.username, name: fullName });
+
+      // Send a DM asking for departure feedback
+      tgSendMessage({
+        chat_id: leaver.id,
+        text:
+          `Hey ${firstName} 👋\n\n` +
+          `I noticed you left <b>${chatTitle}</b>. We're sorry to see you go! 😔\n\n` +
+          `Would you mind sharing why you left? Your feedback helps us improve the group for everyone.\n\n` +
+          `Just reply to this message with your reason — it goes straight to the admin team. 💬\n\n` +
+          `<i>(You have 48 hours to reply. Your response is completely private.)</i>`
+      }).then(async dmResult => {
+        if (dmResult?.ok) {
+          log.ok("DEPARTURE_DM_SENT", { leaver_id: leaver.id });
+          // Mark this user as awaiting feedback so the private handler picks it up
+          await setFeedbackPending(leaver.id, {
+            chatId:    chat.id,
+            chatTitle: chat.title || "",
+            leftAt:    Date.now(),
+            username:  leaver.username || null,
+            name:      fullName
+          });
+        } else {
+          log.warn("DEPARTURE_DM_FAILED", { leaver_id: leaver.id, response: dmResult });
+        }
+      }).catch(e => log.warn("DEPARTURE_DM_EXCEPTION", { leaver_id: leaver.id, error: e.message }));
+
+      return res.status(200).send("ok");
+    }
     // ══════════════════════════════════════════════════════════
     // (B) ADMIN COMMAND: /verify @username sugarbaby|sugardaddy
     // ══════════════════════════════════════════════════════════
@@ -1206,49 +1350,7 @@ export default async function handler(req, res) {
       }
     }
 
-    // ══════════════════════════════════════════════════════════
-    // (G) UNVERIFIED USER WARNING
-    // ══════════════════════════════════════════════════════════
-    const username    = from?.username;
-    const identity    = username ? `@${username}` : `id:${from.id}`;
-    const cooldownKey = `cooldown:unverified:${chat.id}:${identity}`;
-
-    const inCooldown = await redis.get(cooldownKey);
-    log.info("UNVERIFIED_CHECK", { identity, inCooldown: !!inCooldown });
-
-    if (inCooldown) {
-      log.skip("UNVERIFIED_IN_COOLDOWN", { identity });
-      return res.status(200).send("ok");
-    }
-
-    let isVerified = false;
-    if (username) {
-      const v = await verifyUsernameApi(username);
-      isVerified = v?.verified === true;
-    } else {
-      log.warn("USER_NO_USERNAME", { from_id: from.id });
-    }
-
-    log.info("UNVERIFIED_STATUS", { identity, isVerified });
-
-    if (!isVerified) {
-      await redis.set(cooldownKey, "1", { ex: UNVERIFIED_COOLDOWN_SEC });
-      log.warn("UNVERIFIED_WARNING_SENT", { identity, cooldown_sec: UNVERIFIED_COOLDOWN_SEC });
-
-      const m = mentionUser(from);
-      const r = await tgSendMessage({
-        chat_id: chat.id,
-        text:
-          `${m} — your profile is <b>unverified</b> ⚠️\n` +
-          `Verify for free to keep chatting here! 👇`,
-        reply_to_message_id: message.message_id,
-        reply_markup: verifyButton()
-      });
-      await saveBotMsgId(chat.id, r?.result?.message_id);
-    } else {
-      log.ok("USER_IS_VERIFIED", { identity });
-    }
-
+    // ── End of message handling ──
     return res.status(200).send("ok");
 
   } catch (e) {
