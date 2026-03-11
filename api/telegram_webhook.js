@@ -290,16 +290,31 @@ async function saveScamReports(username, reports) {
 async function getStrikeScore(username) {
   try {
     const v = await redis.get(`scam:strikes:${username.toLowerCase()}`);
-    return v ? parseFloat(v) : 0;
+    if (!v) return 0;
+    // Support both legacy plain number and new "score:count" format
+    const str = String(v);
+    return parseFloat(str.split(":")[0]);
   } catch (e) {
     log.error("GET_STRIKE_SCORE_FAILED", { username, error: e.message });
     return 0;
   }
 }
 
-async function setStrikeScore(username, score) {
+async function getStrikeData(username) {
   try {
-    await redis.set(`scam:strikes:${username.toLowerCase()}`, String(score), {
+    const v = await redis.get(`scam:strikes:${username.toLowerCase()}`);
+    if (!v) return { score: 0, count: 0 };
+    const parts = String(v).split(":");
+    return { score: parseFloat(parts[0]), count: parseInt(parts[1] || "0", 10) };
+  } catch (e) {
+    log.error("GET_STRIKE_DATA_FAILED", { username, error: e.message });
+    return { score: 0, count: 0 };
+  }
+}
+
+async function setStrikeScore(username, score, count = 0) {
+  try {
+    await redis.set(`scam:strikes:${username.toLowerCase()}`, `${score}:${count}`, {
       ex: 60 * 60 * 24 * 90
     });
   } catch (e) {
@@ -421,11 +436,10 @@ async function getTopReported(limit = 10) {
     const keys = await redis.keys("scam:strikes:*");
     const results = [];
     for (const key of keys) {
-      const username = key.replace("scam:strikes:", "");
-      const score    = parseFloat(await redis.get(key) || "0");
-      const reports  = await getScamReports(username);
+      const username  = key.replace("scam:strikes:", "");
+      const { score, count } = await getStrikeData(username);
       const confirmed = !!(await redis.get(`scam:blacklist:${username}`));
-      results.push({ username, score, reportCount: reports.length, confirmed });
+      results.push({ username, score, reportCount: count, confirmed });
     }
     return results
       .sort((a, b) => b.score - a.score)
@@ -470,7 +484,8 @@ async function fileScamReport({ targetUsername, reporterId, reporterUsername, re
 
   const oldScore = await getStrikeScore(targetUsername);
   const newScore = oldScore + weight;
-  await setStrikeScore(targetUsername, newScore);
+  // Store score AND report count together so /scamreports never mismatches
+  await setStrikeScore(targetUsername, newScore, reports.length);
 
   log.ok("REPORT_FILED", { targetUsername, reporterId, weight, newScore });
 
@@ -503,17 +518,30 @@ function parsePublicVerifyCommand(text) {
 }
 
 /**
- * Parses /report command:
- *   /report @username [reason]       → { targetUsername, reason }
- *   /report [reason] (as reply)      → { targetUsername: null (use reply), reason }
+ * Parses /report command — NO regex on the reason, accepts any free text.
+ *   /report @username any reason text here  → { targetUsername, reason }
+ *   /report any reason text here (as reply) → { targetUsername: null, reason }
+ *   /report                                 → { targetUsername: null, reason: null }
  */
 function parseReportCommand(text) {
   if (!text) return null;
-  const withUser = text.trim().match(/^\/report(?:@\S+)?\s+@?([a-zA-Z0-9_]{4,32})(?:\s+(.+))?$/i);
-  if (withUser) return { targetUsername: withUser[1], reason: withUser[2]?.trim() || null };
-  const withoutUser = text.trim().match(/^\/report(?:@\S+)?(?:\s+(.+))?$/i);
-  if (withoutUser) return { targetUsername: null, reason: withoutUser[1]?.trim() || null };
-  return null;
+  const trimmed = text.trim();
+
+  // Must start with /report (optionally @botname)
+  const prefix = trimmed.match(/^\/report(?:@\S+)?/i);
+  if (!prefix) return null;
+
+  // Everything after the command trigger
+  const rest = trimmed.slice(prefix[0].length).trim();
+
+  // If starts with @username, split it off — rest is the reason
+  const withUser = rest.match(/^@?([a-zA-Z0-9_]{4,32})(?:\s+(.+))?$/is);
+  if (withUser && rest.startsWith("@")) {
+    return { targetUsername: withUser[1], reason: withUser[2]?.trim() || null };
+  }
+
+  // No @username prefix — entire rest is the reason (reply-based usage)
+  return { targetUsername: null, reason: rest || null };
 }
 
 /**
@@ -962,15 +990,17 @@ export default async function handler(req, res) {
       log.info("CMD_REPORT_DETECTED", { from: from.username, parsed: reportCmd });
 
       let targetUsername = reportCmd.targetUsername;
+      let reason         = reportCmd.reason;
       let evidenceMsgId  = null;
 
-      // If no username given, try the replied-to message
-      if (!targetUsername && message.reply_to_message) {
-        const replyFrom = message.reply_to_message.from;
-        targetUsername  = replyFrom?.username || null;
-        evidenceMsgId   = message.reply_to_message.message_id;
+      // ── Reply-based report: ALWAYS override target from the replied message.
+      // This also fixes the regex-eats-reason bug (e.g. /report asking for money
+      // where "asking" was wrongly parsed as a username).
+      if (message.reply_to_message) {
+        const replyFrom   = message.reply_to_message.from;
+        evidenceMsgId     = message.reply_to_message.message_id;
 
-        if (!targetUsername) {
+        if (!replyFrom?.username) {
           await tgSendMessage({
             chat_id: chat.id,
             text:
@@ -981,6 +1011,15 @@ export default async function handler(req, res) {
           });
           return res.status(200).send("ok");
         }
+
+        // Override username with the reply target
+        targetUsername = replyFrom.username;
+
+        // Re-extract reason as EVERYTHING after /report (ignoring any parsed username)
+        const rawReason = message.text?.trim().match(/^\/report(?:@\S+)?(?:\s+(.+))?$/i);
+        reason = rawReason?.[1]?.trim() || null;
+
+        log.info("REPORT_REPLY_RESOLVED", { targetUsername, reason, evidenceMsgId });
       }
 
       if (!targetUsername) {
@@ -1028,7 +1067,7 @@ export default async function handler(req, res) {
         reporterId: from.id,
         reporterUsername: from.username,
         reporterVerified,
-        reason: reportCmd.reason,
+        reason,
         chatId: chat.id,
         evidenceMsgId
       });
@@ -1051,7 +1090,7 @@ export default async function handler(req, res) {
         text:
           `📋 <b>Report Received</b>\n\n` +
           `👤 User: @${escapeHtml(targetUsername)}\n` +
-          `📝 Reason: ${escapeHtml(reportCmd.reason || "Not specified")}\n` +
+          `📝 Reason: ${escapeHtml(reason || "Not specified")}\n` +
           `🔢 Total reports: ${reports.length}\n\n` +
           `<i>Admins have been notified. The report is anonymous. 🔒</i>`,
         reply_to_message_id: message.message_id
