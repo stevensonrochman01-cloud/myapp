@@ -13,6 +13,16 @@ const VERIFY_LINK =
   process.env.VERIFY_LINK || "http://golden-sugar-daddy.vercel.app/verification";
 const ADMIN_USERNAME = "SugarBabyAdmin";
 
+// ─── SCAM REPORT CONFIG ───────────────────────────────────────────
+// Set this to a private admin/log channel chat ID to receive evidence forwarding.
+// Leave as null to disable forwarding.
+const ADMIN_LOG_CHAT_ID = process.env.ADMIN_LOG_CHAT_ID || null;
+
+// Strike thresholds (weighted: verified reporter = 2pts, unverified = 1pt)
+const MUTE_STRIKE_THRESHOLD   = 3;   // Mute suspect + ping admins
+const BAN_STRIKE_THRESHOLD    = 5;   // Auto-ban if target is also unverified
+const MUTE_DURATION_SEC       = 3600; // 1 hour mute
+
 // ─── Timing Config ────────────────────────────────────────────────
 const UNVERIFIED_COOLDOWN_SEC  = 600;
 const SCHEDULED_CHECK_SEC      = 3600;
@@ -31,7 +41,7 @@ const SCHEDULED_MESSAGES = [
     text:
       `🚨 <b>Scam Alert</b>\n\n` +
       `If anyone asks you for <b>money, vouchers, or gift cards</b> before being your Sugar Daddy — that's a classic scam. 🚫\n\n` +
-      `<i>You're here to earn, not to pay.</i> Report them immediately.`,
+      `<i>You're here to earn, not to pay.</i> Report them immediately using /report @username.`,
     button: null
   },
   {
@@ -200,7 +210,6 @@ async function isGroupAdmin(chatId, userId) {
 async function assignVerifiedTitle(chatId, userId, role) {
   log.info("ASSIGN_TITLE_START", { chatId, userId, role });
 
-  // Step 1: Promote with zero permissions (required before title can be set)
   const promoteRes = await tgApi("promoteChatMember", {
     chat_id: chatId,
     user_id: userId,
@@ -224,12 +233,9 @@ async function assignVerifiedTitle(chatId, userId, role) {
   }
 
   log.ok("PROMOTE_SUCCESS", { chatId, userId });
-
-  // Step 2: Wait for Telegram to propagate the promotion
   log.info("PROMOTE_DELAY", "Waiting 1500ms for Telegram to propagate promotion...");
   await new Promise(resolve => setTimeout(resolve, 1500));
 
-  // Step 3: Set the custom title (max 16 chars, plain text only)
   const titleMap = {
     sugarbaby:  "Verified SugarBaby",
     sugardaddy: "Verified SugarDaddy"
@@ -252,6 +258,200 @@ async function assignVerifiedTitle(chatId, userId, role) {
   return titleRes;
 }
 
+// ══════════════════════════════════════════════════════════════════
+// SCAM REPORTING SYSTEM
+// ══════════════════════════════════════════════════════════════════
+
+// ─── Redis keys ───────────────────────────────────────────────────
+// scam:reports:<username>       → JSON array of report objects
+// scam:strikes:<username>       → total weighted strike score (string number)
+// scam:blacklist:<username>     → "1" if globally confirmed scammer
+// scam:confirmed:<username>     → JSON with confirmation details
+
+async function getScamReports(username) {
+  try {
+    const raw = await redis.get(`scam:reports:${username.toLowerCase()}`);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    log.error("GET_SCAM_REPORTS_FAILED", { username, error: e.message });
+    return [];
+  }
+}
+
+async function saveScamReports(username, reports) {
+  try {
+    await redis.set(`scam:reports:${username.toLowerCase()}`, JSON.stringify(reports), {
+      ex: 60 * 60 * 24 * 90  // 90-day retention
+    });
+  } catch (e) {
+    log.error("SAVE_SCAM_REPORTS_FAILED", { username, error: e.message });
+  }
+}
+
+async function getStrikeScore(username) {
+  try {
+    const v = await redis.get(`scam:strikes:${username.toLowerCase()}`);
+    return v ? parseFloat(v) : 0;
+  } catch (e) {
+    log.error("GET_STRIKE_SCORE_FAILED", { username, error: e.message });
+    return 0;
+  }
+}
+
+async function setStrikeScore(username, score) {
+  try {
+    await redis.set(`scam:strikes:${username.toLowerCase()}`, String(score), {
+      ex: 60 * 60 * 24 * 90
+    });
+  } catch (e) {
+    log.error("SET_STRIKE_SCORE_FAILED", { username, error: e.message });
+  }
+}
+
+async function isBlacklisted(username) {
+  try {
+    const v = await redis.get(`scam:blacklist:${username.toLowerCase()}`);
+    return !!v;
+  } catch (e) {
+    log.error("IS_BLACKLISTED_FAILED", { username, error: e.message });
+    return false;
+  }
+}
+
+async function addToBlacklist(username, details = {}) {
+  try {
+    await redis.set(`scam:blacklist:${username.toLowerCase()}`, "1");
+    await redis.set(
+      `scam:confirmed:${username.toLowerCase()}`,
+      JSON.stringify({ username, ...details, confirmedAt: Date.now() })
+    );
+    log.redis("BLACKLISTED", { username });
+  } catch (e) {
+    log.error("ADD_TO_BLACKLIST_FAILED", { username, error: e.message });
+  }
+}
+
+async function removeFromBlacklist(username) {
+  try {
+    await redis.del(`scam:blacklist:${username.toLowerCase()}`);
+    await redis.del(`scam:confirmed:${username.toLowerCase()}`);
+    await redis.del(`scam:reports:${username.toLowerCase()}`);
+    await redis.del(`scam:strikes:${username.toLowerCase()}`);
+    log.redis("BLACKLIST_CLEARED", { username });
+  } catch (e) {
+    log.error("REMOVE_FROM_BLACKLIST_FAILED", { username, error: e.message });
+  }
+}
+
+// ─── Mute a user ──────────────────────────────────────────────────
+async function muteUser(chatId, userId, durationSec = MUTE_DURATION_SEC) {
+  const untilDate = Math.floor(Date.now() / 1000) + durationSec;
+  log.info("MUTE_USER", { chatId, userId, durationSec });
+  return tgApi("restrictChatMember", {
+    chat_id: chatId,
+    user_id: userId,
+    until_date: untilDate,
+    permissions: {
+      can_send_messages: false,
+      can_send_audios: false,
+      can_send_documents: false,
+      can_send_photos: false,
+      can_send_videos: false,
+      can_send_video_notes: false,
+      can_send_voice_notes: false,
+      can_send_polls: false,
+      can_send_other_messages: false,
+      can_add_web_page_previews: false
+    }
+  });
+}
+
+// ─── Ban a user ───────────────────────────────────────────────────
+async function banUser(chatId, userId) {
+  log.info("BAN_USER", { chatId, userId });
+  return tgApi("banChatMember", { chat_id: chatId, user_id: userId });
+}
+
+// ─── Forward evidence message to admin log channel ────────────────
+async function forwardEvidence(fromChatId, messageId) {
+  if (!ADMIN_LOG_CHAT_ID) return null;
+  log.info("FORWARD_EVIDENCE", { fromChatId, messageId, to: ADMIN_LOG_CHAT_ID });
+  return tgApi("forwardMessage", {
+    chat_id: ADMIN_LOG_CHAT_ID,
+    from_chat_id: fromChatId,
+    message_id: messageId
+  });
+}
+
+// ─── Get top N most reported users (across all time) ─────────────
+async function getTopReported(limit = 10) {
+  try {
+    const keys = await redis.keys("scam:strikes:*");
+    const results = [];
+    for (const key of keys) {
+      const username = key.replace("scam:strikes:", "");
+      const score    = parseFloat(await redis.get(key) || "0");
+      const reports  = await getScamReports(username);
+      const confirmed = !!(await redis.get(`scam:blacklist:${username}`));
+      results.push({ username, score, reportCount: reports.length, confirmed });
+    }
+    return results
+      .sort((a, b) => b.score - a.score)
+      .slice(0, limit);
+  } catch (e) {
+    log.error("GET_TOP_REPORTED_FAILED", { error: e.message });
+    return [];
+  }
+}
+
+// ─── Core report handler ──────────────────────────────────────────
+/**
+ * Files a scam report against targetUsername.
+ * Returns { alreadyReported, newScore, muteTriggered, banTriggered }
+ */
+async function fileScamReport({ targetUsername, reporterId, reporterUsername, reporterVerified, reason, chatId, evidenceMsgId }) {
+  const reports = await getScamReports(targetUsername);
+
+  // Prevent duplicate reports from same reporter
+  const alreadyReported = reports.some(r => r.reporterId === reporterId);
+  if (alreadyReported) {
+    log.warn("REPORT_DUPLICATE", { targetUsername, reporterId });
+    return { alreadyReported: true, newScore: await getStrikeScore(targetUsername), muteTriggered: false, banTriggered: false };
+  }
+
+  // Credibility weight: verified reporter = 2, unverified = 1
+  const weight = reporterVerified ? 2 : 1;
+
+  const reportEntry = {
+    reporterId,
+    reporterUsername: reporterUsername || null,
+    reporterVerified,
+    weight,
+    reason: reason || "No reason given",
+    chatId,
+    evidenceMsgId: evidenceMsgId || null,
+    ts: Date.now()
+  };
+
+  reports.push(reportEntry);
+  await saveScamReports(targetUsername, reports);
+
+  const oldScore = await getStrikeScore(targetUsername);
+  const newScore = oldScore + weight;
+  await setStrikeScore(targetUsername, newScore);
+
+  log.ok("REPORT_FILED", { targetUsername, reporterId, weight, newScore });
+
+  // Forward evidence to admin log
+  if (evidenceMsgId && ADMIN_LOG_CHAT_ID) {
+    const contextNote = `🚨 <b>Report Evidence</b>\n👤 Reported: @${escapeHtml(targetUsername)}\n📋 Reason: ${escapeHtml(reason || "None")}\n⚖️ Reporter: @${escapeHtml(reporterUsername || "unknown")} (${reporterVerified ? "✅ Verified" : "⚠️ Unverified"})\n📊 New strike score: ${newScore}`;
+    await tgSendMessage({ chat_id: ADMIN_LOG_CHAT_ID, text: contextNote });
+    await forwardEvidence(chatId, evidenceMsgId);
+  }
+
+  return { alreadyReported: false, newScore, muteTriggered: false, banTriggered: false };
+}
+
 // ─── Command parsers ──────────────────────────────────────────────
 function parseAdminVerifyCommand(text) {
   if (!text) return null;
@@ -268,6 +468,39 @@ function parsePublicVerifyCommand(text) {
     .trim()
     .match(/^(?:\/verify(?:@\S+)?|verify)\s+@?([a-zA-Z0-9_]{4,32})\s*$/i);
   return m ? m[1] : null;
+}
+
+/**
+ * Parses /report command:
+ *   /report @username [reason]       → { targetUsername, reason }
+ *   /report [reason] (as reply)      → { targetUsername: null (use reply), reason }
+ */
+function parseReportCommand(text) {
+  if (!text) return null;
+  const withUser = text.trim().match(/^\/report(?:@\S+)?\s+@?([a-zA-Z0-9_]{4,32})(?:\s+(.+))?$/i);
+  if (withUser) return { targetUsername: withUser[1], reason: withUser[2]?.trim() || null };
+  const withoutUser = text.trim().match(/^\/report(?:@\S+)?(?:\s+(.+))?$/i);
+  if (withoutUser) return { targetUsername: null, reason: withoutUser[1]?.trim() || null };
+  return null;
+}
+
+/**
+ * Parses /clearreport @username  (admin only)
+ */
+function parseClearReportCommand(text) {
+  if (!text) return null;
+  const m = text.trim().match(/^\/clearreport(?:@\S+)?\s+@?([a-zA-Z0-9_]{4,32})\s*$/i);
+  return m ? m[1] : null;
+}
+
+/**
+ * Parses /confirm @username [tactics]  (admin only — confirms as scammer)
+ */
+function parseConfirmScammerCommand(text) {
+  if (!text) return null;
+  const m = text.trim().match(/^\/confirmscam(?:@\S+)?\s+@?([a-zA-Z0-9_]{4,32})(?:\s+(.+))?$/i);
+  if (!m) return null;
+  return { username: m[1], tactics: m[2]?.trim() || null };
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -342,6 +575,21 @@ export default async function handler(req, res) {
         let isVerified = false;
 
         if (member.username) {
+          // ── Blacklist check on join ──
+          const blacklisted = await isBlacklisted(member.username);
+          if (blacklisted) {
+            log.warn("BLACKLISTED_USER_JOINED", { username: member.username });
+            const userId = member.id;
+            await banUser(chat.id, userId);
+            await tgSendMessage({
+              chat_id: chat.id,
+              text:
+                `🚫 <b>Banned on entry</b>\n\n` +
+                `@${escapeHtml(member.username)} is on the <b>global scammer blacklist</b> and has been automatically removed. 🔐`
+            });
+            continue;
+          }
+
           const v = await verifyUsernameApi(member.username);
           isVerified = v?.verified === true;
         } else {
@@ -485,10 +733,25 @@ export default async function handler(req, res) {
           `🏅 Badge: ${badge}`;
       } else {
         log.warn("PUBLIC_VERIFY_NOT_VERIFIED", { target: verifyTarget });
-        reply =
-          `❌ <b>Not Verified</b> — @${escapeHtml(verifyTarget)}\n\n` +
-          `⚠️ Proceed with caution. Unverified users may be scammers.`;
-        markup = verifyButton("🔗 Verify This Profile");
+
+        // Show blacklist status in lookup result
+        const blacklisted = await isBlacklisted(verifyTarget);
+        if (blacklisted) {
+          reply =
+            `🚫 <b>CONFIRMED SCAMMER</b> — @${escapeHtml(verifyTarget)}\n\n` +
+            `⛔ This user is on the <b>global scammer blacklist</b>.\n` +
+            `Do NOT engage with this person. Block immediately.`;
+        } else {
+          const score = await getStrikeScore(verifyTarget);
+          const reports = await getScamReports(verifyTarget);
+          reply =
+            `❌ <b>Not Verified</b> — @${escapeHtml(verifyTarget)}\n\n` +
+            `⚠️ Proceed with caution. Unverified users may be scammers.\n` +
+            (score > 0
+              ? `\n📊 <b>Report Score:</b> ${score} pts from ${reports.length} report(s)`
+              : "");
+          markup = verifyButton("🔗 Verify This Profile");
+        }
       }
 
       const r = await tgSendMessage({
@@ -511,7 +774,10 @@ export default async function handler(req, res) {
         text:
           `🚨 <b>Scam Warning</b>\n\n` +
           `<b>Never</b> send money, gift cards, or vouchers to anyone here.\n\n` +
-          `Real Sugar Daddies <b>give</b> — they never ask you to pay first. Block & report immediately. 🚫`,
+          `Real Sugar Daddies <b>give</b> — they never ask you to pay first.\n\n` +
+          `📣 To report a scammer: reply to their message and type <code>/report [reason]</code>\n` +
+          `Or use: <code>/report @username [reason]</code>\n\n` +
+          `Block & report immediately. 🚫`,
         reply_to_message_id: message.message_id
       });
       await saveBotMsgId(chat.id, r?.result?.message_id);
@@ -531,10 +797,364 @@ export default async function handler(req, res) {
           `2️⃣ No asking for money, vouchers, or advance payments\n` +
           `3️⃣ No spam or self-promotion\n` +
           `4️⃣ Respect all members\n` +
-          `5️⃣ For genuine SD connections → @${ADMIN_USERNAME}\n\n` +
+          `5️⃣ For genuine SD connections → @${ADMIN_USERNAME}\n` +
+          `6️⃣ Report suspected scammers: /report @username [reason]\n\n` +
           `<i>Breaking rules = instant ban. 🔨</i>`,
         reply_to_message_id: message.message_id,
         reply_markup: verifyButton()
+      });
+      await saveBotMsgId(chat.id, r?.result?.message_id);
+      return res.status(200).send("ok");
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // (H) COMMAND: /report  ← NEW
+    //   Usage 1: /report @username [reason]
+    //   Usage 2: Reply to a message + /report [reason]
+    // ══════════════════════════════════════════════════════════
+    const reportCmd = parseReportCommand(message.text);
+
+    if (reportCmd !== null) {
+      log.info("CMD_REPORT_DETECTED", { from: from.username, parsed: reportCmd });
+
+      let targetUsername = reportCmd.targetUsername;
+      let evidenceMsgId  = null;
+
+      // If no username given, try the replied-to message
+      if (!targetUsername && message.reply_to_message) {
+        const replyFrom = message.reply_to_message.from;
+        targetUsername  = replyFrom?.username || null;
+        evidenceMsgId   = message.reply_to_message.message_id;
+
+        if (!targetUsername) {
+          await tgSendMessage({
+            chat_id: chat.id,
+            text:
+              `⚠️ <b>Cannot identify target</b>\n\n` +
+              `The user you replied to has no username. Try:\n` +
+              `<code>/report @username [reason]</code>`,
+            reply_to_message_id: message.message_id
+          });
+          return res.status(200).send("ok");
+        }
+      }
+
+      if (!targetUsername) {
+        await tgSendMessage({
+          chat_id: chat.id,
+          text:
+            `ℹ️ <b>How to report a scammer</b>\n\n` +
+            `Option 1 — Reply to their message and type:\n<code>/report [reason]</code>\n\n` +
+            `Option 2 — Use their username:\n<code>/report @username [reason]</code>\n\n` +
+            `Example: <code>/report @john asked me for vouchers</code>`,
+          reply_to_message_id: message.message_id
+        });
+        return res.status(200).send("ok");
+      }
+
+      // Prevent self-report
+      if (targetUsername.toLowerCase() === from?.username?.toLowerCase()) {
+        await tgSendMessage({
+          chat_id: chat.id,
+          text: `🤨 You can't report yourself.`,
+          reply_to_message_id: message.message_id
+        });
+        return res.status(200).send("ok");
+      }
+
+      // Prevent reporting the bot admin
+      if (targetUsername.toLowerCase() === ADMIN_USERNAME.toLowerCase()) {
+        await tgSendMessage({
+          chat_id: chat.id,
+          text: `🚫 You cannot report the group admin.`,
+          reply_to_message_id: message.message_id
+        });
+        return res.status(200).send("ok");
+      }
+
+      // Check reporter's verification status for credibility scoring
+      let reporterVerified = false;
+      if (from?.username) {
+        const rv = await verifyUsernameApi(from.username);
+        reporterVerified = rv?.verified === true;
+      }
+
+      const { alreadyReported, newScore } = await fileScamReport({
+        targetUsername,
+        reporterId: from.id,
+        reporterUsername: from.username,
+        reporterVerified,
+        reason: reportCmd.reason,
+        chatId: chat.id,
+        evidenceMsgId
+      });
+
+      if (alreadyReported) {
+        await tgSendMessage({
+          chat_id: chat.id,
+          text:
+            `ℹ️ You've already reported <b>@${escapeHtml(targetUsername)}</b>.\n` +
+            `Admins are aware and monitoring the situation.`,
+          reply_to_message_id: message.message_id
+        });
+        return res.status(200).send("ok");
+      }
+
+      // Acknowledge the report (anonymous — does not say who reported)
+      const reports = await getScamReports(targetUsername);
+      const r = await tgSendMessage({
+        chat_id: chat.id,
+        text:
+          `📋 <b>Report Received</b>\n\n` +
+          `👤 User: @${escapeHtml(targetUsername)}\n` +
+          `📝 Reason: ${escapeHtml(reportCmd.reason || "Not specified")}\n` +
+          `🔢 Total reports: ${reports.length}\n\n` +
+          `<i>Admins have been notified. The report is anonymous. 🔒</i>`,
+        reply_to_message_id: message.message_id
+      });
+      await saveBotMsgId(chat.id, r?.result?.message_id);
+
+      // ── DM confirmation to reporter ───────────────────────
+      tgSendMessage({
+        chat_id: from.id,
+        text:
+          `✅ <b>Your report was received</b>\n\n` +
+          `You reported @${escapeHtml(targetUsername)}.\n` +
+          `If confirmed as a scammer, you will be notified. Thank you for keeping the group safe! 🛡️`
+      }).catch(() => {});
+
+      // ── Strike threshold actions ──────────────────────────
+      if (newScore >= BAN_STRIKE_THRESHOLD) {
+        // Check if target is unverified before auto-banning
+        const targetV = await verifyUsernameApi(targetUsername);
+        const targetVerified = targetV?.verified === true;
+
+        if (!targetVerified) {
+          const targetUserId = await getUserIdByUsername(targetUsername);
+          if (targetUserId) {
+            log.warn("AUTO_BAN_TRIGGERED", { targetUsername, newScore });
+            await banUser(chat.id, targetUserId);
+            await addToBlacklist(targetUsername, { reason: "Auto-banned via community reports", chatId: chat.id, score: newScore });
+
+            const banMsg = await tgSendMessage({
+              chat_id: chat.id,
+              text:
+                `⛔ <b>User Auto-Banned</b>\n\n` +
+                `@${escapeHtml(targetUsername)} has been removed from the group.\n` +
+                `📊 Strike score: <b>${newScore}</b> — threshold exceeded.\n` +
+                `🌐 Added to the global scammer blacklist. 🔐`
+            });
+            await saveBotMsgId(chat.id, banMsg?.result?.message_id);
+
+            if (ADMIN_LOG_CHAT_ID) {
+              await tgSendMessage({
+                chat_id: ADMIN_LOG_CHAT_ID,
+                text:
+                  `⛔ <b>[AUTO-BAN]</b> @${escapeHtml(targetUsername)}\n` +
+                  `Group: ${chat.title || chat.id}\n` +
+                  `Score: ${newScore}\n` +
+                  `Reports: ${reports.length}\n` +
+                  `Use /clearreport @${escapeHtml(targetUsername)} to reverse if false positive.`
+              });
+            }
+          } else {
+            log.warn("AUTO_BAN_NO_USER_ID", { targetUsername });
+          }
+        }
+      } else if (newScore >= MUTE_STRIKE_THRESHOLD) {
+        const targetUserId = await getUserIdByUsername(targetUsername);
+        if (targetUserId) {
+          log.warn("AUTO_MUTE_TRIGGERED", { targetUsername, newScore });
+          await muteUser(chat.id, targetUserId);
+
+          const muteMsg = await tgSendMessage({
+            chat_id: chat.id,
+            text:
+              `🔇 <b>User Muted Pending Review</b>\n\n` +
+              `@${escapeHtml(targetUsername)} has been muted for <b>1 hour</b> while admins review reports.\n` +
+              `📊 Strike score: <b>${newScore}</b>\n\n` +
+              `<i>Admins: use /clearreport @${escapeHtml(targetUsername)} to dismiss if false.</i>`
+          });
+          await saveBotMsgId(chat.id, muteMsg?.result?.message_id);
+
+          if (ADMIN_LOG_CHAT_ID) {
+            await tgSendMessage({
+              chat_id: ADMIN_LOG_CHAT_ID,
+              text:
+                `🔇 <b>[AUTO-MUTE]</b> @${escapeHtml(targetUsername)}\n` +
+                `Group: ${chat.title || chat.id}\n` +
+                `Score: ${newScore} | Reports: ${reports.length}\n` +
+                `Review and use /clearreport or /confirmscam to action.`
+            });
+          }
+        }
+      }
+
+      return res.status(200).send("ok");
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // (I) ADMIN COMMAND: /scamreports  ← NEW
+    //   Shows top reported users (admins only)
+    // ══════════════════════════════════════════════════════════
+    if (message.text?.match(/^\/scamreports(@\S+)?$/i)) {
+      log.info("CMD_SCAMREPORTS", { from: from.username });
+
+      const senderIsAdmin = await isGroupAdmin(chat.id, from.id);
+      if (!senderIsAdmin) {
+        await tgSendMessage({
+          chat_id: chat.id,
+          text: `🚫 This command is for admins only.`,
+          reply_to_message_id: message.message_id
+        });
+        return res.status(200).send("ok");
+      }
+
+      const topReported = await getTopReported(10);
+
+      if (!topReported.length) {
+        await tgSendMessage({
+          chat_id: chat.id,
+          text: `📊 <b>Scam Reports</b>\n\nNo reports filed yet. ✅`,
+          reply_to_message_id: message.message_id
+        });
+        return res.status(200).send("ok");
+      }
+
+      const lines = topReported.map((u, i) => {
+        const status = u.confirmed ? "⛔ CONFIRMED" : `⚠️ Score: ${u.score}`;
+        return `${i + 1}. @${escapeHtml(u.username)} — ${status} | ${u.reportCount} report(s)`;
+      });
+
+      const r = await tgSendMessage({
+        chat_id: chat.id,
+        text:
+          `📊 <b>Top Reported Users</b>\n\n` +
+          lines.join("\n") +
+          `\n\n<i>Use /clearreport @username to dismiss\nUse /confirmscam @username [tactics] to confirm</i>`,
+        reply_to_message_id: message.message_id
+      });
+      await saveBotMsgId(chat.id, r?.result?.message_id);
+      return res.status(200).send("ok");
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // (J) ADMIN COMMAND: /clearreport @username  ← NEW
+    //   Dismisses all reports against a user (false positive)
+    // ══════════════════════════════════════════════════════════
+    const clearTarget = parseClearReportCommand(message.text);
+    if (clearTarget) {
+      log.info("CMD_CLEARREPORT", { from: from.username, target: clearTarget });
+
+      const senderIsAdmin = await isGroupAdmin(chat.id, from.id);
+      if (!senderIsAdmin) {
+        await tgSendMessage({
+          chat_id: chat.id,
+          text: `🚫 This command is for admins only.`,
+          reply_to_message_id: message.message_id
+        });
+        return res.status(200).send("ok");
+      }
+
+      await removeFromBlacklist(clearTarget);
+
+      // Unmute if they were muted
+      const targetUserId = await getUserIdByUsername(clearTarget);
+      if (targetUserId) {
+        await tgApi("restrictChatMember", {
+          chat_id: chat.id,
+          user_id: targetUserId,
+          permissions: {
+            can_send_messages: true,
+            can_send_audios: true,
+            can_send_documents: true,
+            can_send_photos: true,
+            can_send_videos: true,
+            can_send_video_notes: true,
+            can_send_voice_notes: true,
+            can_send_polls: true,
+            can_send_other_messages: true,
+            can_add_web_page_previews: true
+          }
+        });
+      }
+
+      log.ok("REPORT_CLEARED", { target: clearTarget, clearedBy: from.username });
+
+      if (ADMIN_LOG_CHAT_ID) {
+        await tgSendMessage({
+          chat_id: ADMIN_LOG_CHAT_ID,
+          text: `✅ <b>[CLEARED]</b> Reports against @${escapeHtml(clearTarget)} dismissed by admin @${escapeHtml(from.username || from.id)}`
+        });
+      }
+
+      const r = await tgSendMessage({
+        chat_id: chat.id,
+        text:
+          `✅ <b>Reports Cleared</b>\n\n` +
+          `All reports against @${escapeHtml(clearTarget)} have been dismissed.\n` +
+          `If they were muted, they can now speak again. 🔓`,
+        reply_to_message_id: message.message_id
+      });
+      await saveBotMsgId(chat.id, r?.result?.message_id);
+      return res.status(200).send("ok");
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // (K) ADMIN COMMAND: /confirmscam @username [tactics]  ← NEW
+    //   Admin confirms a user as a scammer → blacklist + public notice
+    // ══════════════════════════════════════════════════════════
+    const confirmCmd = parseConfirmScammerCommand(message.text);
+    if (confirmCmd) {
+      log.info("CMD_CONFIRMSCAM", { from: from.username, target: confirmCmd.username });
+
+      const senderIsAdmin = await isGroupAdmin(chat.id, from.id);
+      if (!senderIsAdmin) {
+        await tgSendMessage({
+          chat_id: chat.id,
+          text: `🚫 This command is for admins only.`,
+          reply_to_message_id: message.message_id
+        });
+        return res.status(200).send("ok");
+      }
+
+      const { username: scammerUsername, tactics } = confirmCmd;
+      await addToBlacklist(scammerUsername, {
+        confirmedBy: from.username || from.id,
+        tactics: tactics || "Not specified",
+        chatId: chat.id
+      });
+
+      // Ban from this group
+      const targetUserId = await getUserIdByUsername(scammerUsername);
+      if (targetUserId) {
+        await banUser(chat.id, targetUserId);
+      }
+
+      log.ok("SCAMMER_CONFIRMED", { username: scammerUsername, confirmedBy: from.username });
+
+      if (ADMIN_LOG_CHAT_ID) {
+        await tgSendMessage({
+          chat_id: ADMIN_LOG_CHAT_ID,
+          text:
+            `⛔ <b>[CONFIRMED SCAMMER]</b>\n` +
+            `Username: @${escapeHtml(scammerUsername)}\n` +
+            `Confirmed by: @${escapeHtml(from.username || String(from.id))}\n` +
+            `Tactics: ${escapeHtml(tactics || "Not specified")}\n` +
+            `Date: ${new Date().toUTCString()}`
+        });
+      }
+
+      // Public scammer profile card
+      const r = await tgSendMessage({
+        chat_id: chat.id,
+        text:
+          `⛔ <b>CONFIRMED SCAMMER</b>\n\n` +
+          `👤 Username: @${escapeHtml(scammerUsername)}\n` +
+          `🎭 Tactics: ${escapeHtml(tactics || "Not specified")}\n` +
+          `📅 Confirmed: ${new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}\n` +
+          `🌐 Status: <b>Global blacklist — banned on entry</b>\n\n` +
+          `⚠️ <i>If this person contacts you on any platform, block and ignore them.</i>`
       });
       await saveBotMsgId(chat.id, r?.result?.message_id);
       return res.status(200).send("ok");
