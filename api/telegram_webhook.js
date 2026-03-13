@@ -25,36 +25,17 @@ const SCHEDULED_CHECK_SEC     = 3600;
 const SCHEDULED_MIN_MSG_GAP   = 10;
 
 // ══════════════════════════════════════════════════════════════════
-// 🚨 CP / ILLEGAL CONTENT DETECTION
+// 🚨 ILLEGAL CONTENT DETECTION — Specific phrases only
+// These are kept tight so admin announcements never trigger them.
 // ══════════════════════════════════════════════════════════════════
-// Text keywords that indicate CP or illegal content sharing.
-// Case-insensitive, partial-match scan on every incoming message.
 const ILLEGAL_KEYWORDS = [
-  // CP explicit
-  "cp link", "cp vid", "cp video", "cp photo", "cp pics", "cp collection",
-  "child porn", "kiddie porn", "loli porn", "shota", "preteen nude",
-  "underage nude", "underage sex", "underage porn", "minor porn",
-  "jailbait", "pedo", "paedophile", "paedophilia", "pedophilia",
-  "kids nude", "girls nude young", "boys nude young",
-  // Distribution signals
-  "selling cp", "buy cp", "trade cp", "swap cp", "cp for sale",
-  "cp channel", "cp group", "cp telegram",
-  // CSAM (child sexual abuse material)
-  "csam", "child abuse material",
-  // Illegal drug dealing in chats
-  "selling meth", "selling heroin", "selling fentanyl",
-  // General "illegal content" self-identification
-  "illegal vid", "illegal video", "illegal content",
+  "cp link", "cp vid", "cp video", "cp photo", "cp pics",
+  "child porn", "kiddie porn", "underage nude", "underage porn",
+  "minor porn", "jailbait", "pedo", "csam",
+  "selling cp", "buy cp", "trade cp", "cp for sale",
+  "child abuse material",
 ];
 
-// Media types that, when forwarded from unknown sources, get auto-deleted.
-// (All forwarded messages are deleted anyway — this is used for the ban logic.)
-const ILLEGAL_MEDIA_TYPES = ["photo", "video", "document", "animation", "video_note"];
-
-/**
- * Scans a message for CP / illegal keywords.
- * Returns the matched keyword, or null.
- */
 function detectIllegalKeyword(text = "") {
   const lower = text.toLowerCase();
   for (const kw of ILLEGAL_KEYWORDS) {
@@ -65,8 +46,6 @@ function detectIllegalKeyword(text = "") {
 
 /**
  * Returns true if the message is a forwarded message.
- * Covers both legacy (forward_from / forward_from_chat) and
- * new (forward_origin) Telegram Bot API fields.
  */
 function isForwardedMessage(msg) {
   return !!(
@@ -82,21 +61,20 @@ function isForwardedMessage(msg) {
 // ⭐ REPUTATION SYSTEM CONFIG
 // ══════════════════════════════════════════════════════════════════
 const REP_TIERS = [
-  { min: 0,   label: "New Member",        emoji: "🆕" },
-  { min: 10,  label: "Regular",           emoji: "👤" },
-  { min: 25,  label: "Trusted Member",    emoji: "🌟" },
-  { min: 50,  label: "Community Helper",  emoji: "🛡️" },
-  { min: 100, label: "Senior Helper",     emoji: "👑" },
-  { min: 200, label: "Elite Guardian",    emoji: "💎" },
+  { min: 0,   label: "New Member",       emoji: "🆕" },
+  { min: 10,  label: "Regular",          emoji: "👤" },
+  { min: 25,  label: "Trusted Member",   emoji: "🌟" },
+  { min: 50,  label: "Community Helper", emoji: "🛡️" },
+  { min: 100, label: "Senior Helper",    emoji: "👑" },
+  { min: 200, label: "Elite Guardian",   emoji: "💎" },
 ];
 
 const REP_GAINS = {
-  VERIFIED_JOIN:        2,   // User joins already verified
-  GOT_VERIFIED:         5,   // User completes verification after joining
-  ACCURATE_REPORT:      10,  // A report they filed was /confirmscam'd
-  DAILY_ACTIVE:         1,   // First message of the day
-  HELPFUL_REPLY:        3,   // Admin manually awards for a helpful reply (/giverep)
-  ADMIN_GRANT:          null,// Custom amount — admin sets via /giverep @user [n]
+  VERIFIED_JOIN:   2,
+  GOT_VERIFIED:    5,
+  ACCURATE_REPORT: 10,
+  DAILY_ACTIVE:    1,
+  HELPFUL_REPLY:   3,
 };
 
 function getRepTier(score) {
@@ -111,111 +89,7 @@ function getNextTier(score) {
   for (const t of REP_TIERS) {
     if (t.min > score) return t;
   }
-  return null; // Already at max
-}
-
-// ─── Redis: Reputation storage ────────────────────────────────────
-// rep:score:<userId>       → numeric score
-// rep:history:<userId>     → JSON array of {reason, delta, ts}
-// rep:daily:<userId>       → "1" with TTL until midnight UTC (daily-active gate)
-// rep:reporters:<scammer>  → JSON array of reporter userIds
-
-async function getRepScore(userId) {
-  try {
-    const v = await redis.get(`rep:score:${userId}`);
-    return v ? parseInt(v, 10) : 0;
-  } catch { return 0; }
-}
-
-async function addRepScore(userId, delta, reason) {
-  try {
-    const current = await getRepScore(userId);
-    const newScore = Math.max(0, current + delta);
-    await redis.set(`rep:score:${userId}`, newScore);
-
-    // Append to history (keep last 50 events)
-    const raw = await redis.get(`rep:history:${userId}`);
-    const history = raw ? JSON.parse(raw) : [];
-    history.push({ reason, delta, ts: Date.now() });
-    if (history.length > 50) history.splice(0, history.length - 50);
-    await redis.set(`rep:history:${userId}`, JSON.stringify(history), { ex: 60 * 60 * 24 * 90 });
-
-    log.ok("REP_UPDATED", { userId, delta, reason, newScore });
-    return { newScore, oldScore: current, tierChanged: getRepTier(current).label !== getRepTier(newScore).label, newTier: getRepTier(newScore) };
-  } catch (e) {
-    log.error("REP_UPDATE_FAILED", { userId, error: e.message });
-    return { newScore: 0, oldScore: 0, tierChanged: false, newTier: REP_TIERS[0] };
-  }
-}
-
-async function getRepHistory(userId) {
-  try {
-    const raw = await redis.get(`rep:history:${userId}`);
-    return raw ? JSON.parse(raw) : [];
-  } catch { return []; }
-}
-
-async function isDailyRepClaimed(userId) {
-  try {
-    const v = await redis.get(`rep:daily:${userId}`);
-    return !!v;
-  } catch { return false; }
-}
-
-async function claimDailyRep(userId) {
-  try {
-    // Expire at the next midnight UTC
-    const now = new Date();
-    const midnight = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
-    const ttl = Math.floor((midnight - now) / 1000);
-    await redis.set(`rep:daily:${userId}`, "1", { ex: ttl });
-  } catch {}
-}
-
-// Track who filed reports that later got confirmed (for rep rewards)
-async function storeReporterForTarget(targetUsername, reporterId) {
-  try {
-    const key = `rep:reporters:${targetUsername.toLowerCase()}`;
-    const raw = await redis.get(key);
-    const reporters = raw ? JSON.parse(raw) : [];
-    if (!reporters.includes(reporterId)) {
-      reporters.push(reporterId);
-      await redis.set(key, JSON.stringify(reporters), { ex: 60 * 60 * 24 * 90 });
-    }
-  } catch {}
-}
-
-async function getReportersForTarget(targetUsername) {
-  try {
-    const raw = await redis.get(`rep:reporters:${targetUsername.toLowerCase()}`);
-    return raw ? JSON.parse(raw) : [];
-  } catch { return []; }
-}
-
-// Top N by reputation
-async function getTopRepUsers(limit = 10) {
-  try {
-    const keys = await redis.keys("rep:score:*");
-    const results = [];
-    for (const key of keys) {
-      const userId = key.replace("rep:score:", "");
-      const score  = parseInt((await redis.get(key)) || "0", 10);
-      const uname  = await redis.get(`repname:${userId}`);
-      results.push({ userId, score, username: uname || null });
-    }
-    return results.sort((a, b) => b.score - a.score).slice(0, limit);
-  } catch (e) {
-    log.error("GET_TOP_REP_FAILED", { error: e.message });
-    return [];
-  }
-}
-
-// Cache username → userId mapping AND userId → username for leaderboard
-async function storeRepName(userId, username) {
-  if (!userId || !username) return;
-  try {
-    await redis.set(`repname:${userId}`, username, { ex: 60 * 60 * 24 * 30 });
-  } catch {}
+  return null;
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -224,51 +98,51 @@ async function storeRepName(userId, username) {
 const SCHEDULED_MESSAGES = [
   {
     text:
-      `📊 <b>Did you know?</b>\n\n` +
-      `90% of unverified Sugar Daddies & Sugar Babies are <b>fake or scammers</b>.\n\n` +
+      `📊 *Did you know?*\n\n` +
+      `90% of unverified Sugar Daddies & Sugar Babies are *fake or scammers*.\n\n` +
       `Stay safe — only connect with verified members! 🛡️`,
     button: "✅ Verify Now (FREE)"
   },
   {
     text:
-      `🚨 <b>Scam Alert</b>\n\n` +
-      `If anyone asks you for <b>money, vouchers, or gift cards</b> before being your Sugar Daddy — that's a classic scam. 🚫\n\n` +
-      `<i>You're here to earn, not to pay.</i> Report them immediately using /report @username.`,
+      `🚨 *Scam Alert*\n\n` +
+      `If anyone asks you for *money, vouchers, or gift cards* before being your Sugar Daddy — that's a classic scam. 🚫\n\n` +
+      `_You're here to earn, not to pay._ Report them immediately using /report @username.`,
     button: null
   },
   {
     text:
-      `💡 <b>Pro Tip</b>\n\n` +
-      `Real Sugar Daddies are <b>quiet and private</b> — they don't chase you in chats.\n\n` +
-      `For genuine connections, reach out to <b>@${ADMIN_USERNAME}</b> instead of DMing strangers. 💬`,
+      `💡 *Pro Tip*\n\n` +
+      `Real Sugar Daddies are *quiet and private* — they don't chase you in chats.\n\n` +
+      `For genuine connections, reach out to *@${ADMIN_USERNAME}* instead of DMing strangers. 💬`,
     button: null
   },
   {
     text:
-      `🏆 <b>Why this group?</b>\n\n` +
-      `This is the <b>only verified Sugar group</b> on Telegram.\n\n` +
+      `🏆 *Why this group?*\n\n` +
+      `This is the *only verified Sugar group* on Telegram.\n\n` +
       `✔️ Passport verified\n` +
       `✔️ Financial statement checked\n` +
       `✔️ Affordability confirmed\n` +
       `✔️ Advance payment secured on deal\n\n` +
-      `Verified members <b>cannot lie</b> — we hold them accountable. 🔐`,
+      `Verified members *cannot lie* — we hold them accountable. 🔐`,
     button: "🔗 Get Verified"
   },
   {
     text:
-      `⏳ <b>This group is going verified-only soon!</b>\n\n` +
+      `⏳ *This group is going verified-only soon!*\n\n` +
       `Unverified members will be removed once the cutoff hits.\n` +
-      `Verification is <b>completely FREE</b> for all Sugar Babies. 💸\n\n` +
+      `Verification is *completely FREE* for all Sugar Babies. 💸\n\n` +
       `Don't wait — secure your spot now! 🎯`,
     button: "✅ Verify for Free"
   },
   {
     text:
-      `⭐ <b>Community Reputation System</b>\n\n` +
-      `Active, helpful members earn <b>reputation points</b>!\n\n` +
-      `🆕 New Member → 👤 Regular → 🌟 Trusted → 🛡️ Helper → 👑 Senior → 💎 Elite\n\n` +
-      `Check your rank: <code>/rep</code>\n` +
-      `Top members may be promoted to <b>moderators</b>! 🎖️`,
+      `⭐ *Community Reputation System*\n\n` +
+      `Active, helpful members earn *reputation points*!\n\n` +
+      `🆕 New → 👤 Regular → 🌟 Trusted → 🛡️ Helper → 👑 Senior → 💎 Elite\n\n` +
+      `Check your rank: /rep\n` +
+      `Top members may be promoted to *moderators*! 🎖️`,
     button: null
   }
 ];
@@ -319,7 +193,7 @@ async function tgApi(method, body) {
   return json;
 }
 
-async function tgSendMessage({ chat_id, text, reply_to_message_id, parse_mode = "HTML", reply_markup }) {
+async function tgSendMessage({ chat_id, text, reply_to_message_id, parse_mode = "Markdown", reply_markup }) {
   return tgApi("sendMessage", {
     chat_id, text, parse_mode,
     disable_web_page_preview: true,
@@ -338,15 +212,14 @@ async function verifyUsernameApi(username) {
   const url = `${VERIFY_API_BASE}?username=${encodeURIComponent(username)}`;
   try {
     const r = await fetch(url, { method: "GET" });
-    const json = await r.json();
-    return json;
+    return await r.json();
   } catch (e) {
     log.error("VERIFY_API_FAILED", { username, error: e.message });
     return {};
   }
 }
 
-// ─── Redis: username → user ID cache ─────────────────────────────
+// ─── Redis helpers ────────────────────────────────────────────────
 async function storeUserId(username, userId) {
   if (!username || !userId) return;
   try {
@@ -393,8 +266,43 @@ async function assignVerifiedTitle(chatId, userId, role) {
   });
 }
 
+// ── Restrict user (mute with custom duration) ─────────────────────
+async function restrictUser(chatId, userId, durationSec) {
+  const untilDate = Math.floor(Date.now() / 1000) + durationSec;
+  return tgApi("restrictChatMember", {
+    chat_id: chatId,
+    user_id: userId,
+    until_date: untilDate,
+    permissions: {
+      can_send_messages: false,
+      can_send_audios: false,
+      can_send_documents: false,
+      can_send_photos: false,
+      can_send_videos: false,
+      can_send_video_notes: false,
+      can_send_voice_notes: false,
+      can_send_polls: false,
+      can_send_other_messages: false,
+      can_add_web_page_previews: false
+    }
+  });
+}
+
+async function muteUser(chatId, userId, durationSec = MUTE_DURATION_SEC) {
+  return restrictUser(chatId, userId, durationSec);
+}
+
+async function banUser(chatId, userId) {
+  return tgApi("banChatMember", { chat_id: chatId, user_id: userId });
+}
+
+async function forwardEvidence(fromChatId, messageId) {
+  if (!ADMIN_LOG_CHAT_ID) return null;
+  return tgApi("forwardMessage", { chat_id: ADMIN_LOG_CHAT_ID, from_chat_id: fromChatId, message_id: messageId });
+}
+
 // ══════════════════════════════════════════════════════════════════
-// SCAM REPORTING SYSTEM (unchanged from original)
+// SCAM REPORTING SYSTEM
 // ══════════════════════════════════════════════════════════════════
 async function getScamReports(username) {
   try {
@@ -470,28 +378,6 @@ async function clearFeedbackPending(userId) {
   try { await redis.del(`feedback:pending:${userId}`); } catch {}
 }
 
-async function muteUser(chatId, userId, durationSec = MUTE_DURATION_SEC) {
-  const untilDate = Math.floor(Date.now() / 1000) + durationSec;
-  return tgApi("restrictChatMember", {
-    chat_id: chatId, user_id: userId, until_date: untilDate,
-    permissions: {
-      can_send_messages: false, can_send_audios: false, can_send_documents: false,
-      can_send_photos: false, can_send_videos: false, can_send_video_notes: false,
-      can_send_voice_notes: false, can_send_polls: false, can_send_other_messages: false,
-      can_add_web_page_previews: false
-    }
-  });
-}
-
-async function banUser(chatId, userId) {
-  return tgApi("banChatMember", { chat_id: chatId, user_id: userId });
-}
-
-async function forwardEvidence(fromChatId, messageId) {
-  if (!ADMIN_LOG_CHAT_ID) return null;
-  return tgApi("forwardMessage", { chat_id: ADMIN_LOG_CHAT_ID, from_chat_id: fromChatId, message_id: messageId });
-}
-
 async function getTopReported(limit = 10) {
   try {
     const keys = await redis.keys("scam:strikes:*");
@@ -509,33 +395,126 @@ async function getTopReported(limit = 10) {
 async function fileScamReport({ targetUsername, reporterId, reporterUsername, reporterVerified, reason, chatId, evidenceMsgId }) {
   const reports = await getScamReports(targetUsername);
   const alreadyReported = reports.some(r => r.reporterId === reporterId);
-  if (alreadyReported) return { alreadyReported: true, newScore: await getStrikeScore(targetUsername), muteTriggered: false, banTriggered: false };
+  if (alreadyReported) return { alreadyReported: true, newScore: await getStrikeScore(targetUsername) };
 
   const weight = reporterVerified ? 2 : 1;
-  const reportEntry = {
+  reports.push({
     reporterId, reporterUsername: reporterUsername || null, reporterVerified, weight,
     reason: reason || "No reason given", chatId, evidenceMsgId: evidenceMsgId || null, ts: Date.now()
-  };
-  reports.push(reportEntry);
+  });
   await saveScamReports(targetUsername, reports);
 
-  const oldScore = await getStrikeScore(targetUsername);
-  const newScore = oldScore + weight;
+  const newScore = (await getStrikeScore(targetUsername)) + weight;
   await setStrikeScore(targetUsername, newScore, reports.length);
 
-  // Track reporter for later rep reward on confirmation
   if (reporterId) await storeReporterForTarget(targetUsername, reporterId);
 
   if (evidenceMsgId && ADMIN_LOG_CHAT_ID) {
-    const note = `🚨 <b>Report Evidence</b>\n👤 Reported: @${escapeHtml(targetUsername)}\n📋 Reason: ${escapeHtml(reason || "None")}\n⚖️ Reporter: @${escapeHtml(reporterUsername || "unknown")} (${reporterVerified ? "✅ Verified" : "⚠️ Unverified"})\n📊 New strike score: ${newScore}`;
-    await tgSendMessage({ chat_id: ADMIN_LOG_CHAT_ID, text: note });
+    await tgSendMessage({
+      chat_id: ADMIN_LOG_CHAT_ID,
+      text:
+        `🚨 *Report Evidence*\n` +
+        `👤 Reported: @${escapeHtml(targetUsername)}\n` +
+        `📋 Reason: ${escapeHtml(reason || "None")}\n` +
+        `⚖️ Reporter: @${escapeHtml(reporterUsername || "unknown")} (${reporterVerified ? "✅ Verified" : "⚠️ Unverified"})\n` +
+        `📊 New strike score: ${newScore}`
+    });
     await forwardEvidence(chatId, evidenceMsgId);
   }
 
-  return { alreadyReported: false, newScore, muteTriggered: false, banTriggered: false };
+  return { alreadyReported: false, newScore };
 }
 
-// ─── Command parsers ──────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════
+// ⭐ REPUTATION HELPERS
+// ══════════════════════════════════════════════════════════════════
+async function getRepScore(userId) {
+  try {
+    const v = await redis.get(`rep:score:${userId}`);
+    return v ? parseInt(v, 10) : 0;
+  } catch { return 0; }
+}
+
+async function addRepScore(userId, delta, reason) {
+  try {
+    const current = await getRepScore(userId);
+    const newScore = Math.max(0, current + delta);
+    await redis.set(`rep:score:${userId}`, newScore);
+    const raw = await redis.get(`rep:history:${userId}`);
+    const history = raw ? JSON.parse(raw) : [];
+    history.push({ reason, delta, ts: Date.now() });
+    if (history.length > 50) history.splice(0, history.length - 50);
+    await redis.set(`rep:history:${userId}`, JSON.stringify(history), { ex: 60 * 60 * 24 * 90 });
+    return {
+      newScore, oldScore: current,
+      tierChanged: getRepTier(current).label !== getRepTier(newScore).label,
+      newTier: getRepTier(newScore)
+    };
+  } catch { return { newScore: 0, oldScore: 0, tierChanged: false, newTier: REP_TIERS[0] }; }
+}
+
+async function getRepHistory(userId) {
+  try {
+    const raw = await redis.get(`rep:history:${userId}`);
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
+
+async function isDailyRepClaimed(userId) {
+  try { return !!(await redis.get(`rep:daily:${userId}`)); }
+  catch { return false; }
+}
+
+async function claimDailyRep(userId) {
+  try {
+    const now = new Date();
+    const midnight = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
+    const ttl = Math.floor((midnight - now) / 1000);
+    await redis.set(`rep:daily:${userId}`, "1", { ex: ttl });
+  } catch {}
+}
+
+async function storeReporterForTarget(targetUsername, reporterId) {
+  try {
+    const key = `rep:reporters:${targetUsername.toLowerCase()}`;
+    const raw = await redis.get(key);
+    const reporters = raw ? JSON.parse(raw) : [];
+    if (!reporters.includes(reporterId)) {
+      reporters.push(reporterId);
+      await redis.set(key, JSON.stringify(reporters), { ex: 60 * 60 * 24 * 90 });
+    }
+  } catch {}
+}
+
+async function getReportersForTarget(targetUsername) {
+  try {
+    const raw = await redis.get(`rep:reporters:${targetUsername.toLowerCase()}`);
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
+
+async function getTopRepUsers(limit = 10) {
+  try {
+    const keys = await redis.keys("rep:score:*");
+    const results = [];
+    for (const key of keys) {
+      const userId = key.replace("rep:score:", "");
+      const score  = parseInt((await redis.get(key)) || "0", 10);
+      const uname  = await redis.get(`repname:${userId}`);
+      results.push({ userId, score, username: uname || null });
+    }
+    return results.sort((a, b) => b.score - a.score).slice(0, limit);
+  } catch { return []; }
+}
+
+async function storeRepName(userId, username) {
+  if (!userId || !username) return;
+  try { await redis.set(`repname:${userId}`, username, { ex: 60 * 60 * 24 * 30 }); } catch {}
+}
+
+// ══════════════════════════════════════════════════════════════════
+// COMMAND PARSERS
+// ══════════════════════════════════════════════════════════════════
 function parseAdminVerifyCommand(text) {
   if (!text) return null;
   const m = text.trim().match(/^(?:\/verify(?:@\S+)?|verify)\s+@?([a-zA-Z0-9_]{4,32})\s+(sugarbaby|sugardaddy)\s*$/i);
@@ -570,35 +549,18 @@ function parseConfirmScammerCommand(text) {
   return m ? { username: m[1], tactics: m[2]?.trim() || null } : null;
 }
 
-/**
- * Parses /giverep @username [points] [reason]
- * Examples:
- *   /giverep @alice 10 helped a new member
- *   /giverep @alice           ← awards default 3 pts
- */
 function parseGiveRepCommand(text) {
   if (!text) return null;
   const m = text.trim().match(/^\/giverep(?:@\S+)?\s+@?([a-zA-Z0-9_]{4,32})(?:\s+(\d+))?(?:\s+(.+))?$/i);
   if (!m) return null;
-  return {
-    username: m[1],
-    points: m[2] ? parseInt(m[2], 10) : REP_GAINS.HELPFUL_REPLY,
-    reason: m[3]?.trim() || "Awarded by admin"
-  };
+  return { username: m[1], points: m[2] ? parseInt(m[2], 10) : REP_GAINS.HELPFUL_REPLY, reason: m[3]?.trim() || "Awarded by admin" };
 }
 
-/**
- * Parses /takerep @username [points] [reason]  (penalty / abuse)
- */
 function parseTakeRepCommand(text) {
   if (!text) return null;
   const m = text.trim().match(/^\/takerep(?:@\S+)?\s+@?([a-zA-Z0-9_]{4,32})(?:\s+(\d+))?(?:\s+(.+))?$/i);
   if (!m) return null;
-  return {
-    username: m[1],
-    points: m[2] ? parseInt(m[2], 10) : 5,
-    reason: m[3]?.trim() || "Penalised by admin"
-  };
+  return { username: m[1], points: m[2] ? parseInt(m[2], 10) : 5, reason: m[3]?.trim() || "Penalised by admin" };
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -627,23 +589,23 @@ export default async function handler(req, res) {
       const pending = await getFeedbackPending(from.id);
       if (pending) {
         await clearFeedbackPending(from.id);
-        const firstName = escapeHtml(from.first_name || "");
+        const firstName = from.first_name || "";
         await tgSendMessage({
           chat_id: from.id,
           text: `💛 Thank you for your feedback, ${firstName}!\n\nOur team will review it. We hope to see you back someday! 🙏`
         });
         if (ADMIN_LOG_CHAT_ID) {
-          const lastName = escapeHtml(from.last_name || "");
+          const lastName = from.last_name || "";
           const displayName = [firstName, lastName].filter(Boolean).join(" ") || "Unknown";
           await tgSendMessage({
             chat_id: ADMIN_LOG_CHAT_ID,
             text:
-              `📩 <b>Departure Feedback</b>\n\n` +
+              `📩 *Departure Feedback*\n\n` +
               `👤 Name: ${displayName}\n` +
-              `🔗 Username: ${from.username ? `@${escapeHtml(from.username)}` : "(none)"}\n` +
-              `🪪 User ID: <code>${from.id}</code>\n` +
-              `🏘️ Left: ${escapeHtml(pending.chatTitle || "Unknown")}\n\n` +
-              `💬 <b>Reason:</b>\n${escapeHtml(message.text)}`
+              `🔗 Username: ${from.username ? `@${from.username}` : "(none)"}\n` +
+              `🪪 User ID: ${from.id}\n` +
+              `🏘️ Left: ${pending.chatTitle || "Unknown"}\n\n` +
+              `💬 *Reason:*\n${message.text}`
           });
         }
         return res.status(200).send("ok");
@@ -655,86 +617,84 @@ export default async function handler(req, res) {
 
     const currentMsgId = message.message_id;
 
-    // Cache user IDs
+    // Cache user IDs + rep names
     if (from?.username && from?.id) {
       await storeUserId(from.username, from.id);
       await storeRepName(from.id, from.username);
     }
 
     // ══════════════════════════════════════════════════════════
-    // 🚨 SECURITY LAYER 1: CP / ILLEGAL CONTENT — TEXT SCAN
-    // Runs FIRST on every group message before anything else.
+    // 🚨 SECURITY LAYER 1: ILLEGAL CONTENT — RESTRICT + WARN
+    // Soft action: delete message, restrict for 24h, notify group.
+    // Does NOT ban. Admins review and decide next steps.
     // ══════════════════════════════════════════════════════════
     const msgText = message.text || message.caption || "";
     const illegalKw = detectIllegalKeyword(msgText);
 
     if (illegalKw) {
-      log.warn("ILLEGAL_KEYWORD_DETECTED", { from_id: from.id, from_username: from.username, keyword: illegalKw, chat_id: chat.id });
-
-      // 1. Delete the offending message immediately
-      await tgDeleteMessage(chat.id, message.message_id);
-
-      // 2. Ban the sender permanently
-      await banUser(chat.id, from.id);
-
-      // 3. Add to global blacklist
-      const username = from.username || String(from.id);
-      await addToBlacklist(username, {
-        reason: `Auto-banned: illegal keyword "${illegalKw}"`,
-        chatId: chat.id,
-        bannedAt: Date.now()
+      log.warn("ILLEGAL_KEYWORD_DETECTED", {
+        from_id: from.id, from_username: from.username, keyword: illegalKw
       });
 
-      // 4. Public notice
-      const m = from.username ? `@${from.username}` : `<a href="tg://user?id=${from.id}">${escapeHtml(from.first_name || "User")}</a>`;
-      await tgSendMessage({
-        chat_id: chat.id,
-        text:
-          `🚨 <b>User Removed — Illegal Content</b>\n\n` +
-          `${m} has been <b>permanently banned</b> for sharing or attempting to share illegal/prohibited content.\n\n` +
-          `🔐 Added to global blacklist.\n` +
-          `<i>Zero tolerance. This group is safe space. 🛡️</i>`
-      });
+      const senderIsAdmin = await isGroupAdmin(chat.id, from.id);
+      if (!senderIsAdmin) {
+        // 1. Delete the message
+        await tgDeleteMessage(chat.id, message.message_id);
 
-      // 5. Alert admin log with full details
-      if (ADMIN_LOG_CHAT_ID) {
+        // 2. Restrict for 24 hours (cannot send any messages)
+        await restrictUser(chat.id, from.id, 60 * 60 * 24);
+
+        // 3. Public notice — shows who was restricted and what triggered it
+        const mention = from.username
+          ? `@${from.username}`
+          : `[${from.first_name || "User"}](tg://user?id=${from.id})`;
+
         await tgSendMessage({
-          chat_id: ADMIN_LOG_CHAT_ID,
+          chat_id: chat.id,
           text:
-            `🚨 <b>[ILLEGAL CONTENT BAN]</b>\n\n` +
-            `👤 User: ${m}\n` +
-            `🪪 ID: <code>${from.id}</code>\n` +
-            `🔑 Trigger: <code>${escapeHtml(illegalKw)}</code>\n` +
-            `💬 Message snippet: <code>${escapeHtml(msgText.slice(0, 200))}</code>\n` +
-            `🏘️ Group: ${escapeHtml(chat.title || String(chat.id))}\n` +
-            `📅 ${new Date().toUTCString()}`
+            `⚠️ *User Restricted*\n\n` +
+            `${mention} has been restricted from sending messages for *24 hours*.\n\n` +
+            `🔑 Triggered by: \`${illegalKw}\`\n\n` +
+            `_Admins have been notified and will review. If this was a mistake, contact an admin._`
         });
-      }
 
-      return res.status(200).send("ok");
+        // 4. Alert admin log with full context
+        if (ADMIN_LOG_CHAT_ID) {
+          await tgSendMessage({
+            chat_id: ADMIN_LOG_CHAT_ID,
+            text:
+              `⚠️ *[ILLEGAL KEYWORD — RESTRICTED]*\n\n` +
+              `👤 User: ${mention}\n` +
+              `🪪 ID: ${from.id}\n` +
+              `🔑 Trigger: \`${illegalKw}\`\n` +
+              `💬 Message: \`${msgText.slice(0, 300)}\`\n` +
+              `🏘️ Group: ${chat.title || String(chat.id)}\n` +
+              `📅 ${new Date().toUTCString()}\n\n` +
+              `_Use /confirmscam @username to permanently ban, or /clearreport @username to lift restriction._`
+          });
+        }
+
+        return res.status(200).send("ok");
+      }
     }
 
     // ══════════════════════════════════════════════════════════
-    // 🚨 SECURITY LAYER 2: FORWARDED MESSAGE AUTO-DELETE
-    // All forwarded messages are removed. Admins are exempt.
+    // 🚫 SECURITY LAYER 2: FORWARDED MESSAGE AUTO-DELETE
+    // Admins are exempt.
     // ══════════════════════════════════════════════════════════
     if (isForwardedMessage(message)) {
       const senderIsAdmin = await isGroupAdmin(chat.id, from.id);
-
       if (!senderIsAdmin) {
         log.warn("FORWARDED_MSG_DELETED", { from_id: from.id, msg_id: message.message_id });
-
         await tgDeleteMessage(chat.id, message.message_id);
 
-        // Silently warn the user via a short temp message
         const warning = await tgSendMessage({
           chat_id: chat.id,
           text:
             `⚠️ ${mentionUser(from)} Forwarded messages are not allowed in this group.\n` +
-            `<i>Please share content directly — no forwards. 🚫</i>`
+            `_Please share content directly — no forwards. 🚫_`
         });
 
-        // Auto-delete the warning after 8 seconds to keep chat clean
         if (warning?.result?.message_id) {
           setTimeout(() => {
             tgDeleteMessage(chat.id, warning.result.message_id).catch(() => {});
@@ -742,35 +702,32 @@ export default async function handler(req, res) {
         }
 
         return res.status(200).send("ok");
-      } else {
-        log.info("FORWARDED_MSG_ADMIN_EXEMPT", { from_id: from.id });
       }
     }
 
     // ══════════════════════════════════════════════════════════
     // ⭐ REPUTATION: Daily Active Bonus
-    // Award 1 point for first message of the day (per user)
     // ══════════════════════════════════════════════════════════
     if (from?.id && !(await isDailyRepClaimed(from.id))) {
       await claimDailyRep(from.id);
       const result = await addRepScore(from.id, REP_GAINS.DAILY_ACTIVE, "Daily activity");
-
-      // Announce tier-up in chat (not for daily point, only on tier change)
       if (result.tierChanged) {
-        const m = from.username ? `@${from.username}` : `<a href="tg://user?id=${from.id}">${escapeHtml(from.first_name || "Member")}</a>`;
+        const m = from.username
+          ? `@${from.username}`
+          : `[${from.first_name || "Member"}](tg://user?id=${from.id})`;
         await tgSendMessage({
           chat_id: chat.id,
           text:
-            `${result.newTier.emoji} <b>Reputation Tier Up!</b>\n\n` +
-            `Congratulations ${m}! You've reached <b>${result.newTier.label}</b> 🎉\n` +
-            `Current score: <b>${result.newScore} pts</b>\n\n` +
-            `<i>Keep being helpful to climb higher! 🚀</i>`
+            `${result.newTier.emoji} *Reputation Tier Up!*\n\n` +
+            `Congratulations ${m}! You've reached *${result.newTier.label}* 🎉\n` +
+            `Current score: *${result.newScore} pts*\n\n` +
+            `_Keep being helpful to climb higher! 🚀_`
         });
       }
     }
 
     // ══════════════════════════════════════════════════════════
-    // (A) WELCOME — new members joining
+    // (A) WELCOME — new members
     // ══════════════════════════════════════════════════════════
     if (message.new_chat_members?.length) {
       for (const member of message.new_chat_members) {
@@ -781,22 +738,18 @@ export default async function handler(req, res) {
         }
 
         const fullName = [member.first_name, member.last_name].filter(Boolean).join(" ").trim() || "there";
-        const displayName = member.username ? `@${member.username}` : `<b>${escapeHtml(fullName)}</b>`;
         const m = member.username
           ? `@${member.username}`
-          : `<a href="tg://user?id=${member.id}">${escapeHtml(fullName)}</a>`;
+          : `[${fullName}](tg://user?id=${member.id})`;
 
-        // Blacklist check on join
-        if (member.username) {
-          const blacklisted = await isBlacklisted(member.username);
-          if (blacklisted) {
-            await banUser(chat.id, member.id);
-            await tgSendMessage({
-              chat_id: chat.id,
-              text: `🚫 <b>Banned on Entry</b>\n\n${displayName} is on the global scammer/offender blacklist and has been automatically removed. 🔐`
-            });
-            continue;
-          }
+        // Blacklist check
+        if (member.username && await isBlacklisted(member.username)) {
+          await banUser(chat.id, member.id);
+          await tgSendMessage({
+            chat_id: chat.id,
+            text: `🚫 *Banned on Entry*\n\n${m} is on the global scammer blacklist and has been automatically removed. 🔐`
+          });
+          continue;
         }
 
         let isVerified = false;
@@ -806,32 +759,31 @@ export default async function handler(req, res) {
         }
 
         if (isVerified) {
-          // Award rep for joining already-verified
           await addRepScore(member.id, REP_GAINS.VERIFIED_JOIN, "Joined as verified member");
-
           const r = await tgSendMessage({
             chat_id: chat.id,
-            text: `👑 Welcome ${m}! You're already <b>verified</b> — enjoy the group! ✅\n⭐ <b>+${REP_GAINS.VERIFIED_JOIN} reputation</b> awarded for joining verified.`
+            text:
+              `👑 Welcome ${m}! You're already *verified* — enjoy the group! ✅\n` +
+              `⭐ *+${REP_GAINS.VERIFIED_JOIN} reputation* awarded for joining verified.`
           });
           await saveBotMsgId(chat.id, r?.result?.message_id);
         } else {
           const noUsernameNote = !member.username
-            ? `\n\n<i>💡 Tip: Set a Telegram username in settings so others can verify you.</i>` : "";
+            ? `\n\n_💡 Tip: Set a Telegram username in settings so others can verify you._` : "";
           const r = await tgSendMessage({
             chat_id: chat.id,
             text:
               `👋 Welcome, ${m}!\n\n` +
-              `This is a <b>verified-only</b> group 🛡️\n` +
-              `Please verify yourself to stay — it's <b>FREE</b> for all Sugar Babies! 💸\n\n` +
-              `⚠️ <i>Anyone asking for money or vouchers first is a scammer.</i>` +
+              `This is a *verified-only* group 🛡️\n` +
+              `Please verify yourself to stay — it's *FREE* for all Sugar Babies! 💸\n\n` +
+              `⚠️ _Anyone asking for money or vouchers first is a scammer._` +
               noUsernameNote,
             reply_markup: verifyButton("🔗 Tap to Verify (FREE)")
           });
           await saveBotMsgId(chat.id, r?.result?.message_id);
-
           tgSendMessage({
             chat_id: member.id,
-            text: `Hi ${escapeHtml(member.first_name || "")} 👋\n\nVerify to stay in the group — completely <b>FREE</b>! 🎉`,
+            text: `Hi ${member.first_name || ""} 👋\n\nVerify to stay in the group — completely *FREE*! 🎉`,
             reply_markup: verifyButton("✅ Verify Me Now")
           }).catch(() => {});
         }
@@ -840,23 +792,23 @@ export default async function handler(req, res) {
     }
 
     // ══════════════════════════════════════════════════════════
-    // (A2) DEPARTURE — member left or was removed
+    // (A2) DEPARTURE
     // ══════════════════════════════════════════════════════════
     if (message.left_chat_member) {
       const leaver = message.left_chat_member;
       if (leaver.is_bot) return res.status(200).send("ok");
 
       const fullName  = [leaver.first_name, leaver.last_name].filter(Boolean).join(" ").trim() || "there";
-      const firstName = escapeHtml(leaver.first_name || fullName);
-      const chatTitle = escapeHtml(chat.title || "the group");
+      const firstName = leaver.first_name || fullName;
+      const chatTitle = chat.title || "the group";
 
       tgSendMessage({
         chat_id: leaver.id,
         text:
-          `Hey ${firstName} 👋\n\nI noticed you left <b>${chatTitle}</b>. We're sorry to see you go! 😔\n\n` +
+          `Hey ${firstName} 👋\n\nI noticed you left *${chatTitle}*. We're sorry to see you go! 😔\n\n` +
           `Would you mind sharing why you left? Your feedback helps us improve.\n\n` +
           `Just reply to this message — it goes straight to the admin team. 💬\n\n` +
-          `<i>(You have 48 hours to reply. Completely private.)</i>`
+          `_(You have 48 hours to reply. Completely private.)_`
       }).then(async dmResult => {
         if (dmResult?.ok) {
           await setFeedbackPending(leaver.id, {
@@ -870,7 +822,7 @@ export default async function handler(req, res) {
     }
 
     // ══════════════════════════════════════════════════════════
-    // (B) ADMIN COMMAND: /verify @username sugarbaby|sugardaddy
+    // (B) ADMIN CMD: /verify @username sugarbaby|sugardaddy
     // ══════════════════════════════════════════════════════════
     const adminCmd = parseAdminVerifyCommand(message.text);
     if (adminCmd) {
@@ -879,33 +831,28 @@ export default async function handler(req, res) {
         await tgSendMessage({ chat_id: chat.id, text: `🚫 Only group admins can assign verification tags.`, reply_to_message_id: message.message_id });
         return res.status(200).send("ok");
       }
-
       const { username, role } = adminCmd;
       const targetUserId = await getUserIdByUsername(username);
       if (!targetUserId) {
         await tgSendMessage({
           chat_id: chat.id,
-          text: `⚠️ <b>User not found in cache</b>\n\n@${escapeHtml(username)} hasn't sent a message here yet.\nAsk them to send one message, then retry.`,
+          text: `⚠️ *User not found in cache*\n\n@${username} hasn't sent a message here yet.\nAsk them to send one message, then retry.`,
           reply_to_message_id: message.message_id
         });
         return res.status(200).send("ok");
       }
-
       const result = await assignVerifiedTitle(chat.id, targetUserId, role);
       if (result?.ok) {
         const emoji = role === "sugardaddy" ? "💎" : "🌸";
         const label = role === "sugardaddy" ? "Verified SugarDaddy" : "Verified SugarBaby";
-
-        // Award rep for completing verification
         await addRepScore(targetUserId, REP_GAINS.GOT_VERIFIED, "Completed verification");
-
         const r = await tgSendMessage({
           chat_id: chat.id,
           text:
-            `${emoji} <b>Verification Tag Assigned!</b>\n\n` +
-            `👤 @${escapeHtml(username)}\n` +
-            `🏷️ Title: <b>${label}</b>\n` +
-            `⭐ +${REP_GAINS.GOT_VERIFIED} reputation awarded for getting verified ✅`,
+            `${emoji} *Verification Tag Assigned!*\n\n` +
+            `👤 @${username}\n` +
+            `🏷️ Title: *${label}*\n` +
+            `⭐ +${REP_GAINS.GOT_VERIFIED} reputation awarded ✅`,
           reply_to_message_id: message.message_id
         });
         await saveBotMsgId(chat.id, r?.result?.message_id);
@@ -913,9 +860,9 @@ export default async function handler(req, res) {
         await tgSendMessage({
           chat_id: chat.id,
           text:
-            `❌ <b>Could not assign title</b>\n\n` +
-            `Make sure:\n• The bot has Admin rights\n• @${escapeHtml(username)} is still in the group\n• Bot rank is higher than the target\n\n` +
-            `<i>Error: ${escapeHtml(result?.description || "Unknown")}</i>`,
+            `❌ *Could not assign title*\n\n` +
+            `Make sure:\n• The bot has Admin rights\n• @${username} is still in the group\n• Bot rank is higher than the target\n\n` +
+            `_Error: ${result?.description || "Unknown"}_`,
           reply_to_message_id: message.message_id
         });
       }
@@ -929,30 +876,27 @@ export default async function handler(req, res) {
     if (verifyTarget) {
       const v = await verifyUsernameApi(verifyTarget);
       let reply, markup;
-
       if (v?.verified) {
-        const name = escapeHtml(v?.name || verifyTarget);
         reply =
-          `✅ <b>Verified Member</b>\n\n` +
-          `👤 @${escapeHtml(verifyTarget)}\n` +
-          `📛 Name: ${name}\n` +
-          `🪪 ID: <code>${escapeHtml(v?.public_id || "N/A")}</code>\n` +
-          `🎭 Role: ${escapeHtml(v?.role || "N/A")}\n` +
-          `🏅 Badge: ${escapeHtml(v?.badge || "✨")}`;
+          `✅ *Verified Member*\n\n` +
+          `👤 @${verifyTarget}\n` +
+          `📛 Name: ${v?.name || verifyTarget}\n` +
+          `🪪 ID: ${v?.public_id || "N/A"}\n` +
+          `🎭 Role: ${v?.role || "N/A"}\n` +
+          `🏅 Badge: ${v?.badge || "✨"}`;
       } else {
         const blacklisted = await isBlacklisted(verifyTarget);
         if (blacklisted) {
-          reply = `🚫 <b>CONFIRMED SCAMMER/OFFENDER</b> — @${escapeHtml(verifyTarget)}\n\n⛔ This user is on the global blacklist.\nDo NOT engage. Block immediately.`;
+          reply = `🚫 *CONFIRMED SCAMMER* — @${verifyTarget}\n\n⛔ On the global blacklist. Do NOT engage. Block immediately.`;
         } else {
           const score = await getStrikeScore(verifyTarget);
           const reports = await getScamReports(verifyTarget);
           reply =
-            `❌ <b>Not Verified</b> — @${escapeHtml(verifyTarget)}\n\n⚠️ Proceed with caution.` +
-            (score > 0 ? `\n\n📊 <b>Report Score:</b> ${score} pts from ${reports.length} report(s)` : "");
+            `❌ *Not Verified* — @${verifyTarget}\n\n⚠️ Proceed with caution.` +
+            (score > 0 ? `\n\n📊 *Report Score:* ${score} pts from ${reports.length} report(s)` : "");
           markup = verifyButton("🔗 Verify This Profile");
         }
       }
-
       const r = await tgSendMessage({ chat_id: chat.id, text: reply, reply_to_message_id: message.message_id, reply_markup: markup });
       await saveBotMsgId(chat.id, r?.result?.message_id);
       return res.status(200).send("ok");
@@ -965,11 +909,11 @@ export default async function handler(req, res) {
       const r = await tgSendMessage({
         chat_id: chat.id,
         text:
-          `🚨 <b>Scam Warning</b>\n\n` +
-          `<b>Never</b> send money, gift cards, or vouchers to anyone here.\n\n` +
-          `Real Sugar Daddies <b>give</b> — they never ask you to pay first.\n\n` +
-          `📣 Report: reply to their message and type <code>/report [reason]</code>\n` +
-          `Or: <code>/report @username [reason]</code>\n\nBlock & report immediately. 🚫`,
+          `🚨 *Scam Warning*\n\n` +
+          `*Never* send money, gift cards, or vouchers to anyone here.\n\n` +
+          `Real Sugar Daddies *give* — they never ask you to pay first.\n\n` +
+          `📣 Report: reply to their message and type /report [reason]\n` +
+          `Or: /report @username [reason]\n\nBlock & report immediately. 🚫`,
         reply_to_message_id: message.message_id
       });
       await saveBotMsgId(chat.id, r?.result?.message_id);
@@ -983,16 +927,16 @@ export default async function handler(req, res) {
       const r = await tgSendMessage({
         chat_id: chat.id,
         text:
-          `📋 <b>Group Rules</b>\n\n` +
+          `📋 *Group Rules*\n\n` +
           `1️⃣ Verified members only — get verified to stay\n` +
           `2️⃣ No asking for money, vouchers, or advance payments\n` +
           `3️⃣ No spam, self-promotion, or links\n` +
-          `4️⃣ <b>No forwarded messages</b> — posts only, no forwards 🚫\n` +
-          `5️⃣ Zero tolerance for illegal or harmful content — instant ban 🔨\n` +
+          `4️⃣ *No forwarded messages* — posts only, no forwards 🚫\n` +
+          `5️⃣ Zero tolerance for illegal or harmful content 🔨\n` +
           `6️⃣ Respect all members\n` +
           `7️⃣ For genuine SD connections → @${ADMIN_USERNAME}\n` +
           `8️⃣ Report scammers: /report @username [reason]\n\n` +
-          `<i>Breaking rules = instant ban. No appeals. 🔒</i>`,
+          `_Breaking rules = restriction or ban. No appeals. 🔒_`,
         reply_to_message_id: message.message_id,
         reply_markup: verifyButton()
       });
@@ -1001,21 +945,17 @@ export default async function handler(req, res) {
     }
 
     // ══════════════════════════════════════════════════════════
-    // ⭐ /rep — Check your own or another user's reputation
-    //   Usage: /rep           → your own rep
-    //          /rep @username → check someone else
+    // ⭐ /rep [optional @username]
     // ══════════════════════════════════════════════════════════
     if (message.text?.match(/^\/rep(?:@\S+)?(?:\s+@?[a-zA-Z0-9_]+)?$/i)) {
       const repMatch = message.text.trim().match(/^\/rep(?:@\S+)?(?:\s+@?([a-zA-Z0-9_]{4,32}))?$/i);
       const lookupUsername = repMatch?.[1] || from.username;
-      const lookupUserId   = repMatch?.[1]
-        ? await getUserIdByUsername(repMatch[1])
-        : from.id;
+      const lookupUserId   = repMatch?.[1] ? await getUserIdByUsername(repMatch[1]) : from.id;
 
       if (!lookupUserId) {
         await tgSendMessage({
           chat_id: chat.id,
-          text: `⚠️ User @${escapeHtml(repMatch?.[1] || "?")} not found in cache. Ask them to send a message first.`,
+          text: `⚠️ @${repMatch?.[1] || "?"} not found in cache. Ask them to send a message first.`,
           reply_to_message_id: message.message_id
         });
         return res.status(200).send("ok");
@@ -1028,29 +968,30 @@ export default async function handler(req, res) {
 
       const progressBar = (() => {
         if (!nextTier) return "MAX LEVEL 💎";
-        const range = nextTier.min - (REP_TIERS.find(t => t.label === tier.label)?.min || 0);
-        const progress = score - (REP_TIERS.find(t => t.label === tier.label)?.min || 0);
-        const pct = Math.min(Math.floor((progress / range) * 10), 10);
+        const currentMin = tier.min || 0;
+        const range    = nextTier.min - currentMin;
+        const progress = score - currentMin;
+        const pct      = Math.min(Math.floor((progress / range) * 10), 10);
         return "▓".repeat(pct) + "░".repeat(10 - pct) + ` ${nextTier.min - score} pts to next`;
       })();
 
       const historyLines = history.length
-        ? history.map(h => `  ${h.delta >= 0 ? "+" : ""}${h.delta} — ${escapeHtml(h.reason)}`).join("\n")
+        ? history.map(h => `  ${h.delta >= 0 ? "+" : ""}${h.delta} — ${h.reason}`).join("\n")
         : "  No activity yet";
 
       const isSelf = !repMatch?.[1] || repMatch[1].toLowerCase() === from.username?.toLowerCase();
-      const displayName = lookupUsername ? `@${escapeHtml(lookupUsername)}` : `User ${lookupUserId}`;
+      const displayName = lookupUsername ? `@${lookupUsername}` : `User ${lookupUserId}`;
 
       const r = await tgSendMessage({
         chat_id: chat.id,
         text:
-          `${tier.emoji} <b>Reputation Profile</b>\n\n` +
+          `${tier.emoji} *Reputation Profile*\n\n` +
           `👤 ${isSelf ? "You" : displayName}\n` +
-          `🏅 Tier: <b>${tier.label}</b> ${tier.emoji}\n` +
-          `⭐ Score: <b>${score} pts</b>\n` +
+          `🏅 Tier: *${tier.label}* ${tier.emoji}\n` +
+          `⭐ Score: *${score} pts*\n` +
           `📈 Progress: ${progressBar}\n\n` +
-          `📜 <b>Recent Activity:</b>\n${historyLines}\n\n` +
-          `<i>💡 Earn rep: be active daily, report scammers accurately, help members.</i>`,
+          `📜 *Recent Activity:*\n${historyLines}\n\n` +
+          `_💡 Earn rep: be active daily, report scammers accurately, help members._`,
         reply_to_message_id: message.message_id
       });
       await saveBotMsgId(chat.id, r?.result?.message_id);
@@ -1058,34 +999,31 @@ export default async function handler(req, res) {
     }
 
     // ══════════════════════════════════════════════════════════
-    // ⭐ /leaderboard — Top 10 members by reputation (public)
+    // ⭐ /leaderboard
     // ══════════════════════════════════════════════════════════
     if (message.text?.match(/^\/leaderboard(@\S+)?$/i)) {
       const top = await getTopRepUsers(10);
-
       if (!top.length) {
         await tgSendMessage({
           chat_id: chat.id,
-          text: `⭐ <b>Reputation Leaderboard</b>\n\nNo scores yet — be the first to earn rep! 🏆`,
+          text: `⭐ *Reputation Leaderboard*\n\nNo scores yet — be the first to earn rep! 🏆`,
           reply_to_message_id: message.message_id
         });
         return res.status(200).send("ok");
       }
-
       const medals = ["🥇", "🥈", "🥉"];
       const lines = top.map((u, i) => {
-        const tier  = getRepTier(u.score);
+        const t    = getRepTier(u.score);
         const medal = medals[i] || `${i + 1}.`;
-        const name  = u.username ? `@${escapeHtml(u.username)}` : `User ${u.userId}`;
-        return `${medal} ${name} — ${tier.emoji} <b>${u.score} pts</b> (${tier.label})`;
+        const name  = u.username ? `@${u.username}` : `User ${u.userId}`;
+        return `${medal} ${name} — ${t.emoji} *${u.score} pts* (${t.label})`;
       });
-
       const r = await tgSendMessage({
         chat_id: chat.id,
         text:
-          `🏆 <b>Reputation Leaderboard</b>\n\n` +
+          `🏆 *Reputation Leaderboard*\n\n` +
           lines.join("\n") +
-          `\n\n<i>Check yours: /rep | Earn rep: be helpful, stay active 🌟</i>`,
+          `\n\n_Check yours: /rep | Earn rep: be helpful, stay active 🌟_`,
         reply_to_message_id: message.message_id
       });
       await saveBotMsgId(chat.id, r?.result?.message_id);
@@ -1093,7 +1031,7 @@ export default async function handler(req, res) {
     }
 
     // ══════════════════════════════════════════════════════════
-    // ⭐ /giverep @username [points] [reason]  — Admin only
+    // ⭐ /giverep @username [points] [reason] — Admin only
     // ══════════════════════════════════════════════════════════
     const giveRepCmd = parseGiveRepCommand(message.text);
     if (giveRepCmd) {
@@ -1102,37 +1040,26 @@ export default async function handler(req, res) {
         await tgSendMessage({ chat_id: chat.id, text: `🚫 Only admins can award reputation.`, reply_to_message_id: message.message_id });
         return res.status(200).send("ok");
       }
-
       const targetUserId = await getUserIdByUsername(giveRepCmd.username);
       if (!targetUserId) {
-        await tgSendMessage({
-          chat_id: chat.id,
-          text: `⚠️ @${escapeHtml(giveRepCmd.username)} not found in cache.`,
-          reply_to_message_id: message.message_id
-        });
+        await tgSendMessage({ chat_id: chat.id, text: `⚠️ @${giveRepCmd.username} not found in cache.`, reply_to_message_id: message.message_id });
         return res.status(200).send("ok");
       }
-
       const result = await addRepScore(targetUserId, giveRepCmd.points, `Admin award: ${giveRepCmd.reason}`);
       const tier   = result.newTier;
-
       let text =
-        `⭐ <b>Reputation Awarded!</b>\n\n` +
-        `👤 @${escapeHtml(giveRepCmd.username)}\n` +
-        `💫 +${giveRepCmd.points} pts — <i>${escapeHtml(giveRepCmd.reason)}</i>\n` +
-        `📊 New score: <b>${result.newScore} pts</b> — ${tier.emoji} ${tier.label}`;
-
-      if (result.tierChanged) {
-        text += `\n\n🎉 <b>Tier Up!</b> Now <b>${tier.label}</b> ${tier.emoji}`;
-      }
-
+        `⭐ *Reputation Awarded!*\n\n` +
+        `👤 @${giveRepCmd.username}\n` +
+        `💫 +${giveRepCmd.points} pts — _${giveRepCmd.reason}_\n` +
+        `📊 New score: *${result.newScore} pts* — ${tier.emoji} ${tier.label}`;
+      if (result.tierChanged) text += `\n\n🎉 *Tier Up!* Now *${tier.label}* ${tier.emoji}`;
       const r = await tgSendMessage({ chat_id: chat.id, text, reply_to_message_id: message.message_id });
       await saveBotMsgId(chat.id, r?.result?.message_id);
       return res.status(200).send("ok");
     }
 
     // ══════════════════════════════════════════════════════════
-    // ⭐ /takerep @username [points] [reason]  — Admin only (penalty)
+    // ⭐ /takerep @username [points] [reason] — Admin only
     // ══════════════════════════════════════════════════════════
     const takeRepCmd = parseTakeRepCommand(message.text);
     if (takeRepCmd) {
@@ -1141,27 +1068,20 @@ export default async function handler(req, res) {
         await tgSendMessage({ chat_id: chat.id, text: `🚫 Only admins can adjust reputation.`, reply_to_message_id: message.message_id });
         return res.status(200).send("ok");
       }
-
       const targetUserId = await getUserIdByUsername(takeRepCmd.username);
       if (!targetUserId) {
-        await tgSendMessage({
-          chat_id: chat.id,
-          text: `⚠️ @${escapeHtml(takeRepCmd.username)} not found in cache.`,
-          reply_to_message_id: message.message_id
-        });
+        await tgSendMessage({ chat_id: chat.id, text: `⚠️ @${takeRepCmd.username} not found in cache.`, reply_to_message_id: message.message_id });
         return res.status(200).send("ok");
       }
-
       const result = await addRepScore(targetUserId, -takeRepCmd.points, `Admin penalty: ${takeRepCmd.reason}`);
       const tier   = result.newTier;
-
       const r = await tgSendMessage({
         chat_id: chat.id,
         text:
-          `📉 <b>Reputation Deducted</b>\n\n` +
-          `👤 @${escapeHtml(takeRepCmd.username)}\n` +
-          `💔 -${takeRepCmd.points} pts — <i>${escapeHtml(takeRepCmd.reason)}</i>\n` +
-          `📊 New score: <b>${result.newScore} pts</b> — ${tier.emoji} ${tier.label}`,
+          `📉 *Reputation Deducted*\n\n` +
+          `👤 @${takeRepCmd.username}\n` +
+          `💔 -${takeRepCmd.points} pts — _${takeRepCmd.reason}_\n` +
+          `📊 New score: *${result.newScore} pts* — ${tier.emoji} ${tier.label}`,
         reply_to_message_id: message.message_id
       });
       await saveBotMsgId(chat.id, r?.result?.message_id);
@@ -1169,8 +1089,7 @@ export default async function handler(req, res) {
     }
 
     // ══════════════════════════════════════════════════════════
-    // ⭐ /promote @username — Admin promotes top rep user to mod
-    //   Awards a "Community Moderator" custom title
+    // ⭐ /promote @username — Admin only (requires 50+ pts)
     // ══════════════════════════════════════════════════════════
     if (message.text?.match(/^\/promote(?:@\S+)?\s+@?[a-zA-Z0-9_]{4,32}$/i)) {
       const senderIsAdmin = await isGroupAdmin(chat.id, from.id);
@@ -1178,34 +1097,27 @@ export default async function handler(req, res) {
         await tgSendMessage({ chat_id: chat.id, text: `🚫 Only admins can promote members.`, reply_to_message_id: message.message_id });
         return res.status(200).send("ok");
       }
-
-      const promoteMatch = message.text.trim().match(/^\/promote(?:@\S+)?\s+@?([a-zA-Z0-9_]{4,32})$/i);
+      const promoteMatch  = message.text.trim().match(/^\/promote(?:@\S+)?\s+@?([a-zA-Z0-9_]{4,32})$/i);
       const promoUsername = promoteMatch?.[1];
       const targetUserId  = await getUserIdByUsername(promoUsername);
-
       if (!targetUserId) {
-        await tgSendMessage({ chat_id: chat.id, text: `⚠️ @${escapeHtml(promoUsername)} not found.`, reply_to_message_id: message.message_id });
+        await tgSendMessage({ chat_id: chat.id, text: `⚠️ @${promoUsername} not found.`, reply_to_message_id: message.message_id });
         return res.status(200).send("ok");
       }
-
       const score = await getRepScore(targetUserId);
       const tier  = getRepTier(score);
-
-      // Require at least "Community Helper" tier (50 pts) to be promoted
       if (score < 50) {
         await tgSendMessage({
           chat_id: chat.id,
           text:
-            `⚠️ <b>Insufficient Reputation</b>\n\n` +
-            `@${escapeHtml(promoUsername)} has <b>${score} pts</b> (${tier.label}).\n\n` +
-            `A minimum of <b>50 pts (🛡️ Community Helper)</b> is required for promotion.\n` +
+            `⚠️ *Insufficient Reputation*\n\n` +
+            `@${promoUsername} has *${score} pts* (${tier.label}).\n\n` +
+            `A minimum of *50 pts (🛡️ Community Helper)* is required.\n` +
             `They need ${50 - score} more points.`,
           reply_to_message_id: message.message_id
         });
         return res.status(200).send("ok");
       }
-
-      // Promote with minimal rights + moderator title
       const promoteRes = await tgApi("promoteChatMember", {
         chat_id: chat.id, user_id: targetUserId,
         is_anonymous: false, can_manage_chat: true,
@@ -1214,45 +1126,36 @@ export default async function handler(req, res) {
         can_change_info: false, can_promote_members: false,
         can_manage_video_chats: false
       });
-
       if (!promoteRes?.ok) {
         await tgSendMessage({
           chat_id: chat.id,
-          text: `❌ Promotion failed: ${escapeHtml(promoteRes?.description || "Unknown error")}`,
+          text: `❌ Promotion failed: ${promoteRes?.description || "Unknown error"}`,
           reply_to_message_id: message.message_id
         });
         return res.status(200).send("ok");
       }
-
       await new Promise(r => setTimeout(r, 1500));
       await tgApi("setChatAdministratorCustomTitle", {
         chat_id: chat.id, user_id: targetUserId, custom_title: "Community Moderator"
       });
-
-      // Bonus rep for being promoted
       await addRepScore(targetUserId, 25, "Promoted to Community Moderator");
-
       if (ADMIN_LOG_CHAT_ID) {
         await tgSendMessage({
           chat_id: ADMIN_LOG_CHAT_ID,
           text:
-            `🎖️ <b>[PROMOTION]</b>\n\n` +
-            `@${escapeHtml(promoUsername)} promoted to Community Moderator\n` +
-            `By: @${escapeHtml(from.username || String(from.id))}\n` +
-            `Rep score: ${score} pts (${tier.label})\n` +
-            `Date: ${new Date().toUTCString()}`
+            `🎖️ *[PROMOTION]*\n\n@${promoUsername} promoted to Community Moderator\n` +
+            `By: @${from.username || String(from.id)}\nRep: ${score} pts (${tier.label})\nDate: ${new Date().toUTCString()}`
         });
       }
-
       const r = await tgSendMessage({
         chat_id: chat.id,
         text:
-          `🎖️ <b>Promotion Announcement!</b>\n\n` +
-          `🎉 Congratulations @${escapeHtml(promoUsername)}!\n\n` +
-          `Based on your outstanding reputation of <b>${score} pts</b> (${tier.emoji} ${tier.label}), ` +
-          `you've been promoted to <b>Community Moderator</b>! 🛡️\n\n` +
+          `🎖️ *Promotion Announcement!*\n\n` +
+          `🎉 Congratulations @${promoUsername}!\n\n` +
+          `Based on your outstanding reputation of *${score} pts* (${tier.emoji} ${tier.label}), ` +
+          `you've been promoted to *Community Moderator*! 🛡️\n\n` +
           `⭐ +25 bonus rep awarded\n\n` +
-          `<i>Thank you for keeping this group safe and helpful. The community appreciates you! 💛</i>`,
+          `_Thank you for keeping this group safe and helpful. The community appreciates you! 💛_`,
         reply_to_message_id: message.message_id
       });
       await saveBotMsgId(chat.id, r?.result?.message_id);
@@ -1274,7 +1177,7 @@ export default async function handler(req, res) {
         if (!replyFrom?.username) {
           await tgSendMessage({
             chat_id: chat.id,
-            text: `⚠️ The user you replied to has no username.\nTry: <code>/report @username [reason]</code>`,
+            text: `⚠️ The user you replied to has no username.\nTry: /report @username [reason]`,
             reply_to_message_id: message.message_id
           });
           return res.status(200).send("ok");
@@ -1288,9 +1191,9 @@ export default async function handler(req, res) {
         await tgSendMessage({
           chat_id: chat.id,
           text:
-            `ℹ️ <b>How to report</b>\n\n` +
-            `Option 1 — Reply to their message:\n<code>/report [reason]</code>\n\n` +
-            `Option 2 — Use username:\n<code>/report @username [reason]</code>`,
+            `ℹ️ *How to report*\n\n` +
+            `Option 1 — Reply to their message:\n/report [reason]\n\n` +
+            `Option 2 — Use username:\n/report @username [reason]`,
           reply_to_message_id: message.message_id
         });
         return res.status(200).send("ok");
@@ -1319,7 +1222,7 @@ export default async function handler(req, res) {
       if (alreadyReported) {
         await tgSendMessage({
           chat_id: chat.id,
-          text: `ℹ️ You've already reported <b>@${escapeHtml(targetUsername)}</b>.\nAdmins are monitoring the situation.`,
+          text: `ℹ️ You've already reported *@${targetUsername}*.\nAdmins are monitoring the situation.`,
           reply_to_message_id: message.message_id
         });
         return res.status(200).send("ok");
@@ -1329,18 +1232,20 @@ export default async function handler(req, res) {
       const r = await tgSendMessage({
         chat_id: chat.id,
         text:
-          `📋 <b>Report Received</b>\n\n` +
-          `👤 User: @${escapeHtml(targetUsername)}\n` +
-          `📝 Reason: ${escapeHtml(reason || "Not specified")}\n` +
+          `📋 *Report Received*\n\n` +
+          `👤 User: @${targetUsername}\n` +
+          `📝 Reason: ${reason || "Not specified"}\n` +
           `🔢 Total reports: ${reports.length}\n\n` +
-          `<i>Admins notified. The report is anonymous. 🔒</i>`,
+          `_Admins notified. The report is anonymous. 🔒_`,
         reply_to_message_id: message.message_id
       });
       await saveBotMsgId(chat.id, r?.result?.message_id);
 
       tgSendMessage({
         chat_id: from.id,
-        text: `✅ <b>Report received</b>\n\nYou reported @${escapeHtml(targetUsername)}.\nIf confirmed, you'll earn <b>+${REP_GAINS.ACCURATE_REPORT} reputation</b>! 🛡️`
+        text:
+          `✅ *Report received*\n\nYou reported @${targetUsername}.\n` +
+          `If confirmed, you'll earn *+${REP_GAINS.ACCURATE_REPORT} reputation*! 🛡️`
       }).catch(() => {});
 
       // Strike threshold actions
@@ -1354,16 +1259,19 @@ export default async function handler(req, res) {
             const banMsg = await tgSendMessage({
               chat_id: chat.id,
               text:
-                `⛔ <b>User Auto-Banned</b>\n\n` +
-                `@${escapeHtml(targetUsername)} removed from the group.\n` +
-                `📊 Strike score: <b>${newScore}</b> — threshold exceeded.\n` +
+                `⛔ *User Auto-Banned*\n\n` +
+                `@${targetUsername} removed from the group.\n` +
+                `📊 Strike score: *${newScore}* — threshold exceeded.\n` +
                 `🌐 Added to global blacklist. 🔐`
             });
             await saveBotMsgId(chat.id, banMsg?.result?.message_id);
             if (ADMIN_LOG_CHAT_ID) {
               await tgSendMessage({
                 chat_id: ADMIN_LOG_CHAT_ID,
-                text: `⛔ <b>[AUTO-BAN]</b> @${escapeHtml(targetUsername)}\nScore: ${newScore} | Reports: ${reports.length}\nUse /clearreport to reverse if false positive.`
+                text:
+                  `⛔ *[AUTO-BAN]* @${targetUsername}\n` +
+                  `Score: ${newScore} | Reports: ${reports.length}\n` +
+                  `Use /clearreport @${targetUsername} to reverse if false positive.`
               });
             }
           }
@@ -1375,10 +1283,10 @@ export default async function handler(req, res) {
           const muteMsg = await tgSendMessage({
             chat_id: chat.id,
             text:
-              `🔇 <b>User Muted Pending Review</b>\n\n` +
-              `@${escapeHtml(targetUsername)} muted for <b>1 hour</b> while admins review.\n` +
-              `📊 Strike score: <b>${newScore}</b>\n\n` +
-              `<i>Admins: /clearreport @${escapeHtml(targetUsername)} to dismiss.</i>`
+              `🔇 *User Muted Pending Review*\n\n` +
+              `@${targetUsername} muted for *1 hour* while admins review.\n` +
+              `📊 Strike score: *${newScore}*\n\n` +
+              `_Admins: /clearreport @${targetUsername} to dismiss._`
           });
           await saveBotMsgId(chat.id, muteMsg?.result?.message_id);
         }
@@ -1398,16 +1306,19 @@ export default async function handler(req, res) {
       }
       const topReported = await getTopReported(10);
       if (!topReported.length) {
-        await tgSendMessage({ chat_id: chat.id, text: `📊 <b>Scam Reports</b>\n\nNo reports filed yet. ✅`, reply_to_message_id: message.message_id });
+        await tgSendMessage({ chat_id: chat.id, text: `📊 *Scam Reports*\n\nNo reports filed yet. ✅`, reply_to_message_id: message.message_id });
         return res.status(200).send("ok");
       }
       const lines = topReported.map((u, i) => {
         const status = u.confirmed ? "⛔ CONFIRMED" : `⚠️ Score: ${u.score}`;
-        return `${i + 1}. @${escapeHtml(u.username)} — ${status} | ${u.reportCount} report(s)`;
+        return `${i + 1}. @${u.username} — ${status} | ${u.reportCount} report(s)`;
       });
       const r = await tgSendMessage({
         chat_id: chat.id,
-        text: `📊 <b>Top Reported Users</b>\n\n` + lines.join("\n") + `\n\n<i>/clearreport @user to dismiss | /confirmscam @user [tactics] to action</i>`,
+        text:
+          `📊 *Top Reported Users*\n\n` +
+          lines.join("\n") +
+          `\n\n_/clearreport @user to dismiss | /confirmscam @user [tactics] to action_`,
         reply_to_message_id: message.message_id
       });
       await saveBotMsgId(chat.id, r?.result?.message_id);
@@ -1432,17 +1343,23 @@ export default async function handler(req, res) {
           permissions: {
             can_send_messages: true, can_send_audios: true, can_send_documents: true,
             can_send_photos: true, can_send_videos: true, can_send_video_notes: true,
-            can_send_voice_notes: true, can_send_polls: true, can_send_other_messages: true,
-            can_add_web_page_previews: true
+            can_send_voice_notes: true, can_send_polls: true,
+            can_send_other_messages: true, can_add_web_page_previews: true
           }
         });
       }
       if (ADMIN_LOG_CHAT_ID) {
-        await tgSendMessage({ chat_id: ADMIN_LOG_CHAT_ID, text: `✅ <b>[CLEARED]</b> Reports against @${escapeHtml(clearTarget)} dismissed by @${escapeHtml(from.username || String(from.id))}` });
+        await tgSendMessage({
+          chat_id: ADMIN_LOG_CHAT_ID,
+          text: `✅ *[CLEARED]* Reports against @${clearTarget} dismissed by @${from.username || String(from.id)}`
+        });
       }
       const r = await tgSendMessage({
         chat_id: chat.id,
-        text: `✅ <b>Reports Cleared</b>\n\nAll reports against @${escapeHtml(clearTarget)} dismissed.\nIf muted, they can speak again. 🔓`,
+        text:
+          `✅ *Reports Cleared*\n\n` +
+          `All reports against @${clearTarget} dismissed.\n` +
+          `If restricted, they can now speak again. 🔓`,
         reply_to_message_id: message.message_id
       });
       await saveBotMsgId(chat.id, r?.result?.message_id);
@@ -1461,7 +1378,9 @@ export default async function handler(req, res) {
       }
 
       const { username: scammerUsername, tactics } = confirmCmd;
-      await addToBlacklist(scammerUsername, { confirmedBy: from.username || from.id, tactics: tactics || "Not specified", chatId: chat.id });
+      await addToBlacklist(scammerUsername, {
+        confirmedBy: from.username || from.id, tactics: tactics || "Not specified", chatId: chat.id
+      });
 
       const targetUserId = await getUserIdByUsername(scammerUsername);
       if (targetUserId) await banUser(chat.id, targetUserId);
@@ -1469,16 +1388,15 @@ export default async function handler(req, res) {
       // Reward reporters who got it right
       const reporters = await getReportersForTarget(scammerUsername);
       for (const reporterId of reporters) {
-        const repResult = await addRepScore(reporterId, REP_GAINS.ACCURATE_REPORT, `Accurate report: @${scammerUsername} confirmed scammer`);
-        // DM the reporter about their reward
+        const repResult = await addRepScore(reporterId, REP_GAINS.ACCURATE_REPORT, `Accurate report: @${scammerUsername} confirmed`);
         tgSendMessage({
           chat_id: reporterId,
           text:
-            `🏆 <b>Report Confirmed!</b>\n\n` +
-            `Your earlier report of @${escapeHtml(scammerUsername)} has been confirmed by admins.\n\n` +
-            `⭐ You've earned <b>+${REP_GAINS.ACCURATE_REPORT} reputation points</b>!\n` +
-            `📊 New score: <b>${repResult.newScore} pts</b> — ${repResult.newTier.emoji} ${repResult.newTier.label}\n\n` +
-            `Thank you for keeping the community safe! 🛡️`
+            `🏆 *Report Confirmed!*\n\n` +
+            `Your report of @${scammerUsername} has been confirmed by admins.\n\n` +
+            `⭐ You've earned *+${REP_GAINS.ACCURATE_REPORT} reputation points*!\n` +
+            `📊 New score: *${repResult.newScore} pts* — ${repResult.newTier.emoji} ${repResult.newTier.label}\n\n` +
+            `_Thank you for keeping the community safe! 🛡️_`
         }).catch(() => {});
       }
 
@@ -1486,9 +1404,9 @@ export default async function handler(req, res) {
         await tgSendMessage({
           chat_id: ADMIN_LOG_CHAT_ID,
           text:
-            `⛔ <b>[CONFIRMED SCAMMER]</b>\n@${escapeHtml(scammerUsername)}\n` +
-            `By: @${escapeHtml(from.username || String(from.id))}\n` +
-            `Tactics: ${escapeHtml(tactics || "Not specified")}\n` +
+            `⛔ *[CONFIRMED SCAMMER]*\n@${scammerUsername}\n` +
+            `By: @${from.username || String(from.id)}\n` +
+            `Tactics: ${tactics || "Not specified"}\n` +
             `Reporters rewarded: ${reporters.length}\n` +
             `Date: ${new Date().toUTCString()}`
         });
@@ -1497,13 +1415,13 @@ export default async function handler(req, res) {
       const r = await tgSendMessage({
         chat_id: chat.id,
         text:
-          `⛔ <b>CONFIRMED SCAMMER</b>\n\n` +
-          `👤 @${escapeHtml(scammerUsername)}\n` +
-          `🎭 Tactics: ${escapeHtml(tactics || "Not specified")}\n` +
+          `⛔ *CONFIRMED SCAMMER*\n\n` +
+          `👤 @${scammerUsername}\n` +
+          `🎭 Tactics: ${tactics || "Not specified"}\n` +
           `📅 ${new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}\n` +
-          `🌐 Status: <b>Global blacklist — banned on entry</b>\n\n` +
-          `⭐ ${reporters.length} member(s) who reported this user have been rewarded with reputation points.\n\n` +
-          `⚠️ <i>If this person contacts you anywhere, block and ignore them.</i>`
+          `🌐 Status: *Global blacklist — banned on entry*\n\n` +
+          `⭐ ${reporters.length} member(s) who reported this user have been rewarded.\n\n` +
+          `⚠️ _If this person contacts you anywhere, block and ignore them._`
       });
       await saveBotMsgId(chat.id, r?.result?.message_id);
       return res.status(200).send("ok");
@@ -1522,7 +1440,6 @@ export default async function handler(req, res) {
       await redis.set(schedCheckKey, nowTs);
       const lastBotMsgId = await getLastBotMsgId(chat.id);
       const msgGap       = lastBotMsgId ? currentMsgId - lastBotMsgId : SCHEDULED_MIN_MSG_GAP + 1;
-
       if (msgGap >= SCHEDULED_MIN_MSG_GAP) {
         const idx       = parseInt((await redis.get(schedIndexKey)) || "0", 10);
         const scheduled = SCHEDULED_MESSAGES[idx % SCHEDULED_MESSAGES.length];
