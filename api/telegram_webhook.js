@@ -5,7 +5,7 @@ const redis = new Redis({
   token: "ARncAAImcDFjZTVmMTQ0M2IzMTY0ZjM2YjAxNmRmNjhiZGZiNDc5NHAxNjYyMA"
 });
 
-const BOT_TOKEN = '8111507659:AAHtUZCkKPXNmLSxii02hlUaf3-qRfSDHxg';
+const BOT_TOKEN = '8128154908:AAF1F9Geyvd4Bc6-cszEALGQAWI3CcMKcgE';
 const VERIFY_API_BASE =
   process.env.VERIFY_API_BASE ||
   "https://myapp-git-main-stebes-projects.vercel.app/api/verify";
