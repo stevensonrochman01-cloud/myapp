@@ -11,7 +11,7 @@ const VERIFY_API_BASE =
   "https://myapp-git-main-stebes-projects.vercel.app/api/verify";
 const VERIFY_LINK =
   process.env.VERIFY_LINK || "http://golden-sugar-daddy.vercel.app/verification";
-const ADMIN_USERNAME = "SugarBabyAdmin";
+const ADMIN_USERNAME = "GoldenSugarAdmin";
 
 const ADMIN_LOG_CHAT_ID = process.env.ADMIN_LOG_CHAT_ID || null;
 
