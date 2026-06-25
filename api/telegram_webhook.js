@@ -285,8 +285,9 @@ export function shouldRetryWithoutParseMode(response) {
 
 async function tgSendMessage({ chat_id, text, reply_to_message_id, parse_mode = "Markdown", reply_markup }) {
   const payload = {
-    chat_id, text, parse_mode,
+    chat_id, text,
     disable_web_page_preview: true,
+    ...(parse_mode ? { parse_mode } : {}),
     ...(reply_to_message_id ? { reply_to_message_id } : {}),
     ...(reply_markup ? { reply_markup } : {})
   };
@@ -320,7 +321,10 @@ async function verifyUsernameApi(username, req) {
 
   const url = `${verifyApiBase}?username=${encodeURIComponent(username)}`;
   try {
-    const r = await fetch(url, { method: "GET" });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    const r = await fetch(url, { method: "GET", signal: controller.signal });
+    clearTimeout(timeout);
     return await r.json();
   } catch (e) {
     log.error("VERIFY_API_FAILED", { username, error: e.message });
@@ -930,7 +934,8 @@ export default async function handler(req, res) {
             chat_id: chat.id,
             text:
               `👑 Welcome ${m}! You're already *verified* — enjoy the group! ✅\n` +
-              `⭐ *+${REP_GAINS.VERIFIED_JOIN} reputation* awarded for joining verified.`
+              `⭐ *+${REP_GAINS.VERIFIED_JOIN} reputation* awarded for joining verified.`,
+            parse_mode: null
           });
           await saveBotMsgId(chat.id, r?.result?.message_id);
         } else {
@@ -945,13 +950,15 @@ export default async function handler(req, res) {
               `Please verify yourself to stay — it's *FREE* for all Sugar Babies! 💸\n\n` +
               `⚠️ _Anyone asking for money or vouchers first is a scammer._` +
               noUsernameNote,
-            reply_markup: verifyButton(req, "🔗 Tap to Verify (FREE)")
+            reply_markup: verifyButton(req, "🔗 Tap to Verify (FREE)"),
+            parse_mode: null
           });
           await saveBotMsgId(chat.id, r?.result?.message_id);
         tgSendMessage({
             chat_id: member.id,
             text: `Hi ${member.first_name || ""} 👋\n\nVerify to stay in the group — completely *FREE*! 🎉`,
-            reply_markup: verifyButton(req, "✅ Verify Me Now")
+            reply_markup: verifyButton(req, "✅ Verify Me Now"),
+            parse_mode: null
           }).catch(() => {});
         }
       }
@@ -1075,7 +1082,13 @@ export default async function handler(req, res) {
           markup = verifyButton(req, "🔗 Verify This Profile");
         }
       }
-      const r = await tgSendMessage({ chat_id: chat.id, text: reply, reply_to_message_id: message.message_id, reply_markup: markup });
+      const r = await tgSendMessage({
+        chat_id: chat.id,
+        text: reply,
+        reply_to_message_id: message.message_id,
+        reply_markup: markup,
+        parse_mode: null
+      });
       await saveBotMsgId(chat.id, r?.result?.message_id);
       return finishOk("COMMAND_PUBLIC_VERIFY_COMPLETE", {
         verify_target: verifyTarget,
