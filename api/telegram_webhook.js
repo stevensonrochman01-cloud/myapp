@@ -144,7 +144,7 @@ const SCHEDULED_MESSAGES = [
     text:
       `💡 *Pro Tip*\n\n` +
       `Real Sugar Daddies are *quiet and private* — they don't chase you in chats.\n\n` +
-      `For genuine connections, reach out to *@${ADMIN_USERNAME}* instead of DMing strangers. 💬`,
+      `For genuine connections, reach out to *${formatUsername(ADMIN_USERNAME)}* instead of DMing strangers. 💬`,
     button: null
   },
   {
@@ -238,8 +238,12 @@ function escapeMarkdown(s = "") {
   return String(s).replace(/([_*\[\]()~`>#+\-=|{}.!\\])/g, "\\$1");
 }
 
+function formatUsername(username) {
+  return `@${escapeMarkdown(username || "")}`;
+}
+
 function mentionUser(user) {
-  if (user?.username) return `@${escapeMarkdown(user.username)}`;
+  if (user?.username) return formatUsername(user.username);
   const name = escapeMarkdown(user?.first_name || "User");
   return `[${name}](tg://user?id=${user.id})`;
 }
@@ -498,9 +502,9 @@ async function fileScamReport({ targetUsername, reporterId, reporterUsername, re
       chat_id: ADMIN_LOG_CHAT_ID,
       text:
         `🚨 *Report Evidence*\n` +
-        `👤 Reported: @${escapeHtml(targetUsername)}\n` +
-        `📋 Reason: ${escapeHtml(reason || "None")}\n` +
-        `⚖️ Reporter: @${escapeHtml(reporterUsername || "unknown")} (${reporterVerified ? "✅ Verified" : "⚠️ Unverified"})\n` +
+        `👤 Reported: ${formatUsername(targetUsername)}\n` +
+        `📋 Reason: ${escapeMarkdown(reason || "None")}\n` +
+        `⚖️ Reporter: ${formatUsername(reporterUsername || "unknown")} (${reporterVerified ? "✅ Verified" : "⚠️ Unverified"})\n` +
         `📊 New strike score: ${newScore}`
     });
     await forwardEvidence(chatId, evidenceMsgId);
@@ -723,7 +727,7 @@ export default async function handler(req, res) {
             text:
               `📩 *Departure Feedback*\n\n` +
               `👤 Name: ${displayName}\n` +
-              `🔗 Username: ${from.username ? `@${from.username}` : "(none)"}\n` +
+              `🔗 Username: ${from.username ? formatUsername(from.username) : "(none)"}\n` +
               `🪪 User ID: ${from.id}\n` +
               `🏘️ Left: ${pending.chatTitle || "Unknown"}\n\n` +
               `💬 *Reason:*\n${message.text}`
@@ -772,7 +776,7 @@ export default async function handler(req, res) {
 
         // 3. Public notice — shows who was restricted and what triggered it
         const mention = from.username
-          ? `@${from.username}`
+          ? formatUsername(from.username)
           : `[${from.first_name || "User"}](tg://user?id=${from.id})`;
 
         await tgSendMessage({
@@ -843,7 +847,7 @@ export default async function handler(req, res) {
       const result = await addRepScore(from.id, REP_GAINS.DAILY_ACTIVE, "Daily activity");
       if (result.tierChanged) {
         const m = from.username
-          ? `@${from.username}`
+          ? formatUsername(from.username)
           : `[${from.first_name || "Member"}](tg://user?id=${from.id})`;
         await tgSendMessage({
           chat_id: chat.id,
@@ -878,7 +882,7 @@ export default async function handler(req, res) {
 
         const fullName = [member.first_name, member.last_name].filter(Boolean).join(" ").trim() || "there";
         const m = member.username
-          ? `@${member.username}`
+          ? formatUsername(member.username)
           : `[${fullName}](tg://user?id=${member.id})`;
 
         // Blacklist check
@@ -984,7 +988,7 @@ export default async function handler(req, res) {
       if (!targetUserId) {
         await tgSendMessage({
           chat_id: chat.id,
-          text: `⚠️ *User not found in cache*\n\n@${username} hasn't sent a message here yet.\nAsk them to send one message, then retry.`,
+          text: `⚠️ *User not found in cache*\n\n${formatUsername(username)} hasn't sent a message here yet.\nAsk them to send one message, then retry.`,
           reply_to_message_id: message.message_id
         });
         return finishOk("COMMAND_ADMIN_VERIFY_TARGET_NOT_FOUND", adminCmd);
@@ -998,7 +1002,7 @@ export default async function handler(req, res) {
           chat_id: chat.id,
           text:
             `${emoji} *Verification Tag Assigned!*\n\n` +
-            `👤 @${username}\n` +
+            `👤 ${formatUsername(username)}\n` +
             `🏷️ Title: *${label}*\n` +
             `⭐ +${REP_GAINS.GOT_VERIFIED} reputation awarded ✅`,
           reply_to_message_id: message.message_id
@@ -1009,7 +1013,7 @@ export default async function handler(req, res) {
           chat_id: chat.id,
           text:
             `❌ *Could not assign title*\n\n` +
-            `Make sure:\n• The bot has Admin rights\n• @${username} is still in the group\n• Bot rank is higher than the target\n\n` +
+            `Make sure:\n• The bot has Admin rights\n• ${formatUsername(username)} is still in the group\n• Bot rank is higher than the target\n\n` +
             `_Error: ${result?.description || "Unknown"}_`,
           reply_to_message_id: message.message_id
         });
@@ -1032,7 +1036,7 @@ export default async function handler(req, res) {
       if (v?.verified) {
         reply =
           `✅ *Verified Member*\n\n` +
-          `👤 @${verifyTarget}\n` +
+          `👤 ${formatUsername(verifyTarget)}\n` +
           `📛 Name: ${v?.name || verifyTarget}\n` +
           `🪪 ID: ${v?.public_id || "N/A"}\n` +
           `🎭 Role: ${v?.role || "N/A"}\n` +
@@ -1040,12 +1044,12 @@ export default async function handler(req, res) {
       } else {
         const blacklisted = await isBlacklisted(verifyTarget);
         if (blacklisted) {
-          reply = `🚫 *CONFIRMED SCAMMER* — @${verifyTarget}\n\n⛔ On the global blacklist. Do NOT engage. Block immediately.`;
+          reply = `🚫 *CONFIRMED SCAMMER* — ${formatUsername(verifyTarget)}\n\n⛔ On the global blacklist. Do NOT engage. Block immediately.`;
         } else {
           const score = await getStrikeScore(verifyTarget);
           const reports = await getScamReports(verifyTarget);
           reply =
-            `❌ *Not Verified* — @${verifyTarget}\n\n⚠️ Proceed with caution.` +
+            `❌ *Not Verified* — ${formatUsername(verifyTarget)}\n\n⚠️ Proceed with caution.` +
             (score > 0 ? `\n\n📊 *Report Score:* ${score} pts from ${reports.length} report(s)` : "");
           markup = verifyButton(req, "🔗 Verify This Profile");
         }
@@ -1092,7 +1096,7 @@ export default async function handler(req, res) {
           `4️⃣ *No forwarded messages* — posts only, no forwards 🚫\n` +
           `5️⃣ Zero tolerance for illegal or harmful content 🔨\n` +
           `6️⃣ Respect all members\n` +
-          `7️⃣ For genuine SD connections → @${ADMIN_USERNAME}\n` +
+          `7️⃣ For genuine SD connections → ${formatUsername(ADMIN_USERNAME)}\n` +
           `8️⃣ Report scammers: /report @username [reason]\n\n` +
           `_Breaking rules = restriction or ban. No appeals. 🔒_`,
         reply_to_message_id: message.message_id,
@@ -1114,7 +1118,7 @@ export default async function handler(req, res) {
       if (!lookupUserId) {
         await tgSendMessage({
           chat_id: chat.id,
-          text: `⚠️ @${repMatch?.[1] || "?"} not found in cache. Ask them to send a message first.`,
+          text: `⚠️ ${formatUsername(repMatch?.[1] || "?")} not found in cache. Ask them to send a message first.`,
           reply_to_message_id: message.message_id
         });
         return finishOk("COMMAND_REP_TARGET_NOT_FOUND", { lookup_username: repMatch?.[1] || null });
@@ -1139,7 +1143,7 @@ export default async function handler(req, res) {
         : "  No activity yet";
 
       const isSelf = !repMatch?.[1] || repMatch[1].toLowerCase() === from.username?.toLowerCase();
-      const displayName = lookupUsername ? `@${lookupUsername}` : `User ${lookupUserId}`;
+      const displayName = lookupUsername ? formatUsername(lookupUsername) : `User ${lookupUserId}`;
 
       const r = await tgSendMessage({
         chat_id: chat.id,
@@ -1179,7 +1183,7 @@ export default async function handler(req, res) {
       const lines = top.map((u, i) => {
         const t    = getRepTier(u.score);
         const medal = medals[i] || `${i + 1}.`;
-        const name  = u.username ? `@${u.username}` : `User ${u.userId}`;
+        const name  = u.username ? formatUsername(u.username) : `User ${u.userId}`;
         return `${medal} ${name} — ${t.emoji} *${u.score} pts* (${t.label})`;
       });
       const r = await tgSendMessage({
@@ -1207,14 +1211,14 @@ export default async function handler(req, res) {
       }
       const targetUserId = await getUserIdByUsername(giveRepCmd.username);
       if (!targetUserId) {
-        await tgSendMessage({ chat_id: chat.id, text: `⚠️ @${giveRepCmd.username} not found in cache.`, reply_to_message_id: message.message_id });
+        await tgSendMessage({ chat_id: chat.id, text: `⚠️ ${formatUsername(giveRepCmd.username)} not found in cache.`, reply_to_message_id: message.message_id });
         return finishOk("COMMAND_GIVE_REP_TARGET_NOT_FOUND", giveRepCmd);
       }
       const result = await addRepScore(targetUserId, giveRepCmd.points, `Admin award: ${giveRepCmd.reason}`);
       const tier   = result.newTier;
       let text =
         `⭐ *Reputation Awarded!*\n\n` +
-        `👤 @${giveRepCmd.username}\n` +
+        `👤 ${formatUsername(giveRepCmd.username)}\n` +
         `💫 +${giveRepCmd.points} pts — _${giveRepCmd.reason}_\n` +
         `📊 New score: *${result.newScore} pts* — ${tier.emoji} ${tier.label}`;
       if (result.tierChanged) text += `\n\n🎉 *Tier Up!* Now *${tier.label}* ${tier.emoji}`;
@@ -1240,7 +1244,7 @@ export default async function handler(req, res) {
       }
       const targetUserId = await getUserIdByUsername(takeRepCmd.username);
       if (!targetUserId) {
-        await tgSendMessage({ chat_id: chat.id, text: `⚠️ @${takeRepCmd.username} not found in cache.`, reply_to_message_id: message.message_id });
+        await tgSendMessage({ chat_id: chat.id, text: `⚠️ ${formatUsername(takeRepCmd.username)} not found in cache.`, reply_to_message_id: message.message_id });
         return finishOk("COMMAND_TAKE_REP_TARGET_NOT_FOUND", takeRepCmd);
       }
       const result = await addRepScore(targetUserId, -takeRepCmd.points, `Admin penalty: ${takeRepCmd.reason}`);
@@ -1249,7 +1253,7 @@ export default async function handler(req, res) {
         chat_id: chat.id,
         text:
           `📉 *Reputation Deducted*\n\n` +
-          `👤 @${takeRepCmd.username}\n` +
+          `👤 ${formatUsername(takeRepCmd.username)}\n` +
           `💔 -${takeRepCmd.points} pts — _${takeRepCmd.reason}_\n` +
           `📊 New score: *${result.newScore} pts* — ${tier.emoji} ${tier.label}`,
         reply_to_message_id: message.message_id
@@ -1276,7 +1280,7 @@ export default async function handler(req, res) {
       const promoUsername = promoteMatch?.[1];
       const targetUserId  = await getUserIdByUsername(promoUsername);
       if (!targetUserId) {
-        await tgSendMessage({ chat_id: chat.id, text: `⚠️ @${promoUsername} not found.`, reply_to_message_id: message.message_id });
+        await tgSendMessage({ chat_id: chat.id, text: `⚠️ ${formatUsername(promoUsername)} not found.`, reply_to_message_id: message.message_id });
         return finishOk("COMMAND_PROMOTE_TARGET_NOT_FOUND", { promo_username: promoUsername || null });
       }
       const score = await getRepScore(targetUserId);
@@ -1286,7 +1290,7 @@ export default async function handler(req, res) {
           chat_id: chat.id,
           text:
             `⚠️ *Insufficient Reputation*\n\n` +
-            `@${promoUsername} has *${score} pts* (${tier.label}).\n\n` +
+            `${formatUsername(promoUsername)} has *${score} pts* (${tier.label}).\n\n` +
             `A minimum of *50 pts (🛡️ Community Helper)* is required.\n` +
             `They need ${50 - score} more points.`,
           reply_to_message_id: message.message_id
@@ -1321,15 +1325,15 @@ export default async function handler(req, res) {
         await tgSendMessage({
           chat_id: ADMIN_LOG_CHAT_ID,
           text:
-            `🎖️ *[PROMOTION]*\n\n@${promoUsername} promoted to Community Moderator\n` +
-            `By: @${from.username || String(from.id)}\nRep: ${score} pts (${tier.label})\nDate: ${new Date().toUTCString()}`
+            `🎖️ *[PROMOTION]*\n\n${formatUsername(promoUsername)} promoted to Community Moderator\n` +
+            `By: ${from.username ? formatUsername(from.username) : String(from.id)}\nRep: ${score} pts (${tier.label})\nDate: ${new Date().toUTCString()}`
         });
       }
       const r = await tgSendMessage({
         chat_id: chat.id,
         text:
           `🎖️ *Promotion Announcement!*\n\n` +
-          `🎉 Congratulations @${promoUsername}!\n\n` +
+          `🎉 Congratulations ${formatUsername(promoUsername)}!\n\n` +
           `Based on your outstanding reputation of *${score} pts* (${tier.emoji} ${tier.label}), ` +
           `you've been promoted to *Community Moderator*! 🛡️\n\n` +
           `⭐ +25 bonus rep awarded\n\n` +
@@ -1411,7 +1415,7 @@ export default async function handler(req, res) {
       if (alreadyReported) {
         await tgSendMessage({
           chat_id: chat.id,
-          text: `ℹ️ You've already reported *@${targetUsername}*.\nAdmins are monitoring the situation.`,
+          text: `ℹ️ You've already reported *${formatUsername(targetUsername)}*.\nAdmins are monitoring the situation.`,
           reply_to_message_id: message.message_id
         });
         return finishOk("COMMAND_REPORT_DUPLICATE", { target_username: targetUsername, new_score: newScore });
@@ -1422,7 +1426,7 @@ export default async function handler(req, res) {
         chat_id: chat.id,
         text:
           `📋 *Report Received*\n\n` +
-          `👤 User: @${targetUsername}\n` +
+          `👤 User: ${formatUsername(targetUsername)}\n` +
           `📝 Reason: ${reason || "Not specified"}\n` +
           `🔢 Total reports: ${reports.length}\n\n` +
           `_Admins notified. The report is anonymous. 🔒_`,
@@ -1433,7 +1437,7 @@ export default async function handler(req, res) {
       tgSendMessage({
         chat_id: from.id,
         text:
-          `✅ *Report received*\n\nYou reported @${targetUsername}.\n` +
+          `✅ *Report received*\n\nYou reported ${formatUsername(targetUsername)}.\n` +
           `If confirmed, you'll earn *+${REP_GAINS.ACCURATE_REPORT} reputation*! 🛡️`
       }).catch(() => {});
 
@@ -1450,7 +1454,7 @@ export default async function handler(req, res) {
               chat_id: chat.id,
               text:
                 `⛔ *User Auto-Banned*\n\n` +
-                `@${targetUsername} removed from the group.\n` +
+                `${formatUsername(targetUsername)} removed from the group.\n` +
                 `📊 Strike score: *${newScore}* — threshold exceeded.\n` +
                 `🌐 Added to global blacklist. 🔐`
             });
@@ -1459,9 +1463,9 @@ export default async function handler(req, res) {
               await tgSendMessage({
                 chat_id: ADMIN_LOG_CHAT_ID,
                 text:
-                  `⛔ *[AUTO-BAN]* @${targetUsername}\n` +
+                  `⛔ *[AUTO-BAN]* ${formatUsername(targetUsername)}\n` +
                   `Score: ${newScore} | Reports: ${reports.length}\n` +
-                  `Use /clearreport @${targetUsername} to reverse if false positive.`
+                  `Use /clearreport ${formatUsername(targetUsername)} to reverse if false positive.`
               });
             }
           }
@@ -1475,9 +1479,9 @@ export default async function handler(req, res) {
             chat_id: chat.id,
             text:
               `🔇 *User Muted Pending Review*\n\n` +
-              `@${targetUsername} muted for *1 hour* while admins review.\n` +
+              `${formatUsername(targetUsername)} muted for *1 hour* while admins review.\n` +
               `📊 Strike score: *${newScore}*\n\n` +
-              `_Admins: /clearreport @${targetUsername} to dismiss._`
+              `_Admins: /clearreport ${formatUsername(targetUsername)} to dismiss._`
           });
           await saveBotMsgId(chat.id, muteMsg?.result?.message_id);
         }
@@ -1503,7 +1507,7 @@ export default async function handler(req, res) {
       }
       const lines = topReported.map((u, i) => {
         const status = u.confirmed ? "⛔ CONFIRMED" : `⚠️ Score: ${u.score}`;
-        return `${i + 1}. @${u.username} — ${status} | ${u.reportCount} report(s)`;
+        return `${i + 1}. ${formatUsername(u.username)} — ${status} | ${u.reportCount} report(s)`;
       });
       const r = await tgSendMessage({
         chat_id: chat.id,
@@ -1544,14 +1548,14 @@ export default async function handler(req, res) {
       if (ADMIN_LOG_CHAT_ID) {
         await tgSendMessage({
           chat_id: ADMIN_LOG_CHAT_ID,
-          text: `✅ *[CLEARED]* Reports against @${clearTarget} dismissed by @${from.username || String(from.id)}`
+          text: `✅ *[CLEARED]* Reports against ${formatUsername(clearTarget)} dismissed by ${from.username ? formatUsername(from.username) : String(from.id)}`
         });
       }
       const r = await tgSendMessage({
         chat_id: chat.id,
         text:
           `✅ *Reports Cleared*\n\n` +
-          `All reports against @${clearTarget} dismissed.\n` +
+          `All reports against ${formatUsername(clearTarget)} dismissed.\n` +
           `If restricted, they can now speak again. 🔓`,
         reply_to_message_id: message.message_id
       });
@@ -1590,7 +1594,7 @@ export default async function handler(req, res) {
           chat_id: reporterId,
           text:
             `🏆 *Report Confirmed!*\n\n` +
-            `Your report of @${scammerUsername} has been confirmed by admins.\n\n` +
+            `Your report of ${formatUsername(scammerUsername)} has been confirmed by admins.\n\n` +
             `⭐ You've earned *+${REP_GAINS.ACCURATE_REPORT} reputation points*!\n` +
             `📊 New score: *${repResult.newScore} pts* — ${repResult.newTier.emoji} ${repResult.newTier.label}\n\n` +
             `_Thank you for keeping the community safe! 🛡️_`
@@ -1601,8 +1605,8 @@ export default async function handler(req, res) {
         await tgSendMessage({
           chat_id: ADMIN_LOG_CHAT_ID,
           text:
-            `⛔ *[CONFIRMED SCAMMER]*\n@${scammerUsername}\n` +
-            `By: @${from.username || String(from.id)}\n` +
+            `⛔ *[CONFIRMED SCAMMER]*\n${formatUsername(scammerUsername)}\n` +
+            `By: ${from.username ? formatUsername(from.username) : String(from.id)}\n` +
             `Tactics: ${tactics || "Not specified"}\n` +
             `Reporters rewarded: ${reporters.length}\n` +
             `Date: ${new Date().toUTCString()}`
@@ -1613,7 +1617,7 @@ export default async function handler(req, res) {
         chat_id: chat.id,
         text:
           `⛔ *CONFIRMED SCAMMER*\n\n` +
-          `👤 @${scammerUsername}\n` +
+          `👤 ${formatUsername(scammerUsername)}\n` +
           `🎭 Tactics: ${tactics || "Not specified"}\n` +
           `📅 ${new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}\n` +
           `🌐 Status: *Global blacklist — banned on entry*\n\n` +
