@@ -209,6 +209,13 @@ function mentionUser(user) {
   return `[${name}](tg://user?id=${user.id})`;
 }
 
+export function formatForwardedMessageWarning(user) {
+  return (
+    `⚠️ ${mentionUser(user)} Forwarded messages are not allowed in this group.\n` +
+    `_Please share content directly — no forwards. 🚫_`
+  );
+}
+
 function verifyButton(req, label = "Verify Now") {
   const verifyLink = getVerifyLink(req);
   if (!verifyLink) return undefined;
@@ -736,9 +743,7 @@ export default async function handler(req, res) {
 
         const warning = await tgSendMessage({
           chat_id: chat.id,
-          text:
-            `⚠️ ${mentionUser(from)} Forwarded messages are not allowed in this group.\n` +
-            `_Please share content directly — no forwards. 🚫_`
+          text: formatForwardedMessageWarning(from)
         });
 
         if (warning?.result?.message_id) {

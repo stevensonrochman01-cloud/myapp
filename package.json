@@ -1,5 +1,8 @@
 {
   "type": "module",
+  "scripts": {
+    "test": "node --test"
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.95.3",
     "@upstash/redis": "^1.36.2",
