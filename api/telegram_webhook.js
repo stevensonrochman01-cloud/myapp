@@ -191,6 +191,41 @@ const log = {
   redis: (tag, data) => console.log( `[${log._ts()}] 🗄️  [${tag}]`, typeof data === "object" ? JSON.stringify(data) : data),
 };
 
+function previewText(text = "", max = 160) {
+  const normalized = String(text).replace(/\s+/g, " ").trim();
+  return normalized.length > max ? `${normalized.slice(0, max)}...` : normalized;
+}
+
+function buildMessageState(update, message) {
+  const chat = message?.chat || {};
+  const from = message?.from || {};
+  const text = message?.text || message?.caption || "";
+  const commandMatch = text.match(/^\/([a-zA-Z0-9_]+)(?:@\S+)?/);
+
+  return {
+    update_id: update?.update_id || null,
+    message_id: message?.message_id || null,
+    chat_id: chat?.id || null,
+    chat_type: chat?.type || null,
+    chat_title: chat?.title || null,
+    from_id: from?.id || null,
+    from_username: from?.username || null,
+    from_is_bot: !!from?.is_bot,
+    has_text: !!message?.text,
+    has_caption: !!message?.caption,
+    text_preview: previewText(text),
+    command: commandMatch ? commandMatch[1].toLowerCase() : null,
+    is_forwarded: isForwardedMessage(message),
+    is_reply: !!message?.reply_to_message,
+    new_chat_members_count: message?.new_chat_members?.length || 0,
+    left_chat_member: !!message?.left_chat_member,
+    has_photo: !!message?.photo?.length,
+    has_document: !!message?.document,
+    has_video: !!message?.video,
+    has_sticker: !!message?.sticker
+  };
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────
 function escapeHtml(s = "") {
   return String(s)
@@ -616,10 +651,22 @@ function parseTakeRepCommand(text) {
 // MAIN HANDLER
 // ══════════════════════════════════════════════════════════════════
 export default async function handler(req, res) {
-  if (req.method !== "POST") return res.status(405).send("Method Not Allowed");
-  if (!BOT_TOKEN) return res.status(500).send("Missing TELEGRAM_BOT_TOKEN");
-  if (!TELEGRAM_WEBHOOK_SECRET) return res.status(500).send("Missing TELEGRAM_WEBHOOK_SECRET");
+  if (req.method !== "POST") {
+    log.warn("WEBHOOK_REJECTED_METHOD", { method: req.method });
+    return res.status(405).send("Method Not Allowed");
+  }
+  if (!BOT_TOKEN) {
+    log.error("WEBHOOK_CONFIG_ERROR", { missing: "TELEGRAM_BOT_TOKEN" });
+    return res.status(500).send("Missing TELEGRAM_BOT_TOKEN");
+  }
+  if (!TELEGRAM_WEBHOOK_SECRET) {
+    log.error("WEBHOOK_CONFIG_ERROR", { missing: "TELEGRAM_WEBHOOK_SECRET" });
+    return res.status(500).send("Missing TELEGRAM_WEBHOOK_SECRET");
+  }
   if (req.headers["x-telegram-bot-api-secret-token"] !== TELEGRAM_WEBHOOK_SECRET) {
+    log.warn("WEBHOOK_UNAUTHORIZED", {
+      provided_secret: req.headers["x-telegram-bot-api-secret-token"] ? "present" : "missing"
+    });
     return res.status(401).send("Unauthorized");
   }
 
@@ -628,19 +675,40 @@ export default async function handler(req, res) {
     log.info("WEBHOOK_RECEIVED", { update_id: update.update_id });
 
     const message = update.message || update.edited_message;
-    if (!message) return res.status(200).send("ok");
+    if (!message) {
+      log.skip("WEBHOOK_NO_MESSAGE", {
+        update_id: update.update_id,
+        has_callback_query: !!update.callback_query,
+        has_channel_post: !!update.channel_post
+      });
+      return res.status(200).send("ok");
+    }
 
     const chat = message.chat;
     const from = message.from;
+    const messageState = buildMessageState(update, message);
+    const finishOk = (tag, extra = {}) => {
+      log.ok(tag, { ...messageState, ...extra });
+      return res.status(200).send("ok");
+    };
+    const logBranch = (tag, extra = {}) => log.info(tag, { ...messageState, ...extra });
 
-    if (!chat || from?.is_bot) return res.status(200).send("ok");
+    log.info("MESSAGE_STATE", messageState);
+
+    if (!chat) return finishOk("SKIP_NO_CHAT");
+    if (from?.is_bot) return finishOk("SKIP_BOT_SENDER");
 
     // ══════════════════════════════════════════════════════════
     // (PRIVATE) DEPARTURE FEEDBACK
     // ══════════════════════════════════════════════════════════
     if (chat.type === "private" && from?.id && message.text) {
+      logBranch("BRANCH_PRIVATE_MESSAGE");
       const pending = await getFeedbackPending(from.id);
       if (pending) {
+        logBranch("PRIVATE_FEEDBACK_PENDING_FOUND", {
+          pending_chat_id: pending.chatId || null,
+          pending_chat_title: pending.chatTitle || null
+        });
         await clearFeedbackPending(from.id);
         const firstName = from.first_name || "";
         await tgSendMessage({
@@ -661,12 +729,14 @@ export default async function handler(req, res) {
               `💬 *Reason:*\n${message.text}`
           });
         }
-        return res.status(200).send("ok");
+        return finishOk("PRIVATE_FEEDBACK_CAPTURED");
       }
-      return res.status(200).send("ok");
+      return finishOk("PRIVATE_MESSAGE_NO_PENDING_FEEDBACK");
     }
 
-    if (chat.type !== "group" && chat.type !== "supergroup") return res.status(200).send("ok");
+    if (chat.type !== "group" && chat.type !== "supergroup") {
+      return finishOk("SKIP_UNSUPPORTED_CHAT_TYPE");
+    }
 
     const currentMsgId = message.message_id;
 
@@ -674,6 +744,7 @@ export default async function handler(req, res) {
     if (from?.username && from?.id) {
       await storeUserId(from.username, from.id);
       await storeRepName(from.id, from.username);
+      logBranch("USER_CACHE_UPDATED");
     }
 
     // ══════════════════════════════════════════════════════════
@@ -683,6 +754,7 @@ export default async function handler(req, res) {
     // ══════════════════════════════════════════════════════════
     const msgText = message.text || message.caption || "";
     const illegalKw = detectIllegalKeyword(msgText);
+    logBranch("SECURITY_SCAN_COMPLETE", { illegal_keyword: illegalKw || null });
 
     if (illegalKw) {
       log.warn("ILLEGAL_KEYWORD_DETECTED", {
@@ -690,6 +762,7 @@ export default async function handler(req, res) {
       });
 
       const senderIsAdmin = await isGroupAdmin(chat.id, from.id);
+      logBranch("ILLEGAL_KEYWORD_ADMIN_CHECK", { sender_is_admin: senderIsAdmin, keyword: illegalKw });
       if (!senderIsAdmin) {
         // 1. Delete the message
         await tgDeleteMessage(chat.id, message.message_id);
@@ -727,8 +800,9 @@ export default async function handler(req, res) {
           });
         }
 
-        return res.status(200).send("ok");
+        return finishOk("ILLEGAL_KEYWORD_ACTIONED", { keyword: illegalKw });
       }
+      logBranch("ILLEGAL_KEYWORD_ADMIN_EXEMPT", { keyword: illegalKw });
     }
 
     // ══════════════════════════════════════════════════════════
@@ -737,6 +811,7 @@ export default async function handler(req, res) {
     // ══════════════════════════════════════════════════════════
     if (isForwardedMessage(message)) {
       const senderIsAdmin = await isGroupAdmin(chat.id, from.id);
+      logBranch("FORWARDED_MESSAGE_CHECK", { sender_is_admin: senderIsAdmin });
       if (!senderIsAdmin) {
         log.warn("FORWARDED_MSG_DELETED", { from_id: from.id, msg_id: message.message_id });
         await tgDeleteMessage(chat.id, message.message_id);
@@ -752,14 +827,18 @@ export default async function handler(req, res) {
           }, 8000);
         }
 
-        return res.status(200).send("ok");
+        return finishOk("FORWARDED_MESSAGE_ACTIONED", {
+          warning_message_id: warning?.result?.message_id || null
+        });
       }
+      logBranch("FORWARDED_MESSAGE_ADMIN_EXEMPT");
     }
 
     // ══════════════════════════════════════════════════════════
     // ⭐ REPUTATION: Daily Active Bonus
     // ══════════════════════════════════════════════════════════
     if (from?.id && !(await isDailyRepClaimed(from.id))) {
+      logBranch("DAILY_REP_AWARDED");
       await claimDailyRep(from.id);
       const result = await addRepScore(from.id, REP_GAINS.DAILY_ACTIVE, "Daily activity");
       if (result.tierChanged) {
@@ -774,14 +853,23 @@ export default async function handler(req, res) {
             `Current score: *${result.newScore} pts*\n\n` +
             `_Keep being helpful to climb higher! 🚀_`
         });
+        logBranch("DAILY_REP_TIER_UP", { new_score: result.newScore, new_tier: result.newTier?.label || null });
       }
+    } else if (from?.id) {
+      logBranch("DAILY_REP_ALREADY_CLAIMED");
     }
 
     // ══════════════════════════════════════════════════════════
     // (A) WELCOME — new members
     // ══════════════════════════════════════════════════════════
     if (message.new_chat_members?.length) {
+      logBranch("BRANCH_NEW_CHAT_MEMBERS");
       for (const member of message.new_chat_members) {
+        logBranch("NEW_MEMBER_PROCESSING", {
+          member_id: member.id,
+          member_username: member.username || null,
+          member_is_bot: !!member.is_bot
+        });
         if (member.is_bot) continue;
         if (member.username && member.id) {
           await storeUserId(member.username, member.id);
@@ -795,6 +883,7 @@ export default async function handler(req, res) {
 
         // Blacklist check
         if (member.username && await isBlacklisted(member.username)) {
+          log.warn("NEW_MEMBER_BLACKLISTED", { member_id: member.id, member_username: member.username });
           await banUser(chat.id, member.id);
           await tgSendMessage({
             chat_id: chat.id,
@@ -810,6 +899,7 @@ export default async function handler(req, res) {
         }
 
         if (isVerified) {
+          logBranch("NEW_MEMBER_VERIFIED", { member_id: member.id, member_username: member.username || null });
           await addRepScore(member.id, REP_GAINS.VERIFIED_JOIN, "Joined as verified member");
           const r = await tgSendMessage({
             chat_id: chat.id,
@@ -819,6 +909,7 @@ export default async function handler(req, res) {
           });
           await saveBotMsgId(chat.id, r?.result?.message_id);
         } else {
+          logBranch("NEW_MEMBER_UNVERIFIED", { member_id: member.id, member_username: member.username || null });
           const noUsernameNote = !member.username
             ? `\n\n_💡 Tip: Set a Telegram username in settings so others can verify you._` : "";
           const r = await tgSendMessage({
@@ -839,7 +930,7 @@ export default async function handler(req, res) {
           }).catch(() => {});
         }
       }
-      return res.status(200).send("ok");
+      return finishOk("NEW_MEMBER_BRANCH_COMPLETE");
     }
 
     // ══════════════════════════════════════════════════════════
@@ -847,7 +938,12 @@ export default async function handler(req, res) {
     // ══════════════════════════════════════════════════════════
     if (message.left_chat_member) {
       const leaver = message.left_chat_member;
-      if (leaver.is_bot) return res.status(200).send("ok");
+      logBranch("BRANCH_MEMBER_LEFT", {
+        leaver_id: leaver.id,
+        leaver_username: leaver.username || null,
+        leaver_is_bot: !!leaver.is_bot
+      });
+      if (leaver.is_bot) return finishOk("LEFT_MEMBER_BOT_SKIPPED");
 
       const fullName  = [leaver.first_name, leaver.last_name].filter(Boolean).join(" ").trim() || "there";
       const firstName = leaver.first_name || fullName;
@@ -869,7 +965,7 @@ export default async function handler(req, res) {
         }
       }).catch(() => {});
 
-      return res.status(200).send("ok");
+      return finishOk("LEFT_MEMBER_FEEDBACK_REQUESTED");
     }
 
     // ══════════════════════════════════════════════════════════
@@ -877,10 +973,11 @@ export default async function handler(req, res) {
     // ══════════════════════════════════════════════════════════
     const adminCmd = parseAdminVerifyCommand(message.text);
     if (adminCmd) {
+      logBranch("COMMAND_ADMIN_VERIFY", adminCmd);
       const senderIsAdmin = await isGroupAdmin(chat.id, from.id);
       if (!senderIsAdmin) {
         await tgSendMessage({ chat_id: chat.id, text: `🚫 Only group admins can assign verification tags.`, reply_to_message_id: message.message_id });
-        return res.status(200).send("ok");
+        return finishOk("COMMAND_ADMIN_VERIFY_REJECTED_NON_ADMIN", adminCmd);
       }
       const { username, role } = adminCmd;
       const targetUserId = await getUserIdByUsername(username);
@@ -890,7 +987,7 @@ export default async function handler(req, res) {
           text: `⚠️ *User not found in cache*\n\n@${username} hasn't sent a message here yet.\nAsk them to send one message, then retry.`,
           reply_to_message_id: message.message_id
         });
-        return res.status(200).send("ok");
+        return finishOk("COMMAND_ADMIN_VERIFY_TARGET_NOT_FOUND", adminCmd);
       }
       const result = await assignVerifiedTitle(chat.id, targetUserId, role);
       if (result?.ok) {
@@ -917,7 +1014,11 @@ export default async function handler(req, res) {
           reply_to_message_id: message.message_id
         });
       }
-      return res.status(200).send("ok");
+      return finishOk("COMMAND_ADMIN_VERIFY_COMPLETE", {
+        ...adminCmd,
+        target_user_id: targetUserId,
+        assign_ok: !!result?.ok
+      });
     }
 
     // ══════════════════════════════════════════════════════════
@@ -925,6 +1026,7 @@ export default async function handler(req, res) {
     // ══════════════════════════════════════════════════════════
     const verifyTarget = parsePublicVerifyCommand(message.text);
     if (verifyTarget) {
+      logBranch("COMMAND_PUBLIC_VERIFY", { verify_target: verifyTarget });
       const v = await verifyUsernameApi(verifyTarget, req);
       let reply, markup;
       if (v?.verified) {
@@ -950,13 +1052,17 @@ export default async function handler(req, res) {
       }
       const r = await tgSendMessage({ chat_id: chat.id, text: reply, reply_to_message_id: message.message_id, reply_markup: markup });
       await saveBotMsgId(chat.id, r?.result?.message_id);
-      return res.status(200).send("ok");
+      return finishOk("COMMAND_PUBLIC_VERIFY_COMPLETE", {
+        verify_target: verifyTarget,
+        verified: !!v?.verified
+      });
     }
 
     // ══════════════════════════════════════════════════════════
     // (D) /scam
     // ══════════════════════════════════════════════════════════
     if (message.text?.match(/^\/scam(@\S+)?$/i)) {
+      logBranch("COMMAND_SCAM");
       const r = await tgSendMessage({
         chat_id: chat.id,
         text:
@@ -968,13 +1074,14 @@ export default async function handler(req, res) {
         reply_to_message_id: message.message_id
       });
       await saveBotMsgId(chat.id, r?.result?.message_id);
-      return res.status(200).send("ok");
+      return finishOk("COMMAND_SCAM_COMPLETE");
     }
 
     // ══════════════════════════════════════════════════════════
     // (E) /rules
     // ══════════════════════════════════════════════════════════
     if (message.text?.match(/^\/rules(@\S+)?$/i)) {
+      logBranch("COMMAND_RULES");
       const r = await tgSendMessage({
         chat_id: chat.id,
         text:
@@ -992,13 +1099,14 @@ export default async function handler(req, res) {
         reply_markup: verifyButton(req, "✅ Verify Now (FREE)")
       });
       await saveBotMsgId(chat.id, r?.result?.message_id);
-      return res.status(200).send("ok");
+      return finishOk("COMMAND_RULES_COMPLETE");
     }
 
     // ══════════════════════════════════════════════════════════
     // ⭐ /rep [optional @username]
     // ══════════════════════════════════════════════════════════
     if (message.text?.match(/^\/rep(?:@\S+)?(?:\s+@?[a-zA-Z0-9_]+)?$/i)) {
+      logBranch("COMMAND_REP");
       const repMatch = message.text.trim().match(/^\/rep(?:@\S+)?(?:\s+@?([a-zA-Z0-9_]{4,32}))?$/i);
       const lookupUsername = repMatch?.[1] || from.username;
       const lookupUserId   = repMatch?.[1] ? await getUserIdByUsername(repMatch[1]) : from.id;
@@ -1009,7 +1117,7 @@ export default async function handler(req, res) {
           text: `⚠️ @${repMatch?.[1] || "?"} not found in cache. Ask them to send a message first.`,
           reply_to_message_id: message.message_id
         });
-        return res.status(200).send("ok");
+        return finishOk("COMMAND_REP_TARGET_NOT_FOUND", { lookup_username: repMatch?.[1] || null });
       }
 
       const score    = await getRepScore(lookupUserId);
@@ -1046,13 +1154,18 @@ export default async function handler(req, res) {
         reply_to_message_id: message.message_id
       });
       await saveBotMsgId(chat.id, r?.result?.message_id);
-      return res.status(200).send("ok");
+      return finishOk("COMMAND_REP_COMPLETE", {
+        lookup_username: lookupUsername || null,
+        lookup_user_id: lookupUserId,
+        score
+      });
     }
 
     // ══════════════════════════════════════════════════════════
     // ⭐ /leaderboard
     // ══════════════════════════════════════════════════════════
     if (message.text?.match(/^\/leaderboard(@\S+)?$/i)) {
+      logBranch("COMMAND_LEADERBOARD");
       const top = await getTopRepUsers(10);
       if (!top.length) {
         await tgSendMessage({
@@ -1060,7 +1173,7 @@ export default async function handler(req, res) {
           text: `⭐ *Reputation Leaderboard*\n\nNo scores yet — be the first to earn rep! 🏆`,
           reply_to_message_id: message.message_id
         });
-        return res.status(200).send("ok");
+        return finishOk("COMMAND_LEADERBOARD_EMPTY");
       }
       const medals = ["🥇", "🥈", "🥉"];
       const lines = top.map((u, i) => {
@@ -1078,7 +1191,7 @@ export default async function handler(req, res) {
         reply_to_message_id: message.message_id
       });
       await saveBotMsgId(chat.id, r?.result?.message_id);
-      return res.status(200).send("ok");
+      return finishOk("COMMAND_LEADERBOARD_COMPLETE", { top_count: top.length });
     }
 
     // ══════════════════════════════════════════════════════════
@@ -1086,15 +1199,16 @@ export default async function handler(req, res) {
     // ══════════════════════════════════════════════════════════
     const giveRepCmd = parseGiveRepCommand(message.text);
     if (giveRepCmd) {
+      logBranch("COMMAND_GIVE_REP", giveRepCmd);
       const senderIsAdmin = await isGroupAdmin(chat.id, from.id);
       if (!senderIsAdmin) {
         await tgSendMessage({ chat_id: chat.id, text: `🚫 Only admins can award reputation.`, reply_to_message_id: message.message_id });
-        return res.status(200).send("ok");
+        return finishOk("COMMAND_GIVE_REP_REJECTED_NON_ADMIN", giveRepCmd);
       }
       const targetUserId = await getUserIdByUsername(giveRepCmd.username);
       if (!targetUserId) {
         await tgSendMessage({ chat_id: chat.id, text: `⚠️ @${giveRepCmd.username} not found in cache.`, reply_to_message_id: message.message_id });
-        return res.status(200).send("ok");
+        return finishOk("COMMAND_GIVE_REP_TARGET_NOT_FOUND", giveRepCmd);
       }
       const result = await addRepScore(targetUserId, giveRepCmd.points, `Admin award: ${giveRepCmd.reason}`);
       const tier   = result.newTier;
@@ -1106,7 +1220,11 @@ export default async function handler(req, res) {
       if (result.tierChanged) text += `\n\n🎉 *Tier Up!* Now *${tier.label}* ${tier.emoji}`;
       const r = await tgSendMessage({ chat_id: chat.id, text, reply_to_message_id: message.message_id });
       await saveBotMsgId(chat.id, r?.result?.message_id);
-      return res.status(200).send("ok");
+      return finishOk("COMMAND_GIVE_REP_COMPLETE", {
+        ...giveRepCmd,
+        target_user_id: targetUserId,
+        new_score: result.newScore
+      });
     }
 
     // ══════════════════════════════════════════════════════════
@@ -1114,15 +1232,16 @@ export default async function handler(req, res) {
     // ══════════════════════════════════════════════════════════
     const takeRepCmd = parseTakeRepCommand(message.text);
     if (takeRepCmd) {
+      logBranch("COMMAND_TAKE_REP", takeRepCmd);
       const senderIsAdmin = await isGroupAdmin(chat.id, from.id);
       if (!senderIsAdmin) {
         await tgSendMessage({ chat_id: chat.id, text: `🚫 Only admins can adjust reputation.`, reply_to_message_id: message.message_id });
-        return res.status(200).send("ok");
+        return finishOk("COMMAND_TAKE_REP_REJECTED_NON_ADMIN", takeRepCmd);
       }
       const targetUserId = await getUserIdByUsername(takeRepCmd.username);
       if (!targetUserId) {
         await tgSendMessage({ chat_id: chat.id, text: `⚠️ @${takeRepCmd.username} not found in cache.`, reply_to_message_id: message.message_id });
-        return res.status(200).send("ok");
+        return finishOk("COMMAND_TAKE_REP_TARGET_NOT_FOUND", takeRepCmd);
       }
       const result = await addRepScore(targetUserId, -takeRepCmd.points, `Admin penalty: ${takeRepCmd.reason}`);
       const tier   = result.newTier;
@@ -1136,24 +1255,29 @@ export default async function handler(req, res) {
         reply_to_message_id: message.message_id
       });
       await saveBotMsgId(chat.id, r?.result?.message_id);
-      return res.status(200).send("ok");
+      return finishOk("COMMAND_TAKE_REP_COMPLETE", {
+        ...takeRepCmd,
+        target_user_id: targetUserId,
+        new_score: result.newScore
+      });
     }
 
     // ══════════════════════════════════════════════════════════
     // ⭐ /promote @username — Admin only (requires 50+ pts)
     // ══════════════════════════════════════════════════════════
     if (message.text?.match(/^\/promote(?:@\S+)?\s+@?[a-zA-Z0-9_]{4,32}$/i)) {
+      logBranch("COMMAND_PROMOTE");
       const senderIsAdmin = await isGroupAdmin(chat.id, from.id);
       if (!senderIsAdmin) {
         await tgSendMessage({ chat_id: chat.id, text: `🚫 Only admins can promote members.`, reply_to_message_id: message.message_id });
-        return res.status(200).send("ok");
+        return finishOk("COMMAND_PROMOTE_REJECTED_NON_ADMIN");
       }
       const promoteMatch  = message.text.trim().match(/^\/promote(?:@\S+)?\s+@?([a-zA-Z0-9_]{4,32})$/i);
       const promoUsername = promoteMatch?.[1];
       const targetUserId  = await getUserIdByUsername(promoUsername);
       if (!targetUserId) {
         await tgSendMessage({ chat_id: chat.id, text: `⚠️ @${promoUsername} not found.`, reply_to_message_id: message.message_id });
-        return res.status(200).send("ok");
+        return finishOk("COMMAND_PROMOTE_TARGET_NOT_FOUND", { promo_username: promoUsername || null });
       }
       const score = await getRepScore(targetUserId);
       const tier  = getRepTier(score);
@@ -1167,7 +1291,7 @@ export default async function handler(req, res) {
             `They need ${50 - score} more points.`,
           reply_to_message_id: message.message_id
         });
-        return res.status(200).send("ok");
+        return finishOk("COMMAND_PROMOTE_INSUFFICIENT_REP", { promo_username: promoUsername, score });
       }
       const promoteRes = await tgApi("promoteChatMember", {
         chat_id: chat.id, user_id: targetUserId,
@@ -1183,7 +1307,10 @@ export default async function handler(req, res) {
           text: `❌ Promotion failed: ${promoteRes?.description || "Unknown error"}`,
           reply_to_message_id: message.message_id
         });
-        return res.status(200).send("ok");
+        return finishOk("COMMAND_PROMOTE_FAILED", {
+          promo_username: promoUsername,
+          description: promoteRes?.description || "Unknown error"
+        });
       }
       await new Promise(r => setTimeout(r, 1500));
       await tgApi("setChatAdministratorCustomTitle", {
@@ -1210,7 +1337,11 @@ export default async function handler(req, res) {
         reply_to_message_id: message.message_id
       });
       await saveBotMsgId(chat.id, r?.result?.message_id);
-      return res.status(200).send("ok");
+      return finishOk("COMMAND_PROMOTE_COMPLETE", {
+        promo_username: promoUsername,
+        target_user_id: targetUserId,
+        score
+      });
     }
 
     // ══════════════════════════════════════════════════════════
@@ -1218,6 +1349,7 @@ export default async function handler(req, res) {
     // ══════════════════════════════════════════════════════════
     const reportCmd = parseReportCommand(message.text);
     if (reportCmd !== null) {
+      logBranch("COMMAND_REPORT", reportCmd);
       let targetUsername = reportCmd.targetUsername;
       let reason         = reportCmd.reason;
       let evidenceMsgId  = null;
@@ -1231,7 +1363,7 @@ export default async function handler(req, res) {
             text: `⚠️ The user you replied to has no username.\nTry: /report @username [reason]`,
             reply_to_message_id: message.message_id
           });
-          return res.status(200).send("ok");
+          return finishOk("COMMAND_REPORT_REPLY_TARGET_NO_USERNAME");
         }
         targetUsername = replyFrom.username;
         const rawReason = message.text?.trim().match(/^\/report(?:@\S+)?(?:\s+(.+))?$/i);
@@ -1247,16 +1379,16 @@ export default async function handler(req, res) {
             `Option 2 — Use username:\n/report @username [reason]`,
           reply_to_message_id: message.message_id
         });
-        return res.status(200).send("ok");
+        return finishOk("COMMAND_REPORT_USAGE_SHOWN");
       }
 
       if (targetUsername.toLowerCase() === from?.username?.toLowerCase()) {
         await tgSendMessage({ chat_id: chat.id, text: `🤨 You can't report yourself.`, reply_to_message_id: message.message_id });
-        return res.status(200).send("ok");
+        return finishOk("COMMAND_REPORT_SELF_REJECTED", { target_username: targetUsername });
       }
       if (targetUsername.toLowerCase() === ADMIN_USERNAME.toLowerCase()) {
         await tgSendMessage({ chat_id: chat.id, text: `🚫 You cannot report the group admin.`, reply_to_message_id: message.message_id });
-        return res.status(200).send("ok");
+        return finishOk("COMMAND_REPORT_ADMIN_REJECTED", { target_username: targetUsername });
       }
 
       let reporterVerified = false;
@@ -1269,6 +1401,12 @@ export default async function handler(req, res) {
         targetUsername, reporterId: from.id, reporterUsername: from.username,
         reporterVerified, reason, chatId: chat.id, evidenceMsgId
       });
+      logBranch("COMMAND_REPORT_FILED", {
+        target_username: targetUsername,
+        reporter_verified: reporterVerified,
+        already_reported: alreadyReported,
+        new_score: newScore
+      });
 
       if (alreadyReported) {
         await tgSendMessage({
@@ -1276,7 +1414,7 @@ export default async function handler(req, res) {
           text: `ℹ️ You've already reported *@${targetUsername}*.\nAdmins are monitoring the situation.`,
           reply_to_message_id: message.message_id
         });
-        return res.status(200).send("ok");
+        return finishOk("COMMAND_REPORT_DUPLICATE", { target_username: targetUsername, new_score: newScore });
       }
 
       const reports = await getScamReports(targetUsername);
@@ -1301,6 +1439,7 @@ export default async function handler(req, res) {
 
       // Strike threshold actions
       if (newScore >= BAN_STRIKE_THRESHOLD) {
+        logBranch("COMMAND_REPORT_BAN_THRESHOLD_REACHED", { target_username: targetUsername, new_score: newScore });
         const targetV = await verifyUsernameApi(targetUsername, req);
         if (!targetV?.verified) {
           const targetUserId = await getUserIdByUsername(targetUsername);
@@ -1328,6 +1467,7 @@ export default async function handler(req, res) {
           }
         }
       } else if (newScore >= MUTE_STRIKE_THRESHOLD) {
+        logBranch("COMMAND_REPORT_MUTE_THRESHOLD_REACHED", { target_username: targetUsername, new_score: newScore });
         const targetUserId = await getUserIdByUsername(targetUsername);
         if (targetUserId) {
           await muteUser(chat.id, targetUserId);
@@ -1343,22 +1483,23 @@ export default async function handler(req, res) {
         }
       }
 
-      return res.status(200).send("ok");
+      return finishOk("COMMAND_REPORT_COMPLETE", { target_username: targetUsername, new_score: newScore });
     }
 
     // ══════════════════════════════════════════════════════════
     // (I) /scamreports — Admin only
     // ══════════════════════════════════════════════════════════
     if (message.text?.match(/^\/scamreports(@\S+)?$/i)) {
+      logBranch("COMMAND_SCAMREPORTS");
       const senderIsAdmin = await isGroupAdmin(chat.id, from.id);
       if (!senderIsAdmin) {
         await tgSendMessage({ chat_id: chat.id, text: `🚫 Admins only.`, reply_to_message_id: message.message_id });
-        return res.status(200).send("ok");
+        return finishOk("COMMAND_SCAMREPORTS_REJECTED_NON_ADMIN");
       }
       const topReported = await getTopReported(10);
       if (!topReported.length) {
         await tgSendMessage({ chat_id: chat.id, text: `📊 *Scam Reports*\n\nNo reports filed yet. ✅`, reply_to_message_id: message.message_id });
-        return res.status(200).send("ok");
+        return finishOk("COMMAND_SCAMREPORTS_EMPTY");
       }
       const lines = topReported.map((u, i) => {
         const status = u.confirmed ? "⛔ CONFIRMED" : `⚠️ Score: ${u.score}`;
@@ -1373,7 +1514,7 @@ export default async function handler(req, res) {
         reply_to_message_id: message.message_id
       });
       await saveBotMsgId(chat.id, r?.result?.message_id);
-      return res.status(200).send("ok");
+      return finishOk("COMMAND_SCAMREPORTS_COMPLETE", { top_reported_count: topReported.length });
     }
 
     // ══════════════════════════════════════════════════════════
@@ -1381,10 +1522,11 @@ export default async function handler(req, res) {
     // ══════════════════════════════════════════════════════════
     const clearTarget = parseClearReportCommand(message.text);
     if (clearTarget) {
+      logBranch("COMMAND_CLEARREPORT", { clear_target: clearTarget });
       const senderIsAdmin = await isGroupAdmin(chat.id, from.id);
       if (!senderIsAdmin) {
         await tgSendMessage({ chat_id: chat.id, text: `🚫 Admins only.`, reply_to_message_id: message.message_id });
-        return res.status(200).send("ok");
+        return finishOk("COMMAND_CLEARREPORT_REJECTED_NON_ADMIN", { clear_target: clearTarget });
       }
       await removeFromBlacklist(clearTarget);
       const targetUserId = await getUserIdByUsername(clearTarget);
@@ -1414,7 +1556,10 @@ export default async function handler(req, res) {
         reply_to_message_id: message.message_id
       });
       await saveBotMsgId(chat.id, r?.result?.message_id);
-      return res.status(200).send("ok");
+      return finishOk("COMMAND_CLEARREPORT_COMPLETE", {
+        clear_target: clearTarget,
+        target_user_id: targetUserId || null
+      });
     }
 
     // ══════════════════════════════════════════════════════════
@@ -1422,10 +1567,11 @@ export default async function handler(req, res) {
     // ══════════════════════════════════════════════════════════
     const confirmCmd = parseConfirmScammerCommand(message.text);
     if (confirmCmd) {
+      logBranch("COMMAND_CONFIRMSCAM", confirmCmd);
       const senderIsAdmin = await isGroupAdmin(chat.id, from.id);
       if (!senderIsAdmin) {
         await tgSendMessage({ chat_id: chat.id, text: `🚫 Admins only.`, reply_to_message_id: message.message_id });
-        return res.status(200).send("ok");
+        return finishOk("COMMAND_CONFIRMSCAM_REJECTED_NON_ADMIN", confirmCmd);
       }
 
       const { username: scammerUsername, tactics } = confirmCmd;
@@ -1475,7 +1621,10 @@ export default async function handler(req, res) {
           `⚠️ _If this person contacts you anywhere, block and ignore them._`
       });
       await saveBotMsgId(chat.id, r?.result?.message_id);
-      return res.status(200).send("ok");
+      return finishOk("COMMAND_CONFIRMSCAM_COMPLETE", {
+        scammer_username: scammerUsername,
+        reporters_rewarded: reporters.length
+      });
     }
 
     // ══════════════════════════════════════════════════════════
@@ -1488,9 +1637,14 @@ export default async function handler(req, res) {
     const secSinceCheck = lastCheckTs ? nowTs - parseInt(lastCheckTs, 10) : SCHEDULED_CHECK_SEC + 1;
 
     if (secSinceCheck >= SCHEDULED_CHECK_SEC) {
+      logBranch("SCHEDULED_BROADCAST_ELIGIBLE", { sec_since_check: secSinceCheck });
       await redis.set(schedCheckKey, nowTs);
       const lastBotMsgId = await getLastBotMsgId(chat.id);
       const msgGap       = lastBotMsgId ? currentMsgId - lastBotMsgId : SCHEDULED_MIN_MSG_GAP + 1;
+      logBranch("SCHEDULED_BROADCAST_GAP_CHECK", {
+        last_bot_message_id: lastBotMsgId || null,
+        message_gap: msgGap
+      });
       if (msgGap >= SCHEDULED_MIN_MSG_GAP) {
         const idx       = parseInt((await redis.get(schedIndexKey)) || "0", 10);
         const scheduled = SCHEDULED_MESSAGES[idx % SCHEDULED_MESSAGES.length];
@@ -1498,11 +1652,15 @@ export default async function handler(req, res) {
         const markup = scheduled.button ? verifyButton(req, scheduled.button) : undefined;
         const r = await tgSendMessage({ chat_id: chat.id, text: scheduled.text, reply_markup: markup });
         await saveBotMsgId(chat.id, r?.result?.message_id);
-        return res.status(200).send("ok");
+        return finishOk("SCHEDULED_BROADCAST_SENT", {
+          scheduled_index: idx % SCHEDULED_MESSAGES.length,
+          button: scheduled.button || null
+        });
       }
+      logBranch("SCHEDULED_BROADCAST_SKIPPED_GAP_TOO_SMALL", { message_gap: msgGap });
     }
 
-    return res.status(200).send("ok");
+    return finishOk("NO_ACTION_MATCHED");
 
   } catch (e) {
     log.error("UNHANDLED_EXCEPTION", { message: e.message, stack: e.stack });
