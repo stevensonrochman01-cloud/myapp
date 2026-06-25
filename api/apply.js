@@ -24,6 +24,9 @@ export default async function handler(req, res) {
     let age = now.getFullYear() - dob.getFullYear();
     const m = now.getMonth() - dob.getMonth();
     if (m < 0 || (m === 0 && now.getDate() < dob.getDate())) age--;
+    if (age < 18) {
+      return res.status(400).send("Applicants must be at least 18 years old.");
+    }
 
 
     const submission = {

@@ -1,19 +1,49 @@
 import { Redis } from "@upstash/redis";
 
-const redis = new Redis({
-  url: "https://loyal-peacock-6620.upstash.io",
-  token: "ARncAAImcDFjZTVmMTQ0M2IzMTY0ZjM2YjAxNmRmNjhiZGZiNDc5NHAxNjYyMA"
-});
-
-const BOT_TOKEN = '8128154908:AAF1F9Geyvd4Bc6-cszEALGQAWI3CcMKcgE';
-const VERIFY_API_BASE =
-  process.env.VERIFY_API_BASE ||
-  "https://myapp-git-main-stebes-projects.vercel.app/api/verify";
-const VERIFY_LINK =
-  process.env.VERIFY_LINK || "http://golden-sugar-daddy.vercel.app/verification";
-const ADMIN_USERNAME = "GoldenSugarAdmin";
-
+const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || "";
+const TELEGRAM_WEBHOOK_SECRET = process.env.TELEGRAM_WEBHOOK_SECRET || "";
+const PUBLIC_APP_URL = process.env.PUBLIC_APP_URL || "";
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "GoldenSugarAdmin";
 const ADMIN_LOG_CHAT_ID = process.env.ADMIN_LOG_CHAT_ID || null;
+
+function createRedisClient() {
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+
+  if (url && token) {
+    return new Redis({ url, token });
+  }
+
+  console.warn("[CONFIG] Missing Upstash Redis configuration. Stateful bot features will be disabled.");
+  return {
+    async get() { return null; },
+    async set() { return null; },
+    async del() { return 0; },
+    async keys() { return []; }
+  };
+}
+
+const redis = createRedisClient();
+
+function getBaseUrl(req) {
+  if (PUBLIC_APP_URL) {
+    return PUBLIC_APP_URL.replace(/\/+$/, "");
+  }
+
+  const host = req?.headers?.["x-forwarded-host"] || req?.headers?.host;
+  const proto = req?.headers?.["x-forwarded-proto"] || "https";
+  return host ? `${proto}://${host}` : "";
+}
+
+function getVerifyApiBase(req) {
+  const baseUrl = getBaseUrl(req);
+  return baseUrl ? `${baseUrl}/api/verify` : "";
+}
+
+function getVerifyLink(req) {
+  const baseUrl = getBaseUrl(req);
+  return baseUrl ? `${baseUrl}/verification` : "";
+}
 
 // ─── Strike / mute / ban thresholds ──────────────────────────────
 const MUTE_STRIKE_THRESHOLD   = 3;
@@ -169,14 +199,20 @@ function escapeHtml(s = "") {
     .replace(/>/g, "&gt;");
 }
 
-function mentionUser(user) {
-  if (user?.username) return `@${user.username}`;
-  const name = escapeHtml(user?.first_name || "User");
-  return `<a href="tg://user?id=${user.id}">${name}</a>`;
+function escapeMarkdown(s = "") {
+  return String(s).replace(/([_*\[\]()~`>#+\-=|{}.!\\])/g, "\\$1");
 }
 
-function verifyButton(label = "✅ Verify Now (FREE)") {
-  return { inline_keyboard: [[{ text: label, url: VERIFY_LINK }]] };
+function mentionUser(user) {
+  if (user?.username) return `@${user.username}`;
+  const name = escapeMarkdown(user?.first_name || "User");
+  return `[${name}](tg://user?id=${user.id})`;
+}
+
+function verifyButton(req, label = "Verify Now") {
+  const verifyLink = getVerifyLink(req);
+  if (!verifyLink) return undefined;
+  return { inline_keyboard: [[{ text: label, url: verifyLink }]] };
 }
 
 // ─── Telegram API wrapper ─────────────────────────────────────────
@@ -208,8 +244,14 @@ async function tgDeleteMessage(chat_id, message_id) {
 }
 
 // ─── Verify API ───────────────────────────────────────────────────
-async function verifyUsernameApi(username) {
-  const url = `${VERIFY_API_BASE}?username=${encodeURIComponent(username)}`;
+async function verifyUsernameApi(username, req) {
+  const verifyApiBase = getVerifyApiBase(req);
+  if (!verifyApiBase) {
+    log.error("VERIFY_API_UNAVAILABLE", { username });
+    return {};
+  }
+
+  const url = `${verifyApiBase}?username=${encodeURIComponent(username)}`;
   try {
     const r = await fetch(url, { method: "GET" });
     return await r.json();
@@ -568,7 +610,11 @@ function parseTakeRepCommand(text) {
 // ══════════════════════════════════════════════════════════════════
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).send("Method Not Allowed");
-  if (!BOT_TOKEN) return res.status(500).send("Missing BOT_TOKEN");
+  if (!BOT_TOKEN) return res.status(500).send("Missing TELEGRAM_BOT_TOKEN");
+  if (!TELEGRAM_WEBHOOK_SECRET) return res.status(500).send("Missing TELEGRAM_WEBHOOK_SECRET");
+  if (req.headers["x-telegram-bot-api-secret-token"] !== TELEGRAM_WEBHOOK_SECRET) {
+    return res.status(401).send("Unauthorized");
+  }
 
   try {
     const update = req.body || {};
@@ -754,7 +800,7 @@ export default async function handler(req, res) {
 
         let isVerified = false;
         if (member.username) {
-          const v = await verifyUsernameApi(member.username);
+          const v = await verifyUsernameApi(member.username, req);
           isVerified = v?.verified === true;
         }
 
@@ -778,13 +824,13 @@ export default async function handler(req, res) {
               `Please verify yourself to stay — it's *FREE* for all Sugar Babies! 💸\n\n` +
               `⚠️ _Anyone asking for money or vouchers first is a scammer._` +
               noUsernameNote,
-            reply_markup: verifyButton("🔗 Tap to Verify (FREE)")
+            reply_markup: verifyButton(req, "🔗 Tap to Verify (FREE)")
           });
           await saveBotMsgId(chat.id, r?.result?.message_id);
-          tgSendMessage({
+        tgSendMessage({
             chat_id: member.id,
             text: `Hi ${member.first_name || ""} 👋\n\nVerify to stay in the group — completely *FREE*! 🎉`,
-            reply_markup: verifyButton("✅ Verify Me Now")
+            reply_markup: verifyButton(req, "✅ Verify Me Now")
           }).catch(() => {});
         }
       }
@@ -874,7 +920,7 @@ export default async function handler(req, res) {
     // ══════════════════════════════════════════════════════════
     const verifyTarget = parsePublicVerifyCommand(message.text);
     if (verifyTarget) {
-      const v = await verifyUsernameApi(verifyTarget);
+      const v = await verifyUsernameApi(verifyTarget, req);
       let reply, markup;
       if (v?.verified) {
         reply =
@@ -894,7 +940,7 @@ export default async function handler(req, res) {
           reply =
             `❌ *Not Verified* — @${verifyTarget}\n\n⚠️ Proceed with caution.` +
             (score > 0 ? `\n\n📊 *Report Score:* ${score} pts from ${reports.length} report(s)` : "");
-          markup = verifyButton("🔗 Verify This Profile");
+          markup = verifyButton(req, "🔗 Verify This Profile");
         }
       }
       const r = await tgSendMessage({ chat_id: chat.id, text: reply, reply_to_message_id: message.message_id, reply_markup: markup });
@@ -938,7 +984,7 @@ export default async function handler(req, res) {
           `8️⃣ Report scammers: /report @username [reason]\n\n` +
           `_Breaking rules = restriction or ban. No appeals. 🔒_`,
         reply_to_message_id: message.message_id,
-        reply_markup: verifyButton()
+        reply_markup: verifyButton(req, "✅ Verify Now (FREE)")
       });
       await saveBotMsgId(chat.id, r?.result?.message_id);
       return res.status(200).send("ok");
@@ -1210,7 +1256,7 @@ export default async function handler(req, res) {
 
       let reporterVerified = false;
       if (from?.username) {
-        const rv = await verifyUsernameApi(from.username);
+        const rv = await verifyUsernameApi(from.username, req);
         reporterVerified = rv?.verified === true;
       }
 
@@ -1250,7 +1296,7 @@ export default async function handler(req, res) {
 
       // Strike threshold actions
       if (newScore >= BAN_STRIKE_THRESHOLD) {
-        const targetV = await verifyUsernameApi(targetUsername);
+        const targetV = await verifyUsernameApi(targetUsername, req);
         if (!targetV?.verified) {
           const targetUserId = await getUserIdByUsername(targetUsername);
           if (targetUserId) {
@@ -1444,7 +1490,7 @@ export default async function handler(req, res) {
         const idx       = parseInt((await redis.get(schedIndexKey)) || "0", 10);
         const scheduled = SCHEDULED_MESSAGES[idx % SCHEDULED_MESSAGES.length];
         await redis.set(schedIndexKey, (idx + 1) % SCHEDULED_MESSAGES.length);
-        const markup = scheduled.button ? verifyButton(scheduled.button) : undefined;
+        const markup = scheduled.button ? verifyButton(req, scheduled.button) : undefined;
         const r = await tgSendMessage({ chat_id: chat.id, text: scheduled.text, reply_markup: markup });
         await saveBotMsgId(chat.id, r?.result?.message_id);
         return res.status(200).send("ok");
