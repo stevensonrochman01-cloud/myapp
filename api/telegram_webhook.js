@@ -204,7 +204,7 @@ function escapeMarkdown(s = "") {
 }
 
 function mentionUser(user) {
-  if (user?.username) return `@${user.username}`;
+  if (user?.username) return `@${escapeMarkdown(user.username)}`;
   const name = escapeMarkdown(user?.first_name || "User");
   return `[${name}](tg://user?id=${user.id})`;
 }
