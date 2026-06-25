@@ -1,7 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { formatForwardedMessageWarning } from "../api/telegram_webhook.js";
+import {
+  formatForwardedMessageWarning,
+  shouldRetryWithoutParseMode
+} from "../api/telegram_webhook.js";
 
 test("formatForwardedMessageWarning escapes markdown characters in usernames", () => {
   const text = formatForwardedMessageWarning({
@@ -25,5 +28,25 @@ test("formatForwardedMessageWarning falls back to tg user mention for users with
   assert.equal(
     text,
     "⚠️ [A\\_B](tg://user?id=12345) Forwarded messages are not allowed in this group.\n_Please share content directly — no forwards. 🚫_"
+  );
+});
+
+test("shouldRetryWithoutParseMode matches Telegram markdown parse failures", () => {
+  assert.equal(
+    shouldRetryWithoutParseMode({
+      ok: false,
+      error_code: 400,
+      description: "Bad Request: can't parse entities: Can't find end of the entity starting at byte offset 30"
+    }),
+    true
+  );
+
+  assert.equal(
+    shouldRetryWithoutParseMode({
+      ok: false,
+      error_code: 400,
+      description: "Bad Request: message is too long"
+    }),
+    false
   );
 });

@@ -275,13 +275,34 @@ async function tgApi(method, body) {
   return json;
 }
 
+export function shouldRetryWithoutParseMode(response) {
+  return (
+    response?.ok === false &&
+    response?.error_code === 400 &&
+    /can't parse entities/i.test(String(response?.description || ""))
+  );
+}
+
 async function tgSendMessage({ chat_id, text, reply_to_message_id, parse_mode = "Markdown", reply_markup }) {
-  return tgApi("sendMessage", {
+  const payload = {
     chat_id, text, parse_mode,
     disable_web_page_preview: true,
     ...(reply_to_message_id ? { reply_to_message_id } : {}),
     ...(reply_markup ? { reply_markup } : {})
+  };
+
+  const result = await tgApi("sendMessage", payload);
+  if (!shouldRetryWithoutParseMode(result) || !parse_mode) return result;
+
+  log.warn("TG_SENDMESSAGE_MARKDOWN_RETRY", {
+    chat_id,
+    parse_mode,
+    reply_to_message_id: reply_to_message_id || null
   });
+
+  const fallbackPayload = { ...payload };
+  delete fallbackPayload.parse_mode;
+  return tgApi("sendMessage", fallbackPayload);
 }
 
 async function tgDeleteMessage(chat_id, message_id) {
