@@ -894,6 +894,13 @@ export default async function handler(req, res) {
     if (message.new_chat_members?.length) {
       logBranch("BRANCH_NEW_CHAT_MEMBERS");
       for (const member of message.new_chat_members) {
+        log.info("JOIN_EVENT_DETECTED", {
+          group_chat_id: chat.id,
+          group_title: chat.title || null,
+          member_id: member.id,
+          member_username: member.username || null,
+          member_name: [member.first_name, member.last_name].filter(Boolean).join(" ").trim() || null
+        });
         logBranch("NEW_MEMBER_PROCESSING", {
           member_id: member.id,
           member_username: member.username || null,
@@ -923,13 +930,32 @@ export default async function handler(req, res) {
 
         let isVerified = false;
         if (member.username) {
+          log.info("JOIN_VERIFY_LOOKUP_START", {
+            member_id: member.id,
+            member_username: member.username,
+            verify_api_base: getVerifyApiBase(req) || null
+          });
           const v = await verifyUsernameApi(member.username, req);
           isVerified = v?.verified === true;
+          log.info("JOIN_VERIFY_LOOKUP_RESULT", {
+            member_id: member.id,
+            member_username: member.username,
+            verified: isVerified
+          });
+        } else {
+          log.info("JOIN_VERIFY_LOOKUP_SKIPPED_NO_USERNAME", {
+            member_id: member.id
+          });
         }
 
         if (isVerified) {
           logBranch("NEW_MEMBER_VERIFIED", { member_id: member.id, member_username: member.username || null });
           await addRepScore(member.id, REP_GAINS.VERIFIED_JOIN, "Joined as verified member");
+          log.info("JOIN_WELCOME_GROUP_ATTEMPT", {
+            member_id: member.id,
+            member_username: member.username || null,
+            mode: "verified"
+          });
           const r = await tgSendMessage({
             chat_id: chat.id,
             text:
@@ -937,11 +963,24 @@ export default async function handler(req, res) {
               `⭐ *+${REP_GAINS.VERIFIED_JOIN} reputation* awarded for joining verified.`,
             parse_mode: null
           });
+          log.info("JOIN_WELCOME_GROUP_RESULT", {
+            member_id: member.id,
+            member_username: member.username || null,
+            mode: "verified",
+            ok: !!r?.ok,
+            message_id: r?.result?.message_id || null,
+            description: r?.description || null
+          });
           await saveBotMsgId(chat.id, r?.result?.message_id);
         } else {
           logBranch("NEW_MEMBER_UNVERIFIED", { member_id: member.id, member_username: member.username || null });
           const noUsernameNote = !member.username
             ? `\n\n_💡 Tip: Set a Telegram username in settings so others can verify you._` : "";
+          log.info("JOIN_WELCOME_GROUP_ATTEMPT", {
+            member_id: member.id,
+            member_username: member.username || null,
+            mode: "unverified"
+          });
           const r = await tgSendMessage({
             chat_id: chat.id,
             text:
@@ -953,13 +992,39 @@ export default async function handler(req, res) {
             reply_markup: verifyButton(req, "🔗 Tap to Verify (FREE)"),
             parse_mode: null
           });
+          log.info("JOIN_WELCOME_GROUP_RESULT", {
+            member_id: member.id,
+            member_username: member.username || null,
+            mode: "unverified",
+            ok: !!r?.ok,
+            message_id: r?.result?.message_id || null,
+            description: r?.description || null
+          });
           await saveBotMsgId(chat.id, r?.result?.message_id);
+        log.info("JOIN_WELCOME_DM_ATTEMPT", {
+            member_id: member.id,
+            member_username: member.username || null
+          });
         tgSendMessage({
             chat_id: member.id,
             text: `Hi ${member.first_name || ""} 👋\n\nVerify to stay in the group — completely *FREE*! 🎉`,
             reply_markup: verifyButton(req, "✅ Verify Me Now"),
             parse_mode: null
-          }).catch(() => {});
+          }).then(dmResult => {
+            log.info("JOIN_WELCOME_DM_RESULT", {
+              member_id: member.id,
+              member_username: member.username || null,
+              ok: !!dmResult?.ok,
+              message_id: dmResult?.result?.message_id || null,
+              description: dmResult?.description || null
+            });
+          }).catch(error => {
+            log.warn("JOIN_WELCOME_DM_FAILED", {
+              member_id: member.id,
+              member_username: member.username || null,
+              error: error?.message || "Unknown DM failure"
+            });
+          });
         }
       }
       return finishOk("NEW_MEMBER_BRANCH_COMPLETE");
