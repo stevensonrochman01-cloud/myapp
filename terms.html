@@ -1,89 +1,381 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Golden Sugar Daddy Terms</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Golden Sugar Daddy | Terms and Conditions</title>
+  <meta name="description" content="Read the Golden Sugar Daddy terms and conditions covering privacy, verification, respectful conduct, payment structure, and safety expectations." />
+  <meta name="theme-color" content="#050505" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     :root {
-      --bg: #f4efe7;
-      --paper: #fffaf3;
-      --ink: #231815;
-      --soft: #7b665d;
-      --line: #dccbbd;
-      --accent: #8f5a2a;
+      --bg-color: #050505;
+      --card-bg: #121212;
+      --gold-light: #F3E5AB;
+      --gold-main: #D4AF37;
+      --gold-dark: #AA8C2C;
+      --text-white: #ffffff;
+      --text-grey: #a0a0a0;
+      --muted: #666;
+      --border: rgba(255,255,255,0.08);
+      --border-strong: rgba(255,255,255,0.14);
+      --shadow-gold: 0 0 22px rgba(212, 175, 55, 0.18);
     }
-    * { box-sizing: border-box; }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      margin: 0;
-      font-family: Georgia, "Times New Roman", serif;
       background:
-        radial-gradient(circle at top right, rgba(143, 90, 42, 0.10), transparent 28%),
-        linear-gradient(180deg, #f9f4ed 0%, var(--bg) 100%);
-      color: var(--ink);
+        radial-gradient(circle at top right, rgba(212, 175, 55, 0.08), transparent 30%),
+        linear-gradient(180deg, #0d0d0d 0%, #050505 100%);
+      color: var(--text-white);
+      font-family: 'Montserrat', sans-serif;
+      line-height: 1.6;
     }
-    main {
-      max-width: 760px;
+    a { color: inherit; text-decoration: none; transition: 0.25s; }
+    h1, h2, h3 { font-family: 'Playfair Display', serif; }
+    ul { list-style: none; }
+
+    .gold-text {
+      background: linear-gradient(to right, var(--gold-light), var(--gold-main), var(--gold-dark));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: 700;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 5%;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(5, 5, 5, 0.84);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 1.2rem;
+      letter-spacing: 0.04em;
+    }
+    .logo-mark {
+      width: 14px;
+      height: 14px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 30%, var(--gold-light), var(--gold-main), var(--gold-dark));
+      box-shadow: var(--shadow-gold);
+      flex-shrink: 0;
+    }
+    nav ul {
+      display: flex;
+      gap: 22px;
+      align-items: center;
+    }
+    nav a {
+      color: var(--text-grey);
+      font-size: 0.95rem;
+    }
+    nav a:hover,
+    nav a.active {
+      color: var(--gold-main);
+    }
+    .mobile-links {
+      display: none;
+      padding: 0 5% 18px;
+      background: rgba(5, 5, 5, 0.95);
+      border-bottom: 1px solid var(--border);
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .mobile-links a {
+      color: var(--text-grey);
+      font-size: 0.95rem;
+    }
+
+    .hero {
+      padding: 88px 5% 42px;
+    }
+    .hero-shell {
+      max-width: 1180px;
       margin: 0 auto;
-      padding: 32px 20px 56px;
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 28px;
+      align-items: stretch;
     }
-    .card {
-      background: var(--paper);
-      border: 1px solid var(--line);
-      border-radius: 20px;
-      padding: 28px;
-      box-shadow: 0 18px 50px rgba(35, 24, 21, 0.08);
+    .hero-copy,
+    .hero-panel,
+    .terms-card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-gold);
     }
-    h1 {
-      margin: 0 0 10px;
-      font-size: clamp(2rem, 4vw, 3rem);
-      line-height: 1.05;
+    .hero-copy {
+      padding: 36px;
     }
     .eyebrow {
-      color: var(--accent);
+      color: var(--gold-main);
       text-transform: uppercase;
-      letter-spacing: 0.12em;
-      font-size: 0.78rem;
+      letter-spacing: 0.18em;
+      font-size: 0.76rem;
+      margin-bottom: 16px;
+    }
+    h1 {
+      font-size: clamp(2.4rem, 6vw, 4.8rem);
+      line-height: 0.98;
+      margin-bottom: 18px;
+    }
+    .hero-copy p {
+      color: var(--text-grey);
+      max-width: 700px;
+      font-size: 1.02rem;
+    }
+    .hero-bullets {
+      margin-top: 24px;
+      display: grid;
+      gap: 12px;
+    }
+    .hero-bullets div {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      color: var(--text-white);
+    }
+    .hero-bullets i {
+      color: var(--gold-main);
+      margin-top: 4px;
+    }
+    .hero-panel {
+      padding: 28px;
+      display: grid;
+      gap: 14px;
+      align-content: center;
+    }
+    .hero-panel .stat {
+      padding: 16px 18px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.02);
+    }
+    .hero-panel h3 {
+      font-size: 1.2rem;
+      margin-bottom: 8px;
+    }
+    .hero-panel p {
+      color: var(--text-grey);
+      font-size: 0.95rem;
+    }
+
+    main {
+      padding: 0 5% 90px;
+    }
+    .terms-grid {
+      max-width: 1180px;
+      margin: 0 auto;
+      display: grid;
+      gap: 22px;
+    }
+    .terms-card {
+      padding: 28px;
+    }
+    .terms-card h2 {
+      font-size: 1.7rem;
       margin-bottom: 12px;
     }
-    p, li {
-      font-size: 1rem;
-      line-height: 1.7;
+    .terms-card p,
+    .terms-card li {
+      color: var(--text-grey);
+      font-size: 0.98rem;
     }
-    ul {
+    .terms-card ul {
+      list-style: disc;
       padding-left: 20px;
-      margin: 18px 0;
+      margin-top: 12px;
+    }
+    .terms-card li + li {
+      margin-top: 8px;
+    }
+    .terms-card strong {
+      color: var(--text-white);
+      font-weight: 600;
     }
     .note {
-      margin-top: 22px;
-      padding: 16px 18px;
-      border-left: 4px solid var(--accent);
-      background: rgba(143, 90, 42, 0.08);
-      border-radius: 10px;
-      color: var(--soft);
+      margin-top: 28px;
+      padding: 18px 20px;
+      border-left: 3px solid var(--gold-main);
+      background: rgba(212, 175, 55, 0.08);
+      color: var(--text-white);
+    }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 30px 5% 40px;
+      color: var(--text-grey);
+      text-align: center;
+    }
+
+    @media (max-width: 900px) {
+      nav { display: none; }
+      .mobile-links { display: flex; }
+      .hero-shell { grid-template-columns: 1fr; }
+      .hero-copy, .hero-panel, .terms-card { padding: 22px; }
     }
   </style>
 </head>
 <body>
-  <main>
-    <div class="card">
-      <div class="eyebrow">Sample Terms Page</div>
-      <h1>Golden Sugar Daddy Terms and Conditions</h1>
-      <p>
-        This is a sample agreement page for the Telegram form flow. It gives users a simple page to read before they tap yes or no inside the bot.
-      </p>
+  <header>
+    <a class="logo" href="/">
+      <span class="logo-mark" aria-hidden="true"></span>
+      <div><span class="gold-text">Golden</span> SugarDaddy</div>
+    </a>
+    <nav aria-label="Primary navigation">
       <ul>
-        <li>You confirm that the information you submit is truthful to the best of your knowledge.</li>
-        <li>You understand that verification and review may be used to reduce fake profiles and improve safety.</li>
-        <li>If you are applying as a Sugar Baby, you understand that the platform states the process is free for Sugar Babies.</li>
-        <li>You agree not to submit stolen photos, impersonate another person, or provide misleading personal details.</li>
-        <li>You understand that submitting the form does not guarantee approval, matching, or any financial outcome.</li>
-        <li>You agree that your submitted information and photos may be reviewed by the account owner for screening purposes.</li>
+        <li><a href="/">Home</a></li>
+        <li><a href="/#process">Process</a></li>
+        <li><a href="/#verify">Verification</a></li>
+        <li><a href="/scammers.html">Scammer List</a></li>
+        <li><a href="/terms" class="active">Terms</a></li>
       </ul>
+    </nav>
+  </header>
+  <div class="mobile-links" aria-label="Mobile navigation">
+    <a href="/">Home</a>
+    <a href="/#process">Process</a>
+    <a href="/#verify">Verification</a>
+    <a href="/scammers.html">Scammer List</a>
+    <a href="/terms" class="active">Terms</a>
+  </div>
+
+  <section class="hero">
+    <div class="hero-shell">
+      <div class="hero-copy">
+        <div class="eyebrow">Verified Access</div>
+        <h1>Golden Sugar Daddy <span class="gold-text">Terms & Conditions</span></h1>
+        <p>
+          These terms are designed to set clear expectations, protect privacy, and create a safer and more transparent space for verified Sugar Daddies and Sugar Babies. By continuing through the form, users confirm that they understand the standards below and agree to respectful, lawful, and honest participation.
+        </p>
+        <div class="hero-bullets">
+          <div><i class="fa-solid fa-shield-heart"></i><span>Protection-first standards for respectful, adult-only arrangements.</span></div>
+          <div><i class="fa-solid fa-user-check"></i><span>Verification, confidentiality, and identity accountability built into the process.</span></div>
+          <div><i class="fa-solid fa-scale-balanced"></i><span>Clear consequences for fraud, coercion, harassment, abuse, or misrepresentation.</span></div>
+        </div>
+      </div>
+      <div class="hero-panel">
+        <div class="stat">
+          <h3>Private and mutual</h3>
+          <p>This framework is intended to support transparent, benefit-based companionship between consenting adults.</p>
+        </div>
+        <div class="stat">
+          <h3>Free for Sugar Babies</h3>
+          <p>The service states that Sugar Babies do not pay platform fees, while Sugar Daddies handle the required service-side financial obligations.</p>
+        </div>
+        <div class="stat">
+          <h3>Zero tolerance</h3>
+          <p>Fake identities, pressure tactics, blackmail, abuse, or financial deception can trigger immediate suspension, permanent removal, and legal escalation.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <main>
+    <div class="terms-grid">
+      <section class="terms-card">
+        <h2>1. Nature of the Agreement</h2>
+        <p>
+          This is a private, mutual, and non-legally-binding understanding between consenting adults, referred to in this framework as the <strong>Sugar Daddy</strong> and the <strong>Sugar Baby</strong>.
+        </p>
+        <p>
+          The purpose of the arrangement is to support a respectful, benefit-based companionship in which one party may offer time, communication, attention, and presence, while the other may provide financial support, gifts, or lifestyle assistance under mutually understood expectations.
+        </p>
+        <p>
+          This platform does <strong>not</strong> present itself as an employer, escort agency, or romantic contract provider, and nothing in this agreement should be interpreted as requiring unlawful conduct, emotional dependency, or guaranteed outcomes.
+        </p>
+      </section>
+
+      <section class="terms-card">
+        <h2>2. Physical Engagement Clause</h2>
+        <p>
+          If any arrangement includes in-person or physical interaction, both parties agree that all engagement must remain <strong>fully consensual, voluntary, non-exploitative, and respectful of personal boundaries at all times</strong>.
+        </p>
+        <ul>
+          <li>No party may use pressure, manipulation, intimidation, force, threats, or emotional coercion to obtain access, meetings, intimacy, or continued participation.</li>
+          <li>Every participant is expected to respect verbal and non-verbal boundaries immediately and without argument.</li>
+          <li>Any abusive, dangerous, or non-consensual behavior will be treated as a serious violation and may lead to permanent platform disqualification and referral to law enforcement where appropriate.</li>
+        </ul>
+      </section>
+
+      <section class="terms-card">
+        <h2>3. Virtual Interaction & Digital Conduct</h2>
+        <p>
+          Where an arrangement is online-only or digitally managed, both parties are expected to comply with applicable U.S. digital conduct standards and any relevant local laws. This includes lawful, respectful, and confidential communication.
+        </p>
+        <ul>
+          <li><strong>No private or intimate content</strong> may be shared, reposted, leaked, saved for misuse, or distributed without explicit consent.</li>
+          <li><strong>No threats, extortion, blackmail, harassment, doxxing, or humiliation tactics</strong> are permitted under any circumstances.</li>
+          <li>Messages, calls, and media exchanges must remain respectful, adult, and free from coercion or digital abuse.</li>
+          <li>Users understand that evidence of serious digital misconduct may be preserved for investigation and legal review.</li>
+        </ul>
+      </section>
+
+      <section class="terms-card">
+        <h2>4. Dispute Resolution & Legal Accountability</h2>
+        <p>
+          Serious breaches of trust, including fraud, non-payment, harassment, impersonation, identity misrepresentation, privacy violations, blackmail, or physical misconduct, may trigger internal investigation and external legal escalation.
+        </p>
+        <ul>
+          <li>Immediate suspension or permanent banning from the platform.</li>
+          <li>Formal case review initiated by the agency or administrative team.</li>
+          <li>Referral for legal action where behavior appears fraudulent, abusive, coercive, or criminal under applicable law.</li>
+        </ul>
+        <p>
+          While this framework is not a formal contract enforceable as a commercial services agreement, users acknowledge that their communications, submissions, identity details, and acceptance records may still be used as supporting evidence in disputes or legal proceedings.
+        </p>
+      </section>
+
+      <section class="terms-card">
+        <h2>5. Agency Policy & Payment Structure (Sugar Daddies Only)</h2>
+        <p>
+          To create a more transparent and scam-resistant environment, the following financial structure applies to participating Sugar Daddies.
+        </p>
+        <ul>
+          <li>A <strong>non-refundable agreement fee of $120 USD</strong> is due at the time of signing the agreement form.</li>
+          <li>The Sugar Daddy is also responsible for the <strong>initial agency deposit</strong>, representing the first financial installment tied to the agreed term with the Sugar Baby.</li>
+          <li>This deposit may be held in secure agency escrow and released only after the first defined portion of the arrangement is fulfilled, such as the first week or first month, depending on the accepted understanding.</li>
+        </ul>
+        <p>
+          This policy exists to reduce scams, ghosting, fake financial promises, and emotional exploitation while improving trust between verified members.
+        </p>
+        <p>
+          <strong>Sugar Babies do not pay this fee.</strong> The service position is that the process remains free for Sugar Babies throughout the onboarding journey.
+        </p>
+      </section>
+
+      <section class="terms-card">
+        <h2>6. Verification and Confidentiality</h2>
+        <p>
+          All users interacting through this agreement and platform are expected to be identity-verified, age-verified, and confirmed to be <strong>18 years of age or older</strong>.
+        </p>
+        <ul>
+          <li>Personal information and submitted media are handled under strict confidentiality controls.</li>
+          <li>Payment-related details, identity records, and sensitive communications are expected to be processed privately and with restricted access.</li>
+          <li>The platform maintains a <strong>zero-tolerance policy</strong> for doxxing, data leakage, revenge exposure, unauthorized disclosure, or sale of personal information to third parties.</li>
+        </ul>
+        <p>
+          Users who proceed with the form acknowledge that verification and review may be used to promote safer matching, stronger accountability, and a more trusted member environment.
+        </p>
+      </section>
+
       <div class="note">
-        After reading this page, return to the bot and choose <strong>Yes</strong> or <strong>No</strong> on the agreement step.
+        By tapping <strong>Yes</strong> inside the Telegram bot after reading this page, the user indicates that they have reviewed these sample terms, understand the safety and conduct expectations, and wish to continue with the profile submission.
       </div>
     </div>
   </main>
+
+  <footer>
+    <p>&copy; 2026 Golden Sugar Daddy. Members must be 18+ to participate. Privacy, verification, and respectful conduct are core platform expectations.</p>
+  </footer>
 </body>
 </html>
