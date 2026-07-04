@@ -2,51 +2,36 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
-  formatForwardedMessageWarning,
-  shouldRetryWithoutParseMode
+  buildOwnerSubmissionMessage,
+  escapeHtml,
+  isTelegramCommand
 } from "../api/telegram_webhook.js";
 
-test("formatForwardedMessageWarning escapes markdown characters in usernames", () => {
-  const text = formatForwardedMessageWarning({
-    id: 5678808034,
-    username: "lady_liliane89",
-    first_name: "Lady"
-  });
-
-  assert.equal(
-    text,
-    "⚠️ @lady\\_liliane89 Forwarded messages are not allowed in this group.\n_Please share content directly — no forwards. 🚫_"
-  );
+test("escapeHtml protects user text before sending HTML messages", () => {
+  assert.equal(escapeHtml(`<Admin & "Owner">`), "&lt;Admin &amp; &quot;Owner&quot;&gt;");
 });
 
-test("formatForwardedMessageWarning falls back to tg user mention for users without usernames", () => {
-  const text = formatForwardedMessageWarning({
-    id: 12345,
-    first_name: "A_B"
-  });
-
-  assert.equal(
-    text,
-    "⚠️ [A\\_B](tg://user?id=12345) Forwarded messages are not allowed in this group.\n_Please share content directly — no forwards. 🚫_"
-  );
+test("isTelegramCommand detects bot commands and ignores ordinary messages", () => {
+  assert.equal(isTelegramCommand("/start"), true);
+  assert.equal(isTelegramCommand("/help Golden"), true);
+  assert.equal(isTelegramCommand("Full name: Sarah"), false);
 });
 
-test("shouldRetryWithoutParseMode matches Telegram markdown parse failures", () => {
-  assert.equal(
-    shouldRetryWithoutParseMode({
-      ok: false,
-      error_code: 400,
-      description: "Bad Request: can't parse entities: Can't find end of the entity starting at byte offset 30"
-    }),
-    true
-  );
+test("buildOwnerSubmissionMessage includes sender info and escapes the submission body", () => {
+  const text = buildOwnerSubmissionMessage({
+    text: "Full name: Sarah <Doe>\nCity: London & Dubai",
+    chat: { id: 55501 },
+    from: {
+      id: 8217479753,
+      username: "GoldenSugarAdmin",
+      first_name: "Admin",
+      last_name: "Sugar"
+    }
+  });
 
-  assert.equal(
-    shouldRetryWithoutParseMode({
-      ok: false,
-      error_code: 400,
-      description: "Bad Request: message is too long"
-    }),
-    false
-  );
+  assert.match(text, /<b>New bot form submission<\/b>/);
+  assert.match(text, /<b>Username:<\/b> @GoldenSugarAdmin/);
+  assert.match(text, /<b>User ID:<\/b> 8217479753/);
+  assert.match(text, /Full name: Sarah &lt;Doe&gt;/);
+  assert.match(text, /City: London &amp; Dubai/);
 });

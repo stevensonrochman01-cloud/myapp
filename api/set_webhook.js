@@ -46,7 +46,7 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         url: webhookUrl,
         secret_token: webhookSecret,
-        allowed_updates: ["message", "edited_message"]
+        allowed_updates: ["message"]
       })
     });
 
