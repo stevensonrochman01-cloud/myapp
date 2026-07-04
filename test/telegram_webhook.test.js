@@ -44,21 +44,21 @@ test("buildLanguageKeyboard exposes the requested languages with flags", () => {
 test("buildWelcomeMessage contains the simpler guided-flow intro", () => {
   const text = buildWelcomeMessage("en");
   assert.match(text, /Golden Sugar Daddy, founded in 2023/i);
-  assert.match(text, /one short question at a time/i);
+  assert.doesNotMatch(text, /Step 1\/21/i);
 });
 
-test("buildStepPrompt renders a text step with numbering", () => {
+test("buildStepPrompt renders a text step without visible progress numbering", () => {
   const text = buildStepPrompt({
     languageCode: "en",
-    stepIndex: 0
+    stepIndex: 1
   });
 
-  assert.match(text, /Step 1\/21/);
   assert.match(text, /Name\/Nickname/);
-  assert.match(text, /Type your answer below/i);
+  assert.match(text, /Type a quick answer below/i);
+  assert.doesNotMatch(text, /Step \d+/i);
 });
 
-test("buildStepKeyboard renders choice and skip actions for guided steps", () => {
+test("buildStepKeyboard renders choice, skip, and terms-link actions for guided steps", () => {
   const buttSizeKeyboard = buildStepKeyboard(
     { id: "buttSize", kind: "choice", options: ["small", "medium", "large"] },
     "en"
@@ -75,6 +75,7 @@ test("buildStepKeyboard renders choice and skip actions for guided steps", () =>
   assert.equal(buttSizeKeyboard.inline_keyboard.length, 3);
   assert.equal(buttSizeKeyboard.inline_keyboard[0][0].text, "Small");
   assert.equal(extraPhotoKeyboard.inline_keyboard[0][0].text, "Skip");
-  assert.equal(termsKeyboard.inline_keyboard[0][0].text, "Yes");
-  assert.equal(termsKeyboard.inline_keyboard[0][1].text, "No");
+  assert.equal(termsKeyboard.inline_keyboard[0][0].text, "Read Terms");
+  assert.equal(termsKeyboard.inline_keyboard[1][0].text, "Yes");
+  assert.equal(termsKeyboard.inline_keyboard[1][1].text, "No");
 });
