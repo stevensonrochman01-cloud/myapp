@@ -54,8 +54,9 @@ test("buildStepPrompt renders a text step without visible progress numbering", (
     stepIndex: 1
   });
 
+  assert.match(text, /Please answer this:/i);
   assert.match(text, /Name\/Nickname/);
-  assert.match(text, /Type a quick answer below/i);
+  assert.match(text, /Type your answer below/i);
   assert.doesNotMatch(text, /Step \d+/i);
 });
 
