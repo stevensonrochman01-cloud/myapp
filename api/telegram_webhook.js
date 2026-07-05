@@ -56,15 +56,15 @@ const BASE_COPY = {
     "Hello {name}, welcome to Golden Sugar Daddy.\n\n" +
     "To find a Sugar Daddy or Sugar Baby, please submit your form in private by opening this bot and sending /start.",
   ownerPaymentStart:
-    "Payment request mode is ready.\n\n<b>Question 1</b>\nWhat is the name for whom you want to create payment?",
-  ownerPaymentAskPayer: "<b>Question 2</b>\nWhat is the name of the person who will pay this amount?",
+    "Payment request mode is ready.\n\n<b>Question 1</b>\nAmount for name?",
+  ownerPaymentAskPayer: "<b>Question 2</b>\nPerson who has to pay?",
   ownerPaymentAskAmount: `<b>Question 3</b>\nWhat is the amount?\n\n<i>I will automatically add the $${PAYMENT_SERVICE_FEE} service fee.</i>`,
   ownerPaymentInvalidAmount: "Please send a valid amount like 500 or 500.00.",
   ownerPaymentCreated:
     "Payment request created successfully.\n\n" +
     "<b>Reference:</b> {reference}\n" +
-    "<b>For:</b> {recipient}\n" +
-    "<b>Payer:</b> {payer}\n" +
+    "<b>Amount For Name:</b> {recipient}\n" +
+    "<b>Person Who Has To Pay:</b> {payer}\n" +
     "<b>Amount:</b> ${amount}\n" +
     `<b>Service Fee:</b> $${PAYMENT_SERVICE_FEE}\n` +
     "<b>Total:</b> ${total}\n\n" +
