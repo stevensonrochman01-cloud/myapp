@@ -1,8 +1,7 @@
 import { Redis } from "@upstash/redis";
 
 const PUBLIC_APP_URL = (process.env.PUBLIC_APP_URL || "https://golden-sugar-daddy.vercel.app").replace(/\/+$/, "");
-const PAYMENT_PAYPAL_URL = process.env.PAYMENT_PAYPAL_URL || "https://www.paypal.com/";
-const PAYMENT_CARD_URL = process.env.PAYMENT_CARD_URL || "https://www.visa.com/";
+const PAYMENT_CARD_URL = process.env.PAYMENT_CARD_URL || "";
 
 export const PAYMENT_SERVICE_FEE = 120;
 const PAYMENT_TTL_SECONDS = 60 * 60 * 24 * 30;
@@ -79,11 +78,8 @@ export function buildPaymentLink(reference) {
   return `${PUBLIC_APP_URL}/payment?ref=${encodeURIComponent(reference)}`;
 }
 
-export function buildCheckoutUrls(reference, totalAmount) {
-  return {
-    paypal: applyTemplate(PAYMENT_PAYPAL_URL, reference, totalAmount),
-    card: applyTemplate(PAYMENT_CARD_URL, reference, totalAmount)
-  };
+export function buildCardCheckoutUrl(reference, totalAmount) {
+  return PAYMENT_CARD_URL ? applyTemplate(PAYMENT_CARD_URL, reference, totalAmount) : "";
 }
 
 export function buildPaymentRecord({ recipientName, payerName, amount }) {
@@ -100,7 +96,7 @@ export function buildPaymentRecord({ recipientName, payerName, amount }) {
     totalAmount,
     status: "pending",
     paymentUrl: buildPaymentLink(reference),
-    checkoutUrls: buildCheckoutUrls(reference, totalAmount),
+    cardCheckoutUrl: buildCardCheckoutUrl(reference, totalAmount),
     createdAt: new Date().toISOString(),
     completedAt: null
   };

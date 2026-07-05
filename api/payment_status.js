@@ -30,7 +30,7 @@ export default async function handler(req, res) {
         createdAt: record.createdAt,
         completedAt: record.completedAt,
         paymentUrl: record.paymentUrl,
-        checkoutUrls: record.checkoutUrls
+        cardCheckoutUrl: record.cardCheckoutUrl || ""
       }
     });
   } catch (error) {
