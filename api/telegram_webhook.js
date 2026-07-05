@@ -158,8 +158,8 @@ function getOptionLabel(stepId, option, languageCode) {
   return OPTION_LABELS?.[stepId]?.[option]?.[languageCode] || OPTION_LABELS?.[stepId]?.[option]?.en || option;
 }
 
-function getTermsUrl() {
-  return `${PUBLIC_APP_URL}/terms`;
+export function getTermsUrl(languageCode = "en") {
+  return `${PUBLIC_APP_URL}/terms?lang=${encodeURIComponent(languageCode)}`;
 }
 
 function createInitialSession(languageCode) {
@@ -273,7 +273,7 @@ export function buildStepKeyboard(step, languageCode) {
   if (step.kind === "terms") {
     return {
       inline_keyboard: [
-        [{ text: copy.termsLinkLabel, url: getTermsUrl() }],
+        [{ text: copy.termsLinkLabel, url: getTermsUrl(languageCode) }],
         [
           { text: copy.yes, callback_data: `${CALLBACK_PREFIXES.choice}:${step.id}:yes` },
           { text: copy.no, callback_data: `${CALLBACK_PREFIXES.choice}:${step.id}:no` }

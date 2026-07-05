@@ -8,6 +8,7 @@ import {
   buildStepPrompt,
   buildWelcomeMessage,
   escapeHtml,
+  getTermsUrl,
   isTelegramCommand
 } from "../api/telegram_webhook.js";
 
@@ -76,6 +77,12 @@ test("buildStepKeyboard renders choice, skip, and terms-link actions for guided 
   assert.equal(buttSizeKeyboard.inline_keyboard[0][0].text, "Small");
   assert.equal(extraPhotoKeyboard.inline_keyboard[0][0].text, "Skip");
   assert.equal(termsKeyboard.inline_keyboard[0][0].text, "Read Terms");
+  assert.equal(termsKeyboard.inline_keyboard[0][0].url, getTermsUrl("en"));
   assert.equal(termsKeyboard.inline_keyboard[1][0].text, "Yes");
   assert.equal(termsKeyboard.inline_keyboard[1][1].text, "No");
+});
+
+test("getTermsUrl includes the selected language", () => {
+  assert.match(getTermsUrl("es"), /\?lang=es$/);
+  assert.match(getTermsUrl("ru"), /\?lang=ru$/);
 });
