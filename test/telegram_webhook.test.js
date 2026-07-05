@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  buildGroupWelcomeMessage,
   buildLanguageKeyboard,
   buildLanguagePrompt,
   buildStepKeyboard,
@@ -48,6 +49,19 @@ test("buildWelcomeMessage contains the simpler guided-flow intro", () => {
   assert.match(text, /<b>Golden Sugar Daddy<\/b>/);
   assert.match(text, /Golden Sugar Daddy, founded in 2023/i);
   assert.doesNotMatch(text, /Step 1\/21/i);
+});
+
+test("buildGroupWelcomeMessage greets joined members and tells them to submit the form", () => {
+  const text = buildGroupWelcomeMessage({
+    id: 42,
+    first_name: "Alice",
+    last_name: "Stone"
+  });
+
+  assert.match(text, /<b>Golden Sugar Daddy<\/b>/);
+  assert.match(text, /Hello <a href="tg:\/\/user\?id=42">Alice Stone<\/a>/);
+  assert.match(text, /submit your form in private/i);
+  assert.match(text, /sending \/start/i);
 });
 
 test("buildStepPrompt renders a text step without visible progress numbering", () => {

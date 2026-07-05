@@ -39,6 +39,9 @@ const BASE_COPY = {
   restartNotice: "The form has been restarted. Please choose your language again.",
   notAgreed: "No problem. Because you did not agree to the terms, your profile was not submitted. If you want to start again, send /start.",
   success: `Thank you. Your profile has been submitted successfully to @${OWNER_USERNAME}.`,
+  groupWelcome:
+    "Hello {name}, welcome to Golden Sugar Daddy.\n\n" +
+    "To find a Sugar Daddy or Sugar Baby, please submit your form in private by opening this bot and sending /start.",
   ownerTitle: "New Sugar Baby profile submission",
   ownerStartedTitle: "Profile form started",
   ownerIncompleteTitle: "Incomplete profile form",
@@ -201,6 +204,22 @@ function getStepQuestion(step, languageCode) {
 
 function getOptionLabel(stepId, option, languageCode) {
   return OPTION_LABELS?.[stepId]?.[option]?.[languageCode] || OPTION_LABELS?.[stepId]?.[option]?.en || option;
+}
+
+function formatUserDisplayName(user = {}) {
+  const fullName = [user.first_name, user.last_name].filter(Boolean).join(" ").trim();
+  if (user.id && fullName) {
+    return `<a href="tg://user?id=${user.id}">${escapeHtml(fullName)}</a>`;
+  }
+  if (user.id && user.username) {
+    return `<a href="tg://user?id=${user.id}">${escapeHtml(`@${user.username}`)}</a>`;
+  }
+  return escapeHtml(fullName || user.username || "there");
+}
+
+export function buildGroupWelcomeMessage(user, languageCode = "en") {
+  const copy = getCopy(languageCode);
+  return `<b>Golden Sugar Daddy</b>\n\n${copy.groupWelcome.replace("{name}", formatUserDisplayName(user))}`;
 }
 
 function formatQuestionCard(question, hint = "") {
@@ -695,9 +714,30 @@ async function handleCommand(message) {
   });
 }
 
+async function handleNewChatMembers(message) {
+  const chatId = message?.chat?.id;
+  const languageCode = "en";
+  const newMembers = Array.isArray(message?.new_chat_members)
+    ? message.new_chat_members.filter((member) => !member?.is_bot)
+    : [];
+
+  if (!chatId || !newMembers.length) {
+    return;
+  }
+
+  for (const member of newMembers) {
+    await sendMessage(chatId, buildGroupWelcomeMessage(member, languageCode));
+  }
+}
+
 async function handleIncomingMessage(message) {
   const chatId = message?.chat?.id;
   if (!chatId) {
+    return;
+  }
+
+  if (message?.new_chat_members?.length) {
+    await handleNewChatMembers(message);
     return;
   }
 
