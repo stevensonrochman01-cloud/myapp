@@ -2,6 +2,13 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  PAYMENT_SERVICE_FEE,
+  buildPaymentRecord,
+  parseAmountInput,
+  parsePaymentCompletionText
+} from "../api/_paymentStore.js";
+
+import {
   buildGroupWelcomeMessage,
   buildLanguageKeyboard,
   buildLanguagePrompt,
@@ -62,6 +69,24 @@ test("buildGroupWelcomeMessage greets joined members and tells them to submit th
   assert.match(text, /Hello <a href="tg:\/\/user\?id=42">Alice Stone<\/a>/);
   assert.match(text, /submit your form in private/i);
   assert.match(text, /sending \/start/i);
+});
+
+test("payment helpers add the service fee and parse owner completion text", () => {
+  const record = buildPaymentRecord({
+    recipientName: "Anna",
+    payerName: "John",
+    amount: 500
+  });
+
+  assert.equal(record.amount, 500);
+  assert.equal(record.serviceFee, PAYMENT_SERVICE_FEE);
+  assert.equal(record.totalAmount, 500 + PAYMENT_SERVICE_FEE);
+  assert.match(record.reference, /^X[A-Z0-9]{6}$/);
+  assert.match(record.paymentUrl, /\?ref=X[A-Z0-9]{6}$/);
+  assert.equal(parsePaymentCompletionText(`${record.reference} done`), record.reference);
+  assert.equal(parsePaymentCompletionText("not a completion"), null);
+  assert.equal(parseAmountInput("$780.50"), 780.5);
+  assert.equal(parseAmountInput("abc"), null);
 });
 
 test("buildStepPrompt renders a text step without visible progress numbering", () => {

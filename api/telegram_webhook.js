@@ -1,4 +1,16 @@
 import { Redis } from "@upstash/redis";
+import {
+  PAYMENT_SERVICE_FEE,
+  buildPaymentRecord,
+  clearOwnerPaymentDraft,
+  getOwnerPaymentDraft,
+  getPaymentRecord,
+  markPaymentCompleted,
+  parseAmountInput,
+  parsePaymentCompletionText,
+  saveOwnerPaymentDraft,
+  savePaymentRecord
+} from "./_paymentStore.js";
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || "";
 const TELEGRAM_WEBHOOK_SECRET = process.env.TELEGRAM_WEBHOOK_SECRET || "";
@@ -7,6 +19,7 @@ const OWNER_USERNAME = process.env.OWNER_USERNAME || process.env.ADMIN_USERNAME 
 const PUBLIC_APP_URL = (process.env.PUBLIC_APP_URL || "https://golden-sugar-daddy.vercel.app").replace(/\/+$/, "");
 
 const SESSION_TTL_SECONDS = 60 * 60 * 6;
+const OWNER_CHAT_ID_NORMALIZED = String(OWNER_CHAT_ID || "");
 
 const LANGUAGE_OPTIONS = [
   { code: "en", label: "🇬🇧 English" },
@@ -42,6 +55,26 @@ const BASE_COPY = {
   groupWelcome:
     "Hello {name}, welcome to Golden Sugar Daddy.\n\n" +
     "To find a Sugar Daddy or Sugar Baby, please submit your form in private by opening this bot and sending /start.",
+  ownerPaymentStart:
+    "Payment request mode is ready.\n\n<b>Question 1</b>\nWhat is the name for whom you want to create payment?",
+  ownerPaymentAskPayer: "<b>Question 2</b>\nWhat is the name of the person who will pay this amount?",
+  ownerPaymentAskAmount: `<b>Question 3</b>\nWhat is the amount?\n\n<i>I will automatically add the $${PAYMENT_SERVICE_FEE} service fee.</i>`,
+  ownerPaymentInvalidAmount: "Please send a valid amount like 500 or 500.00.",
+  ownerPaymentCreated:
+    "Payment request created successfully.\n\n" +
+    "<b>Reference:</b> {reference}\n" +
+    "<b>For:</b> {recipient}\n" +
+    "<b>Payer:</b> {payer}\n" +
+    "<b>Amount:</b> ${amount}\n" +
+    `<b>Service Fee:</b> $${PAYMENT_SERVICE_FEE}\n` +
+    "<b>Total:</b> ${total}\n\n" +
+    "<b>Payment Link:</b>\n{paymentUrl}\n\n" +
+    "<i>When payment is received, send {reference} DONE to mark it complete.</i>",
+  ownerPaymentCompleted:
+    "Payment marked as completed.\n\n<b>Reference:</b> {reference}\n<b>Total:</b> ${total}\n<b>Status:</b> Completed",
+  ownerPaymentNotFound: "I could not find that payment reference.",
+  ownerPaymentOnly: "This payment command is only available for the owner account.",
+  ownerPaymentHint: "Send /payment to create a payment request.",
   ownerTitle: "New Sugar Baby profile submission",
   ownerStartedTitle: "Profile form started",
   ownerIncompleteTitle: "Incomplete profile form",
@@ -285,6 +318,32 @@ export function escapeHtml(value = "") {
 
 export function isTelegramCommand(text = "") {
   return /^\/[a-zA-Z0-9_]+(?:@\S+)?(?:\s|$)/.test(String(text).trim());
+}
+
+function isOwnerUser(user = {}) {
+  const matchesId = OWNER_CHAT_ID_NORMALIZED && String(user?.id || "") === OWNER_CHAT_ID_NORMALIZED;
+  const matchesUsername = OWNER_USERNAME && String(user?.username || "").toLowerCase() === String(OWNER_USERNAME).replace(/^@/, "").toLowerCase();
+  return Boolean(matchesId || matchesUsername);
+}
+
+function formatMoney(value) {
+  return Number(value || 0).toFixed(2);
+}
+
+function buildOwnerPaymentCreatedMessage(record) {
+  return COPY.en.ownerPaymentCreated
+    .replaceAll("{reference}", escapeHtml(record.reference))
+    .replace("{recipient}", escapeHtml(record.recipientName))
+    .replace("{payer}", escapeHtml(record.payerName))
+    .replace("{amount}", formatMoney(record.amount))
+    .replace("{total}", formatMoney(record.totalAmount))
+    .replace("{paymentUrl}", escapeHtml(record.paymentUrl));
+}
+
+function buildOwnerPaymentCompletedMessage(record) {
+  return COPY.en.ownerPaymentCompleted
+    .replace("{reference}", escapeHtml(record.reference))
+    .replace("{total}", formatMoney(record.totalAmount));
 }
 
 export function buildLanguagePrompt() {
@@ -695,9 +754,108 @@ async function handlePhotoStep(chatId, session, message) {
   await advanceSession(chatId, session, message, fileId, step);
 }
 
+async function startOwnerPaymentFlow(chatId) {
+  await clearOwnerPaymentDraft(chatId);
+  await saveOwnerPaymentDraft(chatId, {
+    step: "recipientName",
+    data: {}
+  });
+  await sendMessage(chatId, COPY.en.ownerPaymentStart);
+}
+
+async function completeOwnerPaymentFlow(chatId, draft, text) {
+  if (draft.step === "recipientName") {
+    await saveOwnerPaymentDraft(chatId, {
+      step: "payerName",
+      data: {
+        recipientName: text
+      }
+    });
+    await sendMessage(chatId, COPY.en.ownerPaymentAskPayer);
+    return true;
+  }
+
+  if (draft.step === "payerName") {
+    await saveOwnerPaymentDraft(chatId, {
+      step: "amount",
+      data: {
+        ...draft.data,
+        payerName: text
+      }
+    });
+    await sendMessage(chatId, COPY.en.ownerPaymentAskAmount);
+    return true;
+  }
+
+  if (draft.step === "amount") {
+    const parsedAmount = parseAmountInput(text);
+    if (parsedAmount === null) {
+      await sendMessage(chatId, COPY.en.ownerPaymentInvalidAmount);
+      return true;
+    }
+
+    const record = buildPaymentRecord({
+      recipientName: draft.data?.recipientName,
+      payerName: draft.data?.payerName,
+      amount: parsedAmount
+    });
+    await savePaymentRecord(record);
+    await clearOwnerPaymentDraft(chatId);
+    await sendMessage(chatId, buildOwnerPaymentCreatedMessage(record));
+    return true;
+  }
+
+  await clearOwnerPaymentDraft(chatId);
+  return false;
+}
+
+async function handleOwnerTextMessage(message) {
+  const chatId = message?.chat?.id;
+  const text = (message?.text || "").trim();
+
+  if (!chatId || !text || !isOwnerUser(message?.from)) {
+    return false;
+  }
+
+  const completionReference = parsePaymentCompletionText(text);
+  if (completionReference) {
+    const completedRecord = await markPaymentCompleted(completionReference);
+    if (!completedRecord) {
+      await sendMessage(chatId, COPY.en.ownerPaymentNotFound);
+      return true;
+    }
+    await clearOwnerPaymentDraft(chatId);
+    await sendMessage(chatId, buildOwnerPaymentCompletedMessage(completedRecord));
+    return true;
+  }
+
+  if (/^\/payment(?:@\S+)?$/i.test(text)) {
+    await startOwnerPaymentFlow(chatId);
+    return true;
+  }
+
+  const ownerDraft = await getOwnerPaymentDraft(chatId);
+  if (!ownerDraft) {
+    return false;
+  }
+
+  await completeOwnerPaymentFlow(chatId, ownerDraft, text);
+  return true;
+}
+
 async function handleCommand(message) {
   const chatId = message?.chat?.id;
   if (!chatId) {
+    return;
+  }
+
+  const text = (message?.text || "").trim();
+  if (/^\/payment(?:@\S+)?$/i.test(text)) {
+    if (!isOwnerUser(message?.from)) {
+      await sendMessage(chatId, COPY.en.ownerPaymentOnly);
+      return;
+    }
+    await startOwnerPaymentFlow(chatId);
     return;
   }
 
@@ -738,6 +896,10 @@ async function handleIncomingMessage(message) {
 
   if (message?.new_chat_members?.length) {
     await handleNewChatMembers(message);
+    return;
+  }
+
+  if (message?.text && await handleOwnerTextMessage(message)) {
     return;
   }
 

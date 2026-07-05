@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Golden Sugar Daddy | Payment Status</title>
+  <meta name="theme-color" content="#050505" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #050505;
+      --card-bg: #121212;
+      --gold-light: #F3E5AB;
+      --gold-main: #D4AF37;
+      --gold-dark: #AA8C2C;
+      --text-white: #ffffff;
+      --text-grey: #a0a0a0;
+      --border: rgba(255,255,255,0.08);
+      --shadow-gold: 0 0 22px rgba(212, 175, 55, 0.18);
+      --success: #6ed38a;
+      --danger: #ff8b8b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      color: var(--text-white);
+      font-family: 'Montserrat', sans-serif;
+      background:
+        radial-gradient(circle at top right, rgba(212, 175, 55, 0.08), transparent 30%),
+        linear-gradient(180deg, #0d0d0d 0%, #050505 100%);
+    }
+
+    a { color: inherit; text-decoration: none; }
+    h1, h2, h3 { font-family: 'Playfair Display', serif; }
+
+    .gold-text {
+      background: linear-gradient(to right, var(--gold-light), var(--gold-main), var(--gold-dark));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 5%;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(5, 5, 5, 0.84);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 1.2rem;
+      letter-spacing: 0.04em;
+    }
+
+    .logo-mark {
+      width: 14px;
+      height: 14px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 30%, var(--gold-light), var(--gold-main), var(--gold-dark));
+      box-shadow: var(--shadow-gold);
+      flex-shrink: 0;
+    }
+
+    .hero {
+      padding: 72px 5% 96px;
+    }
+
+    .shell {
+      max-width: 1140px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 28px;
+      align-items: stretch;
+    }
+
+    .panel, .details {
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-gold);
+    }
+
+    .panel {
+      padding: 36px;
+      display: grid;
+      gap: 18px;
+      align-content: start;
+    }
+
+    .eyebrow {
+      color: var(--gold-main);
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      font-size: 0.76rem;
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 6vw, 4.5rem);
+      line-height: 0.98;
+    }
+
+    .lead {
+      color: var(--text-grey);
+      font-size: 1.02rem;
+      max-width: 680px;
+    }
+
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      width: fit-content;
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: rgba(212, 175, 55, 0.12);
+      border: 1px solid rgba(212, 175, 55, 0.22);
+      color: var(--gold-light);
+      font-weight: 600;
+      letter-spacing: 0.03em;
+    }
+
+    .status-chip.completed {
+      background: rgba(110, 211, 138, 0.12);
+      border-color: rgba(110, 211, 138, 0.28);
+      color: var(--success);
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 8px;
+    }
+
+    .summary-card {
+      padding: 16px 18px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border);
+    }
+
+    .summary-card span {
+      display: block;
+      color: var(--text-grey);
+      font-size: 0.86rem;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .summary-card strong {
+      font-size: 1.05rem;
+      word-break: break-word;
+    }
+
+    .actions {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 190px;
+      padding: 14px 20px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      font-weight: 600;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--gold-light), var(--gold-main), var(--gold-dark));
+      color: #111;
+      box-shadow: var(--shadow-gold);
+    }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.03);
+      border-color: rgba(255,255,255,0.12);
+      color: var(--text-white);
+    }
+
+    .details {
+      padding: 34px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      min-height: 560px;
+    }
+
+    .status-visual {
+      display: grid;
+      gap: 22px;
+      place-items: center;
+      max-width: 420px;
+    }
+
+    .ring {
+      width: 168px;
+      height: 168px;
+      border-radius: 50%;
+      position: relative;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at center, rgba(5, 5, 5, 1) 56%, transparent 57%),
+        conic-gradient(var(--gold-main) 0deg, rgba(212, 175, 55, 0.15) 300deg, rgba(212, 175, 55, 0.05) 360deg);
+      animation: spin 1.8s linear infinite;
+      box-shadow: 0 0 34px rgba(212, 175, 55, 0.16);
+    }
+
+    .ring.completed {
+      animation: none;
+      background:
+        radial-gradient(circle at center, rgba(5, 5, 5, 1) 56%, transparent 57%),
+        conic-gradient(var(--success) 0deg, rgba(110, 211, 138, 0.35) 360deg);
+      box-shadow: 0 0 28px rgba(110, 211, 138, 0.18);
+    }
+
+    .ring::after {
+      content: "";
+      position: absolute;
+      inset: 12px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .ring-label {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      gap: 6px;
+      place-items: center;
+    }
+
+    .ring-label strong {
+      font-size: 1rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .ring-label span {
+      color: var(--text-grey);
+      font-size: 0.82rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .checkmark {
+      display: none;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: rgba(110, 211, 138, 0.18);
+      color: var(--success);
+      font-size: 2rem;
+      place-items: center;
+    }
+
+    .details.completed .checkmark {
+      display: grid;
+    }
+
+    .details.completed .ring-label strong {
+      display: none;
+    }
+
+    .details.completed .ring-label span {
+      display: none;
+    }
+
+    .status-title {
+      font-size: clamp(2rem, 4vw, 3rem);
+    }
+
+    .status-copy {
+      color: var(--text-grey);
+      font-size: 1rem;
+      line-height: 1.7;
+    }
+
+    .meta {
+      color: var(--text-grey);
+      font-size: 0.92rem;
+    }
+
+    .error {
+      color: var(--danger);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 920px) {
+      .shell {
+        grid-template-columns: 1fr;
+      }
+
+      .panel, .details {
+        padding: 24px;
+      }
+
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="logo" href="/">
+      <span class="logo-mark" aria-hidden="true"></span>
+      <div><span class="gold-text">Golden</span> SugarDaddy</div>
+    </a>
+  </header>
+
+  <section class="hero">
+    <div class="shell">
+      <div class="panel">
+        <div class="eyebrow">Secure Payment Request</div>
+        <h1>Track your <span class="gold-text">payment status</span></h1>
+        <p class="lead">This payment request stays pending until Golden Sugar Daddy manually confirms receipt. Once the owner marks it complete in Telegram, this page updates automatically.</p>
+
+        <div id="statusChip" class="status-chip">Payment Pending</div>
+
+        <div class="summary-grid">
+          <div class="summary-card">
+            <span>Reference</span>
+            <strong id="referenceValue">Loading...</strong>
+          </div>
+          <div class="summary-card">
+            <span>Payer</span>
+            <strong id="payerValue">Loading...</strong>
+          </div>
+          <div class="summary-card">
+            <span>For</span>
+            <strong id="recipientValue">Loading...</strong>
+          </div>
+          <div class="summary-card">
+            <span>Total Due</span>
+            <strong id="totalValue">$0.00</strong>
+          </div>
+        </div>
+
+        <div class="summary-grid">
+          <div class="summary-card">
+            <span>Base Amount</span>
+            <strong id="amountValue">$0.00</strong>
+          </div>
+          <div class="summary-card">
+            <span>Service Fee</span>
+            <strong id="feeValue">$0.00</strong>
+          </div>
+        </div>
+
+        <div id="actions" class="actions">
+          <a id="paypalButton" class="btn btn-primary" href="#" target="_blank" rel="noopener noreferrer">Pay with PayPal</a>
+          <a id="cardButton" class="btn btn-secondary" href="#" target="_blank" rel="noopener noreferrer">Pay by Card</a>
+        </div>
+
+        <p class="meta">Reference updates are checked automatically every 10 seconds while the payment is still pending.</p>
+      </div>
+
+      <div id="detailsCard" class="details">
+        <div class="status-visual">
+          <div id="statusRing" class="ring">
+            <div class="ring-label">
+              <strong>Pending</strong>
+              <span>Awaiting Confirmation</span>
+              <div class="checkmark">✓</div>
+            </div>
+          </div>
+          <h2 id="statusTitle" class="status-title">Payment Pending</h2>
+          <p id="statusCopy" class="status-copy">Please complete the payment using one of the buttons above. This page will switch to completed after the owner confirms the payment reference inside Telegram.</p>
+          <p id="statusMeta" class="meta"></p>
+          <p id="errorText" class="meta error hidden"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const query = new URLSearchParams(window.location.search);
+    const reference = (query.get("ref") || "").trim().toUpperCase();
+    const els = {
+      statusChip: document.getElementById("statusChip"),
+      referenceValue: document.getElementById("referenceValue"),
+      payerValue: document.getElementById("payerValue"),
+      recipientValue: document.getElementById("recipientValue"),
+      totalValue: document.getElementById("totalValue"),
+      amountValue: document.getElementById("amountValue"),
+      feeValue: document.getElementById("feeValue"),
+      paypalButton: document.getElementById("paypalButton"),
+      cardButton: document.getElementById("cardButton"),
+      statusRing: document.getElementById("statusRing"),
+      detailsCard: document.getElementById("detailsCard"),
+      statusTitle: document.getElementById("statusTitle"),
+      statusCopy: document.getElementById("statusCopy"),
+      statusMeta: document.getElementById("statusMeta"),
+      errorText: document.getElementById("errorText"),
+      actions: document.getElementById("actions")
+    };
+
+    let pollTimer = null;
+
+    function formatMoney(value) {
+      return `$${Number(value || 0).toFixed(2)}`;
+    }
+
+    function formatDate(value) {
+      if (!value) return "";
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
+    }
+
+    function showError(message) {
+      els.errorText.textContent = message;
+      els.errorText.classList.remove("hidden");
+    }
+
+    function clearError() {
+      els.errorText.textContent = "";
+      els.errorText.classList.add("hidden");
+    }
+
+    function setCompletedState(payment) {
+      els.statusChip.textContent = "Payment Completed";
+      els.statusChip.classList.add("completed");
+      els.statusRing.classList.add("completed");
+      els.detailsCard.classList.add("completed");
+      els.statusTitle.textContent = "Payment Completed";
+      els.statusCopy.textContent = "This payment has been confirmed successfully by Golden Sugar Daddy.";
+      els.statusMeta.textContent = payment.completedAt ? `Confirmed on ${formatDate(payment.completedAt)}` : "Confirmed successfully.";
+      els.actions.classList.add("hidden");
+      if (pollTimer) {
+        clearInterval(pollTimer);
+        pollTimer = null;
+      }
+    }
+
+    function setPendingState(payment) {
+      els.statusChip.textContent = "Payment Pending";
+      els.statusChip.classList.remove("completed");
+      els.statusRing.classList.remove("completed");
+      els.detailsCard.classList.remove("completed");
+      els.statusTitle.textContent = "Payment Pending";
+      els.statusCopy.textContent = "Please complete the payment using one of the buttons above. This page will switch to completed after the owner confirms the payment reference inside Telegram.";
+      els.statusMeta.textContent = payment.createdAt ? `Request created on ${formatDate(payment.createdAt)}` : "";
+      els.actions.classList.remove("hidden");
+    }
+
+    function renderPayment(payment) {
+      clearError();
+      els.referenceValue.textContent = payment.reference || reference || "Unknown";
+      els.payerValue.textContent = payment.payerName || "Not provided";
+      els.recipientValue.textContent = payment.recipientName || "Not provided";
+      els.totalValue.textContent = formatMoney(payment.totalAmount);
+      els.amountValue.textContent = formatMoney(payment.amount);
+      els.feeValue.textContent = formatMoney(payment.serviceFee);
+      els.paypalButton.href = payment.checkoutUrls?.paypal || "https://www.paypal.com/";
+      els.cardButton.href = payment.checkoutUrls?.card || "https://www.visa.com/";
+
+      if (payment.status === "completed") {
+        setCompletedState(payment);
+      } else {
+        setPendingState(payment);
+      }
+    }
+
+    async function loadPayment() {
+      if (!reference) {
+        showError("Missing payment reference.");
+        els.statusTitle.textContent = "Payment Not Found";
+        els.statusCopy.textContent = "This link is missing a payment reference.";
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/payment_status?ref=${encodeURIComponent(reference)}`, {
+          headers: { "cache-control": "no-store" }
+        });
+        const data = await response.json();
+
+        if (!response.ok || !data?.payment) {
+          throw new Error(data?.error || "Payment request not found");
+        }
+
+        renderPayment(data.payment);
+      } catch (error) {
+        els.statusTitle.textContent = "Payment Not Found";
+        els.statusCopy.textContent = "We could not load this payment request right now.";
+        showError(error?.message || "Failed to load payment");
+      }
+    }
+
+    loadPayment();
+    pollTimer = setInterval(loadPayment, 10000);
+  </script>
+</body>
+</html>
