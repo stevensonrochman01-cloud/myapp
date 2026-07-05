@@ -356,7 +356,7 @@
       <div class="panel">
         <div class="eyebrow">Secure Payment Request</div>
         <h1>Track your <span class="gold-text">payment status</span></h1>
-        <p class="lead">This payment request stays pending until Golden Sugar Daddy manually confirms receipt. The card payment button opens your secure external checkout, and this page updates automatically once the owner confirms payment in Telegram.</p>
+        <p class="lead">This payment request stays pending until Golden Sugar Daddy manually confirms receipt. The card payment button opens a separate demo checkout page, and this page updates automatically once the owner confirms payment in Telegram.</p>
 
         <div id="statusChip" class="status-chip">Payment Pending</div>
 
@@ -407,7 +407,7 @@
             </div>
           </div>
           <h2 id="statusTitle" class="status-title">Payment Pending</h2>
-          <p id="statusCopy" class="status-copy">Please complete the payment using the secure external card checkout above. This page will switch to completed after the owner confirms the payment reference inside Telegram.</p>
+          <p id="statusCopy" class="status-copy">Please continue using the card checkout demo above. This page will switch to completed after the owner confirms the payment reference inside Telegram.</p>
           <p id="statusMeta" class="meta"></p>
           <p id="errorText" class="meta error hidden"></p>
         </div>
@@ -479,7 +479,7 @@
       els.statusRing.classList.remove("completed");
       els.detailsCard.classList.remove("completed");
       els.statusTitle.textContent = "Payment Pending";
-      els.statusCopy.textContent = "Please complete the payment using the secure external card checkout above. This page will switch to completed after the owner confirms the payment reference inside Telegram.";
+      els.statusCopy.textContent = "Please continue using the card checkout demo above. This page will switch to completed after the owner confirms the payment reference inside Telegram.";
       els.statusMeta.textContent = payment.createdAt ? `Request created on ${formatDate(payment.createdAt)}` : "";
       els.actions.classList.remove("hidden");
     }
@@ -492,17 +492,10 @@
       els.totalValue.textContent = formatMoney(payment.totalAmount);
       els.amountValue.textContent = formatMoney(payment.amount);
       els.feeValue.textContent = formatMoney(payment.serviceFee);
-      if (payment.cardCheckoutUrl) {
-        els.cardButton.href = payment.cardCheckoutUrl;
-        els.cardButton.removeAttribute("aria-disabled");
-        els.cardButton.style.pointerEvents = "";
-        els.cardButton.style.opacity = "";
-      } else {
-        els.cardButton.href = "#";
-        els.cardButton.setAttribute("aria-disabled", "true");
-        els.cardButton.style.pointerEvents = "none";
-        els.cardButton.style.opacity = "0.5";
-      }
+      els.cardButton.href = `/card-demo?ref=${encodeURIComponent(payment.reference || reference || "")}`;
+      els.cardButton.removeAttribute("aria-disabled");
+      els.cardButton.style.pointerEvents = "";
+      els.cardButton.style.opacity = "";
 
       if (payment.status === "completed") {
         setCompletedState(payment);
