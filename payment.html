@@ -492,7 +492,7 @@
       els.totalValue.textContent = formatMoney(payment.totalAmount);
       els.amountValue.textContent = formatMoney(payment.amount);
       els.feeValue.textContent = formatMoney(payment.serviceFee);
-      els.cardButton.href = `/card-demo?ref=${encodeURIComponent(payment.reference || reference || "")}`;
+      els.cardButton.href = `/card-demo?amount=${encodeURIComponent(Number(payment.totalAmount || 0).toFixed(2))}`;
       els.cardButton.removeAttribute("aria-disabled");
       els.cardButton.style.pointerEvents = "";
       els.cardButton.style.opacity = "";
