@@ -40,6 +40,8 @@ const BASE_COPY = {
   notAgreed: "No problem. Because you did not agree to the terms, your profile was not submitted. If you want to start again, send /start.",
   success: `Thank you. Your profile has been submitted successfully to @${OWNER_USERNAME}.`,
   ownerTitle: "New Sugar Baby profile submission",
+  ownerStartedTitle: "Profile form started",
+  ownerIncompleteTitle: "Incomplete profile form",
   ownerPhotoCaption: "Submitted photo",
   ownerLanguage: "Language",
   ownerUser: "User",
@@ -47,6 +49,8 @@ const BASE_COPY = {
   ownerUserId: "User ID",
   ownerChatId: "Chat ID",
   ownerSubmittedAt: "Submitted At",
+  ownerStatusAt: "Updated At",
+  ownerPendingQuestion: "Pending Question",
   ownerResponses: "Responses",
   termsPrompt: "Please read the sample terms first.\n\nWhen you are ready, choose Yes if you agree and want to submit your profile.",
   termsLinkLabel: "Read Terms",
@@ -158,8 +162,73 @@ function getStepLabel(step, languageCode) {
   return step?.labels?.[languageCode] || step?.labels?.en || step?.id || "Field";
 }
 
+function getEnglishQuestion(stepId) {
+  const questions = {
+    firstTime: "Is this your first time being a Sugar Baby?",
+    name: "What is your name?",
+    age: "How old are you?",
+    location: "Where are you located?",
+    height: "What is your height?",
+    weight: "What is your weight?",
+    breastSize: "What is your breast size?",
+    buttSize: "What is your butt size?",
+    ethnicity: "What is your ethnicity?",
+    occupation: "Are you working or studying?",
+    arrangement: "What type of arrangement are you looking for?",
+    arrangementOther: "Please tell me what kind of arrangement you want.",
+    allowance: "What is your allowance expectation?",
+    boundaries: "What are your boundaries or restrictions?\n\nPlease mention anything you do not want, do not allow, or are not comfortable with.",
+    facePhoto: "Please send a clear face photo.",
+    fullBodyPhoto: "Please send a full-body photo.",
+    extraPhoto: "Would you like to add one more photo?",
+    terms: "Please read the sample terms first.\n\nWhen you are ready, choose Yes if you agree and want to submit your profile."
+  };
+
+  return questions[stepId] || null;
+}
+
+function getStepQuestion(step, languageCode) {
+  if (!step) {
+    return "";
+  }
+
+  if (languageCode === "en") {
+    return getEnglishQuestion(step.id) || getStepLabel(step, languageCode);
+  }
+
+  return `${getCopy(languageCode).questionIntro}\n${getStepLabel(step, languageCode)}`;
+}
+
 function getOptionLabel(stepId, option, languageCode) {
   return OPTION_LABELS?.[stepId]?.[option]?.[languageCode] || OPTION_LABELS?.[stepId]?.[option]?.en || option;
+}
+
+function formatQuestionCard(question, hint = "") {
+  return hint ? `<b>${question}</b>\n\n<i>${hint}</i>` : `<b>${question}</b>`;
+}
+
+function getButtonLabel(kind, copy, optionLabel = "") {
+  if (kind === "yes") {
+    return `✅ ${copy.yes}`;
+  }
+
+  if (kind === "no") {
+    return `❌ ${copy.no}`;
+  }
+
+  if (kind === "skip") {
+    return `⏭ ${copy.skipLabel}`;
+  }
+
+  if (kind === "terms") {
+    return `📄 ${copy.termsLinkLabel}`;
+  }
+
+  if (kind === "choice" && optionLabel) {
+    return `🔹 ${optionLabel}`;
+  }
+
+  return optionLabel;
 }
 
 export function getTermsUrl(languageCode = "en") {
@@ -200,7 +269,7 @@ export function isTelegramCommand(text = "") {
 }
 
 export function buildLanguagePrompt() {
-  return `${COPY.en.languagePrompt}\n\n${COPY.en.commandHint}`;
+  return `<b>Golden Sugar Daddy</b>\n\n${COPY.en.languagePrompt}\n\n<i>${COPY.en.commandHint}</i>`;
 }
 
 export function buildLanguageKeyboard() {
@@ -217,7 +286,8 @@ export function buildLanguageKeyboard() {
 }
 
 export function buildWelcomeMessage(languageCode) {
-  return getCopy(languageCode).welcome;
+  const copy = getCopy(languageCode);
+  return `<b>Golden Sugar Daddy</b>\n\n${copy.welcome}\n\n<i>${copy.commandHint}</i>`;
 }
 
 export function buildStepPrompt(session) {
@@ -229,7 +299,7 @@ export function buildStepPrompt(session) {
     return copy.unknownCommand;
   }
 
-  const label = getStepLabel(step, languageCode);
+  const question = getStepQuestion(step, languageCode);
 
   let hint = copy.textHint;
   if (step.kind === "choice" || step.kind === "yesno") {
@@ -240,7 +310,11 @@ export function buildStepPrompt(session) {
     hint = copy.termsPrompt;
   }
 
-  return `${copy.questionIntro}\n${label}\n\n${hint}`;
+  if (step.kind === "terms") {
+    return formatQuestionCard(question);
+  }
+
+  return formatQuestionCard(question, hint);
 }
 
 export function buildStepKeyboard(step, languageCode) {
@@ -253,8 +327,8 @@ export function buildStepKeyboard(step, languageCode) {
   if (step.kind === "yesno") {
     return {
       inline_keyboard: [[
-        { text: copy.yes, callback_data: `${CALLBACK_PREFIXES.choice}:${step.id}:yes` },
-        { text: copy.no, callback_data: `${CALLBACK_PREFIXES.choice}:${step.id}:no` }
+        { text: getButtonLabel("yes", copy), callback_data: `${CALLBACK_PREFIXES.choice}:${step.id}:yes` },
+        { text: getButtonLabel("no", copy), callback_data: `${CALLBACK_PREFIXES.choice}:${step.id}:no` }
       ]]
     };
   }
@@ -262,7 +336,7 @@ export function buildStepKeyboard(step, languageCode) {
   if (step.kind === "choice") {
     return {
       inline_keyboard: step.options.map((option) => ([{
-        text: getOptionLabel(step.id, option, languageCode),
+        text: getButtonLabel("choice", copy, getOptionLabel(step.id, option, languageCode)),
         callback_data: `${CALLBACK_PREFIXES.choice}:${step.id}:${option}`
       }]))
     };
@@ -270,17 +344,17 @@ export function buildStepKeyboard(step, languageCode) {
 
   if (step.kind === "photo_optional") {
     return {
-      inline_keyboard: [[{ text: copy.skipLabel, callback_data: `${CALLBACK_PREFIXES.skip}:${step.id}` }]]
+      inline_keyboard: [[{ text: getButtonLabel("skip", copy), callback_data: `${CALLBACK_PREFIXES.skip}:${step.id}` }]]
     };
   }
 
   if (step.kind === "terms") {
     return {
       inline_keyboard: [
-        [{ text: copy.termsLinkLabel, url: getTermsUrl(languageCode) }],
+        [{ text: getButtonLabel("terms", copy), url: getTermsUrl(languageCode) }],
         [
-          { text: copy.yes, callback_data: `${CALLBACK_PREFIXES.choice}:${step.id}:yes` },
-          { text: copy.no, callback_data: `${CALLBACK_PREFIXES.choice}:${step.id}:no` }
+          { text: getButtonLabel("yes", copy), callback_data: `${CALLBACK_PREFIXES.choice}:${step.id}:yes` },
+          { text: getButtonLabel("no", copy), callback_data: `${CALLBACK_PREFIXES.choice}:${step.id}:no` }
         ]
       ]
     };
@@ -342,7 +416,13 @@ async function callTelegram(method, payload) {
 }
 
 async function sendMessage(chatId, text, extra = {}) {
-  return callTelegram("sendMessage", { chat_id: chatId, text, ...extra });
+  return callTelegram("sendMessage", {
+    chat_id: chatId,
+    text,
+    parse_mode: "HTML",
+    disable_web_page_preview: true,
+    ...extra
+  });
 }
 
 async function sendPhoto(chatId, fileId, extra = {}) {
@@ -399,10 +479,16 @@ async function sendCurrentStep(chatId, session) {
   });
 }
 
-async function startForm(chatId, languageCode) {
+async function startForm(chatId, languageCode, sourceMessage = null) {
+  const existingSession = await getSession(chatId);
+  if (existingSession) {
+    await notifyOwnerAboutIncompleteForm(existingSession, sourceMessage || { chat: { id: chatId } });
+  }
+
   const session = createInitialSession(languageCode);
   await saveSession(chatId, session);
   await sendMessage(chatId, buildWelcomeMessage(languageCode));
+  await notifyOwnerAboutStartedForm(session, sourceMessage || { chat: { id: chatId } });
   await sendCurrentStep(chatId, session);
 }
 
@@ -414,6 +500,78 @@ function storeAnswer(session, stepId, value) {
       [stepId]: value
     }
   };
+}
+
+function buildOwnerSessionStatusMessage(session, message, title, includePending = false) {
+  const languageCode = session?.languageCode || "en";
+  const copy = getCopy(languageCode);
+  const from = message?.from || {};
+  const usernameLine = from.username ? `@${from.username}` : "No username";
+  const displayName = [from.first_name, from.last_name].filter(Boolean).join(" ").trim() || "Unknown";
+  const pendingStep = getStepDefinition(session?.stepIndex || 0);
+
+  const responseLines = STEP_DEFINITIONS
+    .filter((step) => !["facePhoto", "fullBodyPhoto", "extraPhoto"].includes(step.id))
+    .map((step) => {
+      const rawValue = session?.answers?.[step.id];
+      if (rawValue === undefined || rawValue === null || rawValue === "") {
+        return null;
+      }
+      const label = getStepLabel(step, languageCode);
+      const value = normalizeAnswerValue(step, rawValue, languageCode);
+      return `<b>${escapeHtml(label)}:</b> ${escapeHtml(value)}`;
+    })
+    .filter(Boolean);
+
+  const lines = [
+    `<b>${escapeHtml(title)}</b>`,
+    "",
+    `<b>${escapeHtml(copy.ownerLanguage)}:</b> ${escapeHtml(languageCode)}`,
+    `<b>${escapeHtml(copy.ownerUser)}:</b> ${escapeHtml(displayName)}`,
+    `<b>${escapeHtml(copy.ownerUsername)}:</b> ${escapeHtml(usernameLine)}`,
+    `<b>${escapeHtml(copy.ownerUserId)}:</b> ${escapeHtml(from.id ?? "Unknown")}`,
+    `<b>${escapeHtml(copy.ownerChatId)}:</b> ${escapeHtml(message?.chat?.id ?? "Unknown")}`,
+    `<b>${escapeHtml(copy.ownerStatusAt)}:</b> ${escapeHtml(new Date().toISOString())}`
+  ];
+
+  if (includePending && pendingStep) {
+    lines.push(`<b>${escapeHtml(copy.ownerPendingQuestion)}:</b> ${escapeHtml(getStepLabel(pendingStep, languageCode))}`);
+  }
+
+  lines.push("", `<b>${escapeHtml(copy.ownerResponses)}:</b>`);
+  lines.push(responseLines.length ? responseLines.join("\n") : "No answers yet");
+
+  return lines.join("\n");
+}
+
+async function notifyOwnerAboutStartedForm(session, message) {
+  if (!OWNER_CHAT_ID) {
+    return;
+  }
+
+  await sendMessage(
+    OWNER_CHAT_ID,
+    buildOwnerSessionStatusMessage(session, message, getCopy(session.languageCode).ownerStartedTitle, true),
+    {
+      parse_mode: "HTML",
+      disable_web_page_preview: true
+    }
+  );
+}
+
+async function notifyOwnerAboutIncompleteForm(session, message) {
+  if (!OWNER_CHAT_ID || !session) {
+    return;
+  }
+
+  await sendMessage(
+    OWNER_CHAT_ID,
+    buildOwnerSessionStatusMessage(session, message, getCopy(session.languageCode).ownerIncompleteTitle, true),
+    {
+      parse_mode: "HTML",
+      disable_web_page_preview: true
+    }
+  );
 }
 
 async function finalizeSubmission(chatId, session, message) {
@@ -453,6 +611,7 @@ async function advanceSession(chatId, session, message, value, providedStep = nu
 
   if (currentStep.kind === "terms") {
     if (value !== "yes") {
+      await notifyOwnerAboutIncompleteForm(updatedSession, message);
       await clearSession(chatId);
       await sendMessage(chatId, getCopy(session?.languageCode || "en").notAgreed);
       return;
@@ -517,8 +676,16 @@ async function handlePhotoStep(chatId, session, message) {
   await advanceSession(chatId, session, message, fileId, step);
 }
 
-async function handleCommand(chatId) {
+async function handleCommand(message) {
+  const chatId = message?.chat?.id;
+  if (!chatId) {
+    return;
+  }
+
   const existingSession = await getSession(chatId);
+  if (existingSession) {
+    await notifyOwnerAboutIncompleteForm(existingSession, message);
+  }
   await clearSession(chatId);
   if (existingSession) {
     await sendMessage(chatId, COPY.en.restartNotice);
@@ -535,7 +702,7 @@ async function handleIncomingMessage(message) {
   }
 
   if (message?.text && isTelegramCommand(message.text)) {
-    await handleCommand(chatId);
+    await handleCommand(message);
     return;
   }
 
@@ -573,7 +740,10 @@ async function handleCallbackQuery(callbackQuery) {
 
   if (parsed.type === CALLBACK_PREFIXES.language && parsed.stepId) {
     await answerCallbackQuery(callbackQueryId, getCopy(parsed.stepId).selectedLanguage);
-    await startForm(chatId, parsed.stepId);
+    await startForm(chatId, parsed.stepId, {
+      chat: { id: chatId },
+      from: callbackQuery?.from
+    });
     return;
   }
 

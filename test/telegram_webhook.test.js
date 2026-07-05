@@ -24,6 +24,7 @@ test("isTelegramCommand detects telegram commands", () => {
 
 test("buildLanguagePrompt asks the user to pick a language first", () => {
   const text = buildLanguagePrompt();
+  assert.match(text, /<b>Golden Sugar Daddy<\/b>/);
   assert.match(text, /choose your language/i);
   assert.match(text, /\/start/);
 });
@@ -44,6 +45,7 @@ test("buildLanguageKeyboard exposes the requested languages with flags", () => {
 
 test("buildWelcomeMessage contains the simpler guided-flow intro", () => {
   const text = buildWelcomeMessage("en");
+  assert.match(text, /<b>Golden Sugar Daddy<\/b>/);
   assert.match(text, /Golden Sugar Daddy, founded in 2023/i);
   assert.doesNotMatch(text, /Step 1\/21/i);
 });
@@ -54,9 +56,8 @@ test("buildStepPrompt renders a text step without visible progress numbering", (
     stepIndex: 1
   });
 
-  assert.match(text, /Please answer this:/i);
-  assert.match(text, /Name\/Nickname/);
-  assert.match(text, /Type your answer below/i);
+  assert.match(text, /<b>What is your name\?<\/b>/i);
+  assert.match(text, /<i>Type your answer below\.<\/i>/i);
   assert.doesNotMatch(text, /Step \d+/i);
 });
 
@@ -75,12 +76,12 @@ test("buildStepKeyboard renders choice, skip, and terms-link actions for guided 
   );
 
   assert.equal(buttSizeKeyboard.inline_keyboard.length, 3);
-  assert.equal(buttSizeKeyboard.inline_keyboard[0][0].text, "Small");
-  assert.equal(extraPhotoKeyboard.inline_keyboard[0][0].text, "Skip");
-  assert.equal(termsKeyboard.inline_keyboard[0][0].text, "Read Terms");
+  assert.equal(buttSizeKeyboard.inline_keyboard[0][0].text, "🔹 Small");
+  assert.equal(extraPhotoKeyboard.inline_keyboard[0][0].text, "⏭ Skip");
+  assert.equal(termsKeyboard.inline_keyboard[0][0].text, "📄 Read Terms");
   assert.equal(termsKeyboard.inline_keyboard[0][0].url, getTermsUrl("en"));
-  assert.equal(termsKeyboard.inline_keyboard[1][0].text, "Yes");
-  assert.equal(termsKeyboard.inline_keyboard[1][1].text, "No");
+  assert.equal(termsKeyboard.inline_keyboard[1][0].text, "✅ Yes");
+  assert.equal(termsKeyboard.inline_keyboard[1][1].text, "❌ No");
 });
 
 test("getTermsUrl includes the selected language", () => {

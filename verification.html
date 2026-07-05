@@ -90,6 +90,63 @@
       margin:26px 0;
     }
 
+    header.site-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:18px 5%;
+      position:sticky;
+      top:0;
+      z-index:50;
+      background:rgba(5,5,5,0.88);
+      backdrop-filter:blur(14px);
+      border-bottom:1px solid rgba(255,255,255,0.08);
+    }
+    .site-header .logo{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      color:#fff;
+      text-decoration:none;
+      font-size:1.15rem;
+    }
+    .site-header .logo-mark{
+      width:14px;
+      height:14px;
+      border-radius:999px;
+      background: radial-gradient(circle at 30% 30%, #F3E5AB, var(--gold), var(--gold2));
+      box-shadow: 0 0 22px rgba(212,175,55,0.18);
+      flex-shrink:0;
+    }
+    .site-header nav ul{
+      display:flex;
+      gap:18px;
+      align-items:center;
+      list-style:none;
+      margin:0;
+      padding:0;
+    }
+    .site-header nav a,
+    .mobile-site-nav a{
+      color:rgba(255,255,255,0.72);
+      text-decoration:none;
+      transition:0.25s;
+    }
+    .site-header nav a:hover,
+    .mobile-site-nav a:hover,
+    .site-header nav a[aria-current="page"],
+    .mobile-site-nav a[aria-current="page"]{
+      color:var(--gold);
+    }
+    .mobile-site-nav{
+      display:none;
+      padding:12px 5% 18px;
+      gap:14px;
+      flex-wrap:wrap;
+      border-bottom:1px solid rgba(255,255,255,0.08);
+      background:rgba(5,5,5,0.95);
+    }
+
     /* Info boxes */
     .info-box{
       border:1px solid rgba(58, 134, 255, 0.25);
@@ -759,6 +816,12 @@
     }
 
     @media (max-width: 640px){
+      .site-header nav{
+        display:none;
+      }
+      .mobile-site-nav{
+        display:flex;
+      }
       .container{
         padding: 60px 4% 50px;
       }
@@ -1094,6 +1157,35 @@
 </head>
 
 <body>
+  <header class="site-header" aria-label="Site header">
+    <a class="logo" href="/" aria-label="Brand home">
+      <span class="logo-mark" aria-hidden="true"></span>
+      <div><span class="gold-text">Golden</span> SugarDaddy</div>
+    </a>
+
+    <nav aria-label="Primary navigation">
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/#process">Process</a></li>
+        <li><a href="/#verify">Verification</a></li>
+        <li><a href="/verification" aria-current="page">Start Verification</a></li>
+        <li><a href="/verify">Verify Profile</a></li>
+        <li><a href="/scammers.html">Scammer List</a></li>
+        <li><a href="/terms">Terms</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <div class="mobile-site-nav" aria-label="Mobile navigation">
+    <a href="/">Home</a>
+    <a href="/#process">Process</a>
+    <a href="/#verify">Verification</a>
+    <a href="/verification" aria-current="page">Start Verification</a>
+    <a href="/verify">Verify Profile</a>
+    <a href="/scammers.html">Scammer List</a>
+    <a href="/terms">Terms</a>
+  </div>
+
   <!-- Role Selection Modal -->
   <div class="overlay" id="roleOverlay">
     <div class="modal" role="dialog" aria-modal="true">
