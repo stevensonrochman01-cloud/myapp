@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Demo Only - Checkout</title>
+<title>Sneat - Checkout</title>
 <style>
   :root {
     --primary: #7367F0;
@@ -81,17 +81,7 @@
     font-weight: 500;
     cursor: pointer;
   }
-  .demo-banner {
-    margin: 16px auto 0;
-    max-width: 1400px;
-    background: #FFF4D6;
-    color: #8A5B00;
-    border: 1px solid #F3D27A;
-    border-radius: 12px;
-    padding: 14px 18px;
-    font-size: 14px;
-    font-weight: 600;
-  }
+
   .container {
     max-width: 1400px;
     margin: 24px auto;
@@ -125,7 +115,7 @@
     display: flex;
     align-items: center;
     gap: 14px;
-    cursor: default;
+    cursor: pointer;
   }
   .pay-card.selected {
     border: 1.5px solid var(--primary);
@@ -199,13 +189,8 @@
     outline: none;
     appearance: none;
   }
-  .field input:disabled,
-  .field select:disabled {
-    color: #A0A4AD;
-    background: #FAFAFC;
-    cursor: not-allowed;
-  }
   .field input::placeholder { color: #B0AEBB; }
+  .field input:focus, .field select:focus { border-color: var(--primary); }
   .input-icon {
     position: absolute;
     right: 12px;
@@ -245,6 +230,17 @@
     margin-bottom: 18px;
   }
   .plan-price span { font-size: 14px; font-weight: 400; color: var(--text-muted); }
+  .change-plan-btn {
+    width: 100%;
+    background: var(--primary-light);
+    color: var(--primary);
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 14.5px;
+    font-weight: 500;
+    cursor: pointer;
+  }
   .summary-line {
     display: flex;
     justify-content: space-between;
@@ -260,7 +256,7 @@
   }
   .pay-btn {
     width: 100%;
-    background: #C9CDD4;
+    background: var(--green);
     color: #fff;
     border: none;
     padding: 15px;
@@ -268,30 +264,40 @@
     font-size: 15.5px;
     font-weight: 600;
     margin-top: 24px;
-    cursor: not-allowed;
+    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
+    transition: background 0.15s ease;
   }
+  .pay-btn:hover { background: var(--green-dark); }
   .fine-print {
     font-size: 13px;
     color: var(--text-muted);
     line-height: 1.6;
     margin-top: 20px;
   }
+  .fine-print a { color: var(--text-muted); text-decoration: underline; }
   @media (max-width: 900px) {
     .container { flex-direction: column; }
     .summary-panel { border-left: none; border-top: 1px solid var(--border); }
     .nav-links { display: none; }
   }
+
+#planPrice{
+font-size: 40px;
+    font-weight: 700;
+    color: #3A3B4A;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    margin-bottom: 18px;
+
+}
 </style>
 </head>
 <body>
-
-  <div class="demo-banner">
-    Demo only. This page is a visual mockup, all payment fields are disabled, and no card data is submitted or stored.
-  </div>
 
   <nav class="navbar">
     <div class="navbar-left">
@@ -322,8 +328,8 @@
 
   <div class="container">
     <div class="checkout-panel">
-      <h1>Checkout Demo</h1>
-      <p class="subtitle">This is a demo-only payment layout for presentation purposes. The fields below are intentionally disabled and cannot be used to submit real payment details.</p>
+      <h1>Checkout</h1>
+      <p class="subtitle">All plans include 40+ advanced tools and features to boost your product. Choose the best plan to fit your needs.</p>
 
       <div class="payment-methods">
         <div class="pay-card selected">
@@ -344,14 +350,14 @@
           <div class="field">
             <label>Email Address</label>
             <div class="input-wrap">
-              <input type="email" placeholder="john.doe@gmail.com" disabled>
+              <input type="email" placeholder="john.doe@gmail.com">
               <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
             </div>
           </div>
           <div class="field">
             <label>Password</label>
             <div class="input-wrap">
-              <input type="password" placeholder="Password" disabled>
+              <input type="password" placeholder="Password">
               <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>
             </div>
           </div>
@@ -360,13 +366,13 @@
           <div class="field">
             <label>Country</label>
             <div class="input-wrap select-wrap">
-              <select disabled><option>Select</option></select>
+              <select><option>Select</option></select>
             </div>
           </div>
           <div class="field">
             <label>Billing Zip / Postal Code</label>
             <div class="input-wrap">
-              <input type="text" placeholder="Zip / Postal Code" disabled>
+              <input type="text" placeholder="Zip / Postal Code">
               <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
             </div>
           </div>
@@ -378,7 +384,7 @@
         <div class="field" style="margin-bottom: 20px;">
           <label>Card Number</label>
           <div class="input-wrap">
-            <input type="text" placeholder="7465 8374 5837 5067" disabled>
+            <input type="text" placeholder="7465 8374 5837 5067">
             <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
           </div>
         </div>
@@ -386,18 +392,18 @@
           <div class="field">
             <label>Name</label>
             <div class="input-wrap">
-              <input type="text" placeholder="John Doe" disabled>
+              <input type="text" placeholder="John Doe">
               <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
             </div>
           </div>
           <div class="field">
             <label>Exp. Date</label>
-            <input type="text" placeholder="MM/YY" disabled>
+            <input type="text" placeholder="MM/YY">
           </div>
           <div class="field">
             <label>CVV</label>
             <div class="input-wrap">
-              <input type="text" placeholder="965" disabled>
+              <input type="text" placeholder="965">
               <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/></svg>
             </div>
           </div>
@@ -407,24 +413,51 @@
 
     <div class="summary-panel">
       <h1>Order Summary</h1>
-      <p class="summary-intro">This side is demo-only and is shown only to complete the sample checkout look.</p>
+      <p class="summary-intro">It can help you manage and service orders before, during and after fulfilment.</p>
 
       <div class="plan-box">
-        <div class="plan-label">Demo plan preview</div>
-        <div class="plan-price">$59.99 <span>/month</span></div>
+        <div class="plan-label">A simple start for everyone</div>
+        <div class="plan-price">$<span id="planPrice">0.00</span> <span></span></div>
+        <button class="change-plan-btn">Change Plan</button>
       </div>
 
-      <div class="summary-line"><span>Subtotal</span><span>$85.99</span></div>
-      <div class="summary-line"><span>Tax</span><span>$4.99</span></div>
-      <div class="summary-line total"><span>Total</span><span>$90.98</span></div>
+      <div class="summary-line"><span>Subtotal</span><span>$<span id="subtotal">0.00</span></span></div>
+      <div class="summary-line"><span>Tax</span><span>$<span id="tax">0.00</span></span></div>
+      <div class="summary-line total"><span>Total</span><span>$<span id="total">0.00</span></span></div>
 
-      <button class="pay-btn" disabled>Demo Only
+      <button class="pay-btn">Proceed with Payment
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
       </button>
 
-      <p class="fine-print">This is a disabled demonstration screen only. No payment information can be entered, submitted, processed, or stored from this page.</p>
+      <p class="fine-print">By continuing, you accept to our Terms of Services and Privacy Policy. Please note that payments are non-refundable.</p>
     </div>
   </div>
+
+  <script>
+    (function () {
+      const TAX_RATE = 0.058; // 5.8%
+
+      function getAmount() {
+        const params = new URLSearchParams(window.location.search);
+        const raw = params.get('amount');
+        const value = parseFloat(raw);
+        return (raw === null || isNaN(value) || value < 0) ? 0 : value;
+      }
+
+      function formatMoney(n) {
+        return n.toFixed(2);
+      }
+
+      const amount = getAmount();
+      const tax = amount * TAX_RATE;
+      const total = amount ;
+
+      document.getElementById('planPrice').textContent = formatMoney(amount);
+      document.getElementById('subtotal').textContent = formatMoney(amount);
+      document.getElementById('tax').textContent = 0;
+      document.getElementById('total').textContent = formatMoney(total);
+    })();
+  </script>
 
 </body>
 </html>
