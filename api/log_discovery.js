@@ -1,4 +1,5 @@
 import { buildDiscoveryLogEntry } from "./_requestMeta.js";
+import { buildDiscoveryAlertMessage, sendOwnerAlert } from "./_ownerAlerts.js";
 
 function parseRequestBody(body) {
   if (!body) {
@@ -38,6 +39,7 @@ export default async function handler(req, res) {
   });
 
   console.log("visitor_location_log", JSON.stringify(logEntry));
+  await sendOwnerAlert(buildDiscoveryAlertMessage(logEntry));
 
   return res.status(200).json({ ok: true });
 }

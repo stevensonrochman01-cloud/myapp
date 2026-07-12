@@ -393,6 +393,13 @@
     document.getElementById("findDaddies").addEventListener("click", () => {
       handleDiscovery("find_sugardaddies_near_me", "SugarDaddies near me");
     });
+
+    sendDiscoveryLog({
+      action: "page_visit",
+      permission: "not_requested"
+    }).catch((error) => {
+      console.error(error);
+    });
   </script>
 </body>
 </html>
