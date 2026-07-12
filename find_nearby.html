@@ -3,300 +3,735 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Find SugarBabies Or SugarDaddies Near Me</title>
-  <meta name="description" content="Find SugarBabies or SugarDaddies near you with quick location-enabled discovery." />
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <title>Find SugarBabies Near You | Golden Sugar Match</title>
+  <meta name="description" content="Discover nearby SugarBabies or SugarDaddies with a premium local matching experience." />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0a0907;
-      --bg-soft: #16110d;
-      --panel: rgba(24, 18, 12, 0.88);
-      --panel-strong: rgba(38, 29, 20, 0.94);
-      --gold: #d4af37;
-      --gold-soft: #f3df9c;
-      --text: #f8f5ef;
-      --muted: #c8bcaa;
-      --line: rgba(255, 231, 170, 0.14);
-      --shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
-      --radius: 24px;
+      --bg: #140d0a;
+      --bg-2: #221510;
+      --panel: rgba(30, 20, 15, 0.9);
+      --panel-soft: rgba(255, 248, 236, 0.05);
+      --line: rgba(244, 205, 134, 0.14);
+      --line-strong: rgba(244, 205, 134, 0.28);
+      --gold: #d4a64f;
+      --gold-deep: #8f6420;
+      --gold-soft: #f5e0b3;
+      --text: #fbf4ea;
+      --muted: #cdbda6;
+      --muted-2: #9d8870;
+      --success: #d7bf7a;
+      --shadow: 0 28px 90px rgba(0, 0, 0, 0.45);
+      --radius-xl: 34px;
+      --radius-lg: 24px;
+      --radius-md: 18px;
+      --radius-pill: 999px;
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
       min-height: 100vh;
-      font-family: "Montserrat", sans-serif;
+      font-family: "Manrope", sans-serif;
       color: var(--text);
       background:
-        radial-gradient(circle at top right, rgba(212, 175, 55, 0.16), transparent 28%),
-        radial-gradient(circle at bottom left, rgba(212, 175, 55, 0.11), transparent 30%),
-        linear-gradient(135deg, #050505 0%, #120d09 52%, #060606 100%);
+        radial-gradient(circle at 12% 18%, rgba(243, 187, 99, 0.16), transparent 24%),
+        radial-gradient(circle at 80% 10%, rgba(165, 89, 43, 0.2), transparent 28%),
+        radial-gradient(circle at 50% 100%, rgba(243, 187, 99, 0.08), transparent 35%),
+        linear-gradient(180deg, #100a08 0%, #1a100c 38%, #120a07 100%);
     }
 
-    .page {
-      width: min(1120px, calc(100% - 32px));
+    .shell {
+      width: min(1240px, calc(100% - 28px));
       margin: 0 auto;
-      padding: 28px 0 48px;
+      padding: 22px 0 40px;
     }
 
-    .hero {
+    .frame {
       position: relative;
       overflow: hidden;
       border: 1px solid var(--line);
-      border-radius: 32px;
-      padding: 28px;
-      background: linear-gradient(180deg, rgba(20, 15, 11, 0.92), rgba(8, 7, 6, 0.96));
+      border-radius: 36px;
+      background:
+        linear-gradient(180deg, rgba(37, 24, 18, 0.94), rgba(18, 11, 8, 0.98)),
+        linear-gradient(120deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0));
       box-shadow: var(--shadow);
+      padding: 24px;
     }
 
-    .hero::before,
-    .hero::after {
+    .frame::before,
+    .frame::after {
       content: "";
       position: absolute;
       border-radius: 999px;
-      filter: blur(12px);
+      filter: blur(14px);
       pointer-events: none;
     }
 
-    .hero::before {
-      width: 260px;
-      height: 260px;
-      top: -80px;
-      right: -40px;
-      background: radial-gradient(circle, rgba(212, 175, 55, 0.26), transparent 68%);
+    .frame::before {
+      width: 360px;
+      height: 360px;
+      top: -140px;
+      right: -90px;
+      background: radial-gradient(circle, rgba(243, 187, 99, 0.18), transparent 66%);
     }
 
-    .hero::after {
-      width: 220px;
-      height: 220px;
-      bottom: -90px;
-      left: -50px;
-      background: radial-gradient(circle, rgba(212, 175, 55, 0.14), transparent 68%);
+    .frame::after {
+      width: 300px;
+      height: 300px;
+      left: -120px;
+      bottom: -130px;
+      background: radial-gradient(circle, rgba(214, 136, 74, 0.12), transparent 64%);
     }
 
-    .nav {
+    .topbar {
+      position: relative;
+      z-index: 1;
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 16px;
-      margin-bottom: 48px;
-      position: relative;
-      z-index: 1;
+      margin-bottom: 22px;
     }
 
     .brand {
-      font-family: "Playfair Display", serif;
-      font-size: 1.5rem;
-      letter-spacing: 0.08em;
+      display: flex;
+      align-items: center;
+      gap: 14px;
     }
 
-    .brand span {
+    .brand-mark {
+      width: 46px;
+      height: 46px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(145deg, rgba(244, 205, 134, 0.24), rgba(143, 100, 32, 0.28));
+      border: 1px solid var(--line-strong);
       color: var(--gold-soft);
+      font-size: 1.2rem;
+      font-weight: 700;
     }
 
-    .nav a {
+    .brand-copy strong {
+      display: block;
+      font-size: 1rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .brand-copy span {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .topbar a {
       color: var(--muted);
       text-decoration: none;
-      border: 1px solid var(--line);
       padding: 10px 16px;
-      border-radius: 999px;
-      font-size: 0.92rem;
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.02);
     }
 
-    .content {
-      display: grid;
-      grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
-      gap: 26px;
+    .hero-grid {
       position: relative;
       z-index: 1;
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(330px, 0.8fr);
+      gap: 24px;
+      align-items: start;
+    }
+
+    .hero-copy {
+      padding: 20px 10px 4px 4px;
     }
 
     .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 14px;
+      margin-bottom: 22px;
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--line);
       color: var(--gold-soft);
+      background: rgba(255, 255, 255, 0.02);
+      letter-spacing: 0.16em;
       text-transform: uppercase;
-      letter-spacing: 0.24em;
-      font-size: 0.76rem;
-      margin-bottom: 18px;
+      font-size: 0.74rem;
+      font-weight: 700;
     }
 
     h1 {
-      font-family: "Playfair Display", serif;
-      font-size: clamp(2.6rem, 6vw, 5rem);
-      line-height: 0.95;
-      margin: 0 0 18px;
-      max-width: 11ch;
+      margin: 0;
+      max-width: 12ch;
+      font-family: "Cormorant Garamond", serif;
+      font-size: clamp(3rem, 6.8vw, 5.6rem);
+      line-height: 0.9;
+      letter-spacing: -0.02em;
     }
 
-    .lead {
+    .hero-copy p {
+      max-width: 640px;
+      font-size: 1.04rem;
+      line-height: 1.8;
       color: var(--muted);
-      max-width: 620px;
-      font-size: 1.05rem;
-      line-height: 1.7;
-      margin-bottom: 28px;
+      margin: 18px 0 0;
+    }
+
+    .micro-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 22px 0 0;
+    }
+
+    .micro-pill {
+      padding: 10px 14px;
+      border-radius: var(--radius-pill);
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      color: var(--gold-soft);
+      font-size: 0.88rem;
+    }
+
+    .action-panel,
+    .profile-panel,
+    .insight-panel {
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(44, 28, 22, 0.9), rgba(22, 14, 10, 0.95));
+      box-shadow: var(--shadow);
+    }
+
+    .action-panel {
+      padding: 22px;
+    }
+
+    .panel-label {
+      color: var(--gold-soft);
+      font-size: 0.76rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      display: block;
+    }
+
+    .panel-title {
+      margin: 0;
+      font-family: "Cormorant Garamond", serif;
+      font-size: 2rem;
+      line-height: 1;
+    }
+
+    .panel-copy {
+      margin: 12px 0 18px;
+      color: var(--muted);
+      line-height: 1.75;
+      font-size: 0.96rem;
+    }
+
+    .signal-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .signal {
+      padding: 14px;
+      border-radius: var(--radius-md);
+      background: var(--panel-soft);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .signal strong {
+      display: block;
+      font-size: 1.1rem;
+      color: var(--gold-soft);
+      margin-bottom: 4px;
+    }
+
+    .signal span {
+      color: var(--muted-2);
+      font-size: 0.84rem;
     }
 
     .button-row {
       display: flex;
-      flex-wrap: wrap;
-      gap: 14px;
-      margin-bottom: 18px;
+      flex-direction: column;
+      gap: 12px;
     }
 
     button {
+      width: 100%;
       border: 0;
-      border-radius: 999px;
-      padding: 15px 22px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: transform 0.22s ease, box-shadow 0.22s ease, opacity 0.22s ease;
+      border-radius: 20px;
+      padding: 16px 18px;
       font-family: inherit;
+      text-align: left;
+      cursor: pointer;
+      transition: transform 0.22s ease, box-shadow 0.22s ease, opacity 0.22s ease, border-color 0.22s ease;
     }
 
-    button:hover { transform: translateY(-2px); }
-    button:disabled { opacity: 0.7; cursor: wait; }
+    button:hover {
+      transform: translateY(-2px);
+    }
+
+    button:disabled {
+      opacity: 0.72;
+      cursor: wait;
+    }
+
+    .primary,
+    .secondary {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+    }
 
     .primary {
-      background: linear-gradient(135deg, #f1d36f 0%, var(--gold) 46%, #8b6419 100%);
-      color: #170f05;
-      box-shadow: 0 18px 40px rgba(212, 175, 55, 0.28);
+      color: #201106;
+      background: linear-gradient(135deg, #f7df9d 0%, #e2b456 52%, #9d6d24 100%);
+      box-shadow: 0 18px 40px rgba(212, 166, 79, 0.3);
     }
 
     .secondary {
-      background: rgba(255, 255, 255, 0.04);
       color: var(--text);
+      background: rgba(255, 255, 255, 0.04);
       border: 1px solid var(--line);
+    }
+
+    .button-copy strong {
+      display: block;
+      font-size: 1rem;
+      margin-bottom: 4px;
+    }
+
+    .button-copy span {
+      display: block;
+      font-size: 0.85rem;
+      line-height: 1.45;
+      opacity: 0.8;
+    }
+
+    .button-icon {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.18);
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .secondary .button-icon {
+      background: rgba(244, 205, 134, 0.12);
+      color: var(--gold-soft);
     }
 
     .status {
-      margin-top: 10px;
       min-height: 24px;
-      color: var(--gold-soft);
-      font-size: 0.95rem;
-    }
-
-    .note {
       margin-top: 14px;
-      color: var(--muted);
-      font-size: 0.9rem;
-      max-width: 640px;
+      color: var(--success);
+      font-size: 0.94rem;
     }
 
-    .panel {
-      background: linear-gradient(180deg, rgba(31, 22, 16, 0.96), rgba(16, 11, 8, 0.95));
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      padding: 24px;
-      box-shadow: var(--shadow);
+    .quiet-note {
+      margin-top: 12px;
+      color: var(--muted-2);
+      font-size: 0.85rem;
+      line-height: 1.6;
     }
 
-    .panel h2 {
-      margin: 0 0 16px;
-      font-family: "Playfair Display", serif;
-      font-size: 1.65rem;
-    }
-
-    .feature-list {
+    .lower-grid {
+      position: relative;
+      z-index: 1;
+      margin-top: 22px;
       display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+      gap: 24px;
+    }
+
+    .profile-panel {
+      padding: 22px;
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: end;
+      margin-bottom: 18px;
+    }
+
+    .section-head h2,
+    .insight-panel h2 {
+      margin: 0;
+      font-family: "Cormorant Garamond", serif;
+      font-size: 2rem;
+      line-height: 1;
+    }
+
+    .section-head p,
+    .insight-panel p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 0.94rem;
+    }
+
+    .live-dot {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 12px;
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--line);
+      color: var(--gold-soft);
+      background: rgba(255, 255, 255, 0.03);
+      font-size: 0.82rem;
+      white-space: nowrap;
+    }
+
+    .live-dot::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #f2cb6b;
+      box-shadow: 0 0 0 6px rgba(242, 203, 107, 0.1);
+    }
+
+    .profile-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 14px;
     }
 
-    .feature {
-      padding: 14px 16px;
-      border-radius: 18px;
+    .profile-card {
+      border-radius: 24px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .profile-photo {
+      aspect-ratio: 0.85;
+      position: relative;
+      padding: 16px;
+      display: flex;
+      align-items: end;
+      background:
+        linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(12, 7, 4, 0.72)),
+        var(--profile-bg);
+    }
+
+    .profile-pill {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      padding: 7px 11px;
+      border-radius: var(--radius-pill);
+      background: rgba(16, 10, 7, 0.62);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--gold-soft);
+      font-size: 0.78rem;
+    }
+
+    .profile-text strong {
+      display: block;
+      font-size: 1.1rem;
+      margin-bottom: 4px;
+    }
+
+    .profile-text span {
+      color: #ebdcc5;
+      font-size: 0.85rem;
+    }
+
+    .profile-meta {
+      padding: 14px 16px 16px;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .tag {
+      padding: 6px 10px;
+      border-radius: var(--radius-pill);
+      background: rgba(244, 205, 134, 0.08);
+      border: 1px solid rgba(244, 205, 134, 0.12);
+      color: var(--gold-soft);
+      font-size: 0.76rem;
+    }
+
+    .profile-meta p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    .insight-panel {
+      padding: 22px;
+      display: grid;
+      gap: 16px;
+      align-content: start;
+    }
+
+    .insight-card {
+      padding: 16px 18px;
+      border-radius: 22px;
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
-    .feature strong {
+    .insight-card strong {
       display: block;
       color: var(--gold-soft);
+      font-size: 0.95rem;
       margin-bottom: 6px;
-      font-size: 0.98rem;
     }
 
-    .chip-row {
+    .insight-card span {
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.65;
+    }
+
+    .city-list {
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
-      margin-top: 18px;
     }
 
-    .chip {
+    .city-list span {
       padding: 9px 12px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.04);
+      border-radius: var(--radius-pill);
       border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.02);
       color: var(--muted);
-      font-size: 0.86rem;
+      font-size: 0.82rem;
     }
 
-    @media (max-width: 860px) {
-      .content {
+    @media (max-width: 1080px) {
+      .hero-grid,
+      .lower-grid {
         grid-template-columns: 1fr;
-      }
-
-      .hero {
-        padding: 22px;
-      }
-
-      .nav {
-        margin-bottom: 28px;
       }
 
       h1 {
         max-width: none;
       }
     }
+
+    @media (max-width: 760px) {
+      .shell {
+        width: min(100% - 16px, 1240px);
+        padding-top: 10px;
+      }
+
+      .frame {
+        padding: 16px;
+        border-radius: 28px;
+      }
+
+      .topbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .topbar a {
+        text-align: center;
+      }
+
+      .signal-grid,
+      .profile-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .section-head {
+        flex-direction: column;
+        align-items: start;
+      }
+    }
   </style>
 </head>
 <body>
-  <div class="page">
-    <section class="hero">
-      <div class="nav">
-        <div class="brand">Golden <span>Sugar</span> Match</div>
+  <div class="shell">
+    <section class="frame">
+      <div class="topbar">
+        <div class="brand">
+          <div class="brand-mark">GS</div>
+          <div class="brand-copy">
+            <strong>Golden Sugar Match</strong>
+            <span>Premium local discovery for discreet arrangements</span>
+          </div>
+        </div>
         <a href="/">Back to home</a>
       </div>
 
-      <div class="content">
-        <div>
-          <div class="eyebrow">Nearby discovery</div>
-          <h1>Find SugarBabies or SugarDaddies near you.</h1>
-          <p class="lead">
-            Tap one of the discovery buttons below. We will ask for your location permission, then log your selected search type and approved location so you can build a nearby matching flow around it.
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <div class="eyebrow">Nearby Sugar Discovery</div>
+          <h1>Find nearby SugarBabies that actually fit your city, style, and pace.</h1>
+          <p>
+            Built for fast local discovery, private arrangements, and members who prefer to meet within their own area. Enable location and start a nearby search for SugarBabies or SugarDaddies in seconds.
+          </p>
+          <div class="micro-row">
+            <div class="micro-pill">Location-based discovery</div>
+            <div class="micro-pill">Nearby activity focus</div>
+            <div class="micro-pill">Private matching flow</div>
+          </div>
+        </div>
+
+        <aside class="action-panel">
+          <span class="panel-label">Start Search</span>
+          <h2 class="panel-title">Search around your current area</h2>
+          <p class="panel-copy">
+            Choose who you want to discover nearby. We will ask for location permission so the search can be centered around your current city or district.
           </p>
 
+          <div class="signal-grid">
+            <div class="signal">
+              <strong>5-25 km</strong>
+              <span>Typical nearby discovery radius</span>
+            </div>
+            <div class="signal">
+              <strong>Private</strong>
+              <span>Built for discreet local browsing</span>
+            </div>
+          </div>
+
           <div class="button-row">
-            <button id="findBabies" class="primary" type="button">Find SugarBabies Near Me</button>
-            <button id="findDaddies" class="secondary" type="button">Find SugarDaddies Near Me</button>
+            <button id="findBabies" class="primary" type="button">
+              <div class="button-copy">
+                <strong>Find SugarBabies Near Me</strong>
+                <span>See who is closest to your current area and actively open to nearby arrangements.</span>
+              </div>
+              <div class="button-icon">SB</div>
+            </button>
+
+            <button id="findDaddies" class="secondary" type="button">
+              <div class="button-copy">
+                <strong>Find SugarDaddies Near Me</strong>
+                <span>Use your current location to start a local search for generous nearby matches.</span>
+              </div>
+              <div class="button-icon">SD</div>
+            </button>
           </div>
 
           <div id="status" class="status" aria-live="polite"></div>
-          <p class="note">
-            This page logs page visits through your Vercel middleware. When a visitor presses a button, it also logs their IP address again together with the chosen action and any location they allow the browser to share.
-          </p>
-        </div>
+          <div class="quiet-note">
+            Your browser may ask for location permission so the nearby search can be centered around you.
+          </div>
+        </aside>
+      </div>
 
-        <aside class="panel">
-          <h2>What gets logged</h2>
-          <div class="feature-list">
-            <div class="feature">
-              <strong>Page visit</strong>
-              Each visit to this page is logged with IP address, path, user agent, referer, and timestamp.
+      <div class="lower-grid">
+        <section class="profile-panel">
+          <div class="section-head">
+            <div>
+              <h2>Nearby profile style preview</h2>
+              <p>The local discovery experience is designed to feel city-focused, active, and selective.</p>
             </div>
-            <div class="feature">
-              <strong>Discovery action</strong>
-              The button choice is logged as either `find_sugarbabies_near_me` or `find_sugardaddies_near_me`.
-            </div>
-            <div class="feature">
-              <strong>Location result</strong>
-              If permission is granted, latitude, longitude, and accuracy are logged. If permission is denied, that denial is logged too.
-            </div>
+            <div class="live-dot">Nearby mode ready</div>
           </div>
 
-          <div class="chip-row">
-            <div class="chip">IP logging enabled</div>
-            <div class="chip">Browser location permission</div>
-            <div class="chip">Vercel function logs</div>
+          <div class="profile-grid">
+            <article class="profile-card">
+              <div class="profile-photo" style="--profile-bg: linear-gradient(135deg, #7a3a2f 0%, #d18f6f 50%, #2c1511 100%);">
+                <div class="profile-pill">3.2 km away</div>
+                <div class="profile-text">
+                  <strong>Amelia, 24</strong>
+                  <span>Luxury dinners, travel, private meets</span>
+                </div>
+              </div>
+              <div class="profile-meta">
+                <div class="tags">
+                  <span class="tag">Recently active</span>
+                  <span class="tag">City center</span>
+                </div>
+                <p>Soft-spoken, stylish, and prefers a consistent local arrangement over random long-distance chats.</p>
+              </div>
+            </article>
+
+            <article class="profile-card">
+              <div class="profile-photo" style="--profile-bg: linear-gradient(135deg, #5c1f1f 0%, #b76868 44%, #261112 100%);">
+                <div class="profile-pill">6.8 km away</div>
+                <div class="profile-text">
+                  <strong>Layla, 22</strong>
+                  <span>Upscale dates, gifts, weekly meets</span>
+                </div>
+              </div>
+              <div class="profile-meta">
+                <div class="tags">
+                  <span class="tag">Evening availability</span>
+                  <span class="tag">High response</span>
+                </div>
+                <p>Looking for a refined arrangement with someone nearby who values chemistry, comfort, and generosity.</p>
+              </div>
+            </article>
+
+            <article class="profile-card">
+              <div class="profile-photo" style="--profile-bg: linear-gradient(135deg, #6a4a1d 0%, #d6a767 46%, #24140a 100%);">
+                <div class="profile-pill">9.1 km away</div>
+                <div class="profile-text">
+                  <strong>Sofia, 25</strong>
+                  <span>Fashion, brunch dates, weekend plans</span>
+                </div>
+              </div>
+              <div class="profile-meta">
+                <div class="tags">
+                  <span class="tag">Weekend friendly</span>
+                  <span class="tag">Verified vibe</span>
+                </div>
+                <p>Interested in nearby connections that feel polished, easygoing, and worth meeting in person soon.</p>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <aside class="insight-panel">
+          <div>
+            <h2>How nearby mode feels</h2>
+            <p>Designed to read like a local discovery product rather than a generic landing page.</p>
+          </div>
+
+          <div class="insight-card">
+            <strong>Local-first positioning</strong>
+            <span>The page is framed around city-based discovery, quick permission-based search, and selective nearby matches.</span>
+          </div>
+
+          <div class="insight-card">
+            <strong>Profile-style browsing</strong>
+            <span>Instead of plain buttons only, the layout now previews the kind of nearby SugarBaby discovery users expect to see.</span>
+          </div>
+
+          <div class="insight-card">
+            <strong>Premium tone</strong>
+            <span>The typography, color palette, and card styling are shaped to feel more like a discreet upscale matching page.</span>
+          </div>
+
+          <div class="city-list">
+            <span>Dubai Marina</span>
+            <span>JLT</span>
+            <span>Downtown</span>
+            <span>Business Bay</span>
+            <span>Palm Jumeirah</span>
+            <span>City Walk</span>
           </div>
         </aside>
       </div>
@@ -363,7 +798,7 @@
           }
         });
 
-        setStatus(label + " search logged with your location.");
+        setStatus("No one is near you right now. Try again later or search from a different area.");
       } catch (error) {
         const denied = error && typeof error.code === "number" && error.code === 1;
 
@@ -377,9 +812,9 @@
         }
 
         if (denied) {
-          setStatus("Location permission was denied. We still logged the search request without coordinates.");
+          setStatus("We could not check nearby matches because location permission was denied.");
         } else {
-          setStatus("We could not get your location. The search request was still logged.");
+          setStatus("We could not check nearby matches right now. Please try again.");
         }
       } finally {
         setLoading(false);
