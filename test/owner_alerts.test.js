@@ -8,6 +8,8 @@ test("buildDiscoveryAlertMessage includes the important discovery fields", () =>
     action: "find_sugarbabies_near_me",
     permission: "granted",
     ip: "198.51.100.55",
+    country: "AE",
+    city: "Dubai",
     pathname: "/find-nearby",
     method: "POST",
     latitude: 25.2048,
@@ -22,6 +24,8 @@ test("buildDiscoveryAlertMessage includes the important discovery fields", () =>
   assert.match(message, /Action: find_sugarbabies_near_me/);
   assert.match(message, /Permission: granted/);
   assert.match(message, /IP: 198.51.100.55/);
+  assert.match(message, /Country: AE/);
+  assert.match(message, /City: Dubai/);
   assert.match(message, /Latitude: 25.2048/);
   assert.match(message, /Longitude: 55.2708/);
 });

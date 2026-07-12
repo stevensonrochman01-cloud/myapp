@@ -5,6 +5,10 @@ function firstHeaderValue(value) {
   return value || "";
 }
 
+function normalizedHeaderString(value) {
+  return firstHeaderValue(value).toString().trim();
+}
+
 export function extractClientIp(headers = {}) {
   const forwardedFor = firstHeaderValue(headers["x-forwarded-for"]);
   if (forwardedFor) {
@@ -40,14 +44,20 @@ export function buildVisitorLogEntry({
   headers = {},
   method = "",
   pathname = "",
-  source = "request"
+  source = "request",
+  geo = null
 } = {}) {
+  const headerCountry = normalizedHeaderString(headers["x-vercel-ip-country"]);
+  const headerCity = decodeURIComponent(normalizedHeaderString(headers["x-vercel-ip-city"]) || "");
+
   return {
     source,
     timestamp: new Date().toISOString(),
     ip: extractClientIp(headers),
     method: method || "",
     pathname: pathname || "/",
+    country: geo?.country || headerCountry || "",
+    city: geo?.city || headerCity || "",
     userAgent: firstHeaderValue(headers["user-agent"]).toString(),
     referer: firstHeaderValue(headers.referer).toString()
   };
@@ -64,13 +74,15 @@ export function buildDiscoveryLogEntry({
   action = "",
   permission = "unknown",
   coords = null,
-  source = "discovery_location"
+  source = "discovery_location",
+  geo = null
 } = {}) {
   const baseLog = buildVisitorLogEntry({
     headers,
     method: "POST",
     pathname,
-    source
+    source,
+    geo
   });
 
   return {

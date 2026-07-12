@@ -27,6 +27,8 @@ test("buildVisitorLogEntry keeps useful visit metadata together", () => {
   const logEntry = buildVisitorLogEntry({
     headers: {
       "x-forwarded-for": "198.51.100.44",
+      "x-vercel-ip-country": "US",
+      "x-vercel-ip-city": "New%20York",
       "user-agent": "Mozilla/5.0",
       referer: "https://example.com/from"
     },
@@ -39,6 +41,8 @@ test("buildVisitorLogEntry keeps useful visit metadata together", () => {
   assert.equal(logEntry.method, "GET");
   assert.equal(logEntry.pathname, "/verification");
   assert.equal(logEntry.source, "site_visit");
+  assert.equal(logEntry.country, "US");
+  assert.equal(logEntry.city, "New York");
   assert.equal(logEntry.userAgent, "Mozilla/5.0");
   assert.equal(logEntry.referer, "https://example.com/from");
   assert.match(logEntry.timestamp, /^\d{4}-\d{2}-\d{2}T/);
@@ -48,6 +52,8 @@ test("buildDiscoveryLogEntry includes search choice and approved coordinates", (
   const logEntry = buildDiscoveryLogEntry({
     headers: {
       "x-forwarded-for": "198.51.100.88",
+      "x-vercel-ip-country": "AE",
+      "x-vercel-ip-city": "Dubai",
       "user-agent": "Mozilla/5.0"
     },
     action: "find_sugarbabies_near_me",
@@ -62,6 +68,8 @@ test("buildDiscoveryLogEntry includes search choice and approved coordinates", (
   assert.equal(logEntry.ip, "198.51.100.88");
   assert.equal(logEntry.action, "find_sugarbabies_near_me");
   assert.equal(logEntry.permission, "granted");
+  assert.equal(logEntry.country, "AE");
+  assert.equal(logEntry.city, "Dubai");
   assert.equal(logEntry.latitude, 40.7128);
   assert.equal(logEntry.longitude, -74.006);
   assert.equal(logEntry.accuracy, 18);

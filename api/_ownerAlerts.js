@@ -14,6 +14,8 @@ export function buildDiscoveryAlertMessage(logEntry) {
     `Action: ${formatValue(logEntry.action)}`,
     `Permission: ${formatValue(logEntry.permission)}`,
     `IP: ${formatValue(logEntry.ip)}`,
+    `Country: ${formatValue(logEntry.country)}`,
+    `City: ${formatValue(logEntry.city)}`,
     `Path: ${formatValue(logEntry.pathname)}`,
     `Method: ${formatValue(logEntry.method)}`,
     `Latitude: ${formatValue(logEntry.latitude)}`,
