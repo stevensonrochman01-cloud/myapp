@@ -1,4 +1,5 @@
 import { google } from "googleapis";
+import { extractClientIp } from "./_requestMeta.js";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).send("Method Not Allowed");
@@ -41,7 +42,7 @@ export default async function handler(req, res) {
       dob: String(body.dob || "").trim(),
       preference: String(body.preference || "").trim(),
       about: String(body.about || "").trim(),
-      ip: (req.headers["x-forwarded-for"] || "").toString().split(",")[0].trim(),
+      ip: extractClientIp(req.headers),
       userAgent: String(req.headers["user-agent"] || "")
     };
 
