@@ -3,6 +3,7 @@
     { "source": "/terms", "destination": "/terms.html" },
     { "source": "/payment", "destination": "/payment.html" },
     { "source": "/card-demo", "destination": "/card-demo.html" },
+    { "source": "/find-nearby", "destination": "/find_nearby.html" },
 
     { "source": "/verify", "destination": "/verify_profile.html" },
     { "source": "/verify_profile", "destination": "/verify_profile.html" },
@@ -25,6 +26,7 @@
 
     { "source": "/(en|es|ru)/admin", "destination": "/admin.html" },
     { "source": "/(en|es|ru)/admin_verification", "destination": "/admin_verification.html" },
+    { "source": "/(en|es|ru)/find-nearby", "destination": "/find_nearby.html" },
 
     { "source": "/(en|es|ru)", "destination": "/" },
     { "source": "/(en|es|ru)/(.*)", "destination": "/" }

@@ -18,6 +18,6 @@ export default function middleware(req) {
 
 export const config = {
   matcher: [
-    "/((?!_next/|_vercel/|favicon.ico|robots.txt|sitemap.xml|.*\\.(?:css|js|mjs|map|png|jpg|jpeg|gif|webp|svg|ico|txt|xml|woff|woff2)$).*)"
+    "/((?!api/|_next/|_vercel/|favicon.ico|robots.txt|sitemap.xml|.*\\.(?:css|js|mjs|map|png|jpg|jpeg|gif|webp|svg|ico|txt|xml|woff|woff2)$).*)"
   ]
 };

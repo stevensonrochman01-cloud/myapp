@@ -52,3 +52,33 @@ export function buildVisitorLogEntry({
     referer: firstHeaderValue(headers.referer).toString()
   };
 }
+
+function normalizeNumber(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+export function buildDiscoveryLogEntry({
+  headers = {},
+  pathname = "/find-nearby",
+  action = "",
+  permission = "unknown",
+  coords = null,
+  source = "discovery_location"
+} = {}) {
+  const baseLog = buildVisitorLogEntry({
+    headers,
+    method: "POST",
+    pathname,
+    source
+  });
+
+  return {
+    ...baseLog,
+    action: action || "",
+    permission,
+    latitude: normalizeNumber(coords?.latitude),
+    longitude: normalizeNumber(coords?.longitude),
+    accuracy: normalizeNumber(coords?.accuracy)
+  };
+}
