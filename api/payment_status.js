@@ -1,4 +1,4 @@
-import { getPaymentRecord } from "./_paymentStore.js";
+import { buildPublicPaymentRecord, getPaymentRecord } from "./_paymentStore.js";
 
 export default async function handler(req, res) {
   if (req.method !== "GET") {
@@ -19,19 +19,7 @@ export default async function handler(req, res) {
     res.setHeader("Cache-Control", "no-store, max-age=0");
     return res.status(200).json({
       ok: true,
-      payment: {
-        reference: record.reference,
-        recipientName: record.recipientName,
-        payerName: record.payerName,
-        amount: record.amount,
-        serviceFee: record.serviceFee,
-        totalAmount: record.totalAmount,
-        status: record.status,
-        createdAt: record.createdAt,
-        completedAt: record.completedAt,
-        paymentUrl: record.paymentUrl,
-        cardCheckoutUrl: record.cardCheckoutUrl || ""
-      }
+      payment: buildPublicPaymentRecord(record)
     });
   } catch (error) {
     return res.status(500).json({

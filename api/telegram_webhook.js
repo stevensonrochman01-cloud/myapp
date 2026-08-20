@@ -71,7 +71,12 @@ const BASE_COPY = {
     "<b>Payment Link:</b>\n{paymentUrl}\n\n" +
     "<i>When payment is received, send {reference} DONE to mark it complete.</i>",
   ownerPaymentCompleted:
-    "Payment marked as completed.\n\n<b>Reference:</b> {reference}\n<b>Total:</b> ${total}\n<b>Status:</b> Completed",
+    "Payment marked as completed.\n\n" +
+    "<b>Reference:</b> {reference}\n" +
+    "<b>Total:</b> ${total}\n" +
+    "<b>Status:</b> Completed\n" +
+    "<b>Scheduler Verification Code:</b> <code>{scheduleCode}</code>\n\n" +
+    "<i>Use this password to unlock the public scheduling portal for this payment.</i>",
   ownerPaymentNotFound: "I could not find that payment reference.",
   ownerPaymentOnly: "This payment command is only available for the owner account.",
   ownerPaymentHint: "Send /payment to create a payment request.",
@@ -343,7 +348,8 @@ function buildOwnerPaymentCreatedMessage(record) {
 function buildOwnerPaymentCompletedMessage(record) {
   return COPY.en.ownerPaymentCompleted
     .replace("{reference}", escapeHtml(record.reference))
-    .replace("{total}", formatMoney(record.totalAmount));
+    .replace("{total}", formatMoney(record.totalAmount))
+    .replace("{scheduleCode}", escapeHtml(record.scheduleVerificationCode || "Not issued"));
 }
 
 export function buildLanguagePrompt() {

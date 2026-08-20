@@ -19,25 +19,37 @@
       --shadow-gold: 0 0 22px rgba(212, 175, 55, 0.18);
       --success: #6ed38a;
       --danger: #ff8b8b;
+      --warning: #f6d673;
+      --info: #8bc1ff;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
       min-height: 100vh;
       color: var(--text-white);
-      font-family: 'Montserrat', sans-serif;
+      font-family: "Montserrat", sans-serif;
       background:
         radial-gradient(circle at top right, rgba(212, 175, 55, 0.08), transparent 30%),
         linear-gradient(180deg, #0d0d0d 0%, #050505 100%);
     }
 
     a { color: inherit; text-decoration: none; }
-    h1, h2, h3 { font-family: 'Playfair Display', serif; }
+    button, input {
+      font: inherit;
+    }
+    h1, h2, h3 {
+      font-family: "Playfair Display", serif;
+    }
 
     .gold-text {
       background: linear-gradient(to right, var(--gold-light), var(--gold-main), var(--gold-dark));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
+    }
+
+    .hidden {
+      display: none !important;
     }
 
     header {
@@ -47,7 +59,7 @@
       padding: 18px 5%;
       position: sticky;
       top: 0;
-      z-index: 20;
+      z-index: 30;
       background: rgba(5, 5, 5, 0.84);
       backdrop-filter: blur(14px);
       border-bottom: 1px solid var(--border);
@@ -71,19 +83,25 @@
     }
 
     .hero {
-      padding: 72px 5% 96px;
+      padding: 72px 5% 110px;
+    }
+
+    .shell,
+    .scheduler-shell {
+      max-width: 1180px;
+      margin: 0 auto;
     }
 
     .shell {
-      max-width: 1140px;
-      margin: 0 auto;
       display: grid;
-      grid-template-columns: 1.1fr 0.9fr;
+      grid-template-columns: 1.12fr 0.88fr;
       gap: 28px;
       align-items: stretch;
     }
 
-    .panel, .details {
+    .panel,
+    .details,
+    .portal-card {
       background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
       border: 1px solid var(--border);
       box-shadow: var(--shadow-gold);
@@ -108,57 +126,103 @@
       line-height: 0.98;
     }
 
+    h2 {
+      font-size: clamp(1.8rem, 3vw, 2.5rem);
+    }
+
     .lead {
       color: var(--text-grey);
       font-size: 1.02rem;
       max-width: 680px;
+      line-height: 1.7;
     }
 
-    .status-chip {
+    .status-chip,
+    .mini-chip,
+    .message-pill {
       display: inline-flex;
       align-items: center;
       gap: 10px;
       width: fit-content;
       padding: 10px 16px;
       border-radius: 999px;
-      background: rgba(212, 175, 55, 0.12);
-      border: 1px solid rgba(212, 175, 55, 0.22);
-      color: var(--gold-light);
       font-weight: 600;
       letter-spacing: 0.03em;
+      border: 1px solid transparent;
     }
 
-    .status-chip.completed {
+    .status-chip {
+      background: rgba(212, 175, 55, 0.12);
+      border-color: rgba(212, 175, 55, 0.22);
+      color: var(--gold-light);
+    }
+
+    .status-chip.completed,
+    .mini-chip.success,
+    .message-pill.success {
       background: rgba(110, 211, 138, 0.12);
       border-color: rgba(110, 211, 138, 0.28);
       color: var(--success);
     }
 
-    .summary-grid {
+    .mini-chip.info {
+      background: rgba(139, 193, 255, 0.12);
+      border-color: rgba(139, 193, 255, 0.28);
+      color: var(--info);
+    }
+
+    .mini-chip.warning {
+      background: rgba(246, 214, 115, 0.12);
+      border-color: rgba(246, 214, 115, 0.28);
+      color: var(--warning);
+    }
+
+    .message-pill.error {
+      background: rgba(255, 139, 139, 0.12);
+      border-color: rgba(255, 139, 139, 0.28);
+      color: var(--danger);
+    }
+
+    .summary-grid,
+    .stats-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 14px;
       margin-top: 8px;
     }
 
-    .summary-card {
+    .summary-card,
+    .stat-card {
       padding: 16px 18px;
       background: rgba(255,255,255,0.02);
       border: 1px solid var(--border);
     }
 
-    .summary-card span {
+    .summary-card span,
+    .stat-card span {
       display: block;
       color: var(--text-grey);
-      font-size: 0.86rem;
+      font-size: 0.82rem;
       margin-bottom: 8px;
       text-transform: uppercase;
       letter-spacing: 0.08em;
     }
 
-    .summary-card strong {
+    .summary-card strong,
+    .stat-card strong {
+      display: block;
       font-size: 1.05rem;
       word-break: break-word;
+      line-height: 1.4;
+    }
+
+    .summary-card small,
+    .stat-card small {
+      display: block;
+      color: var(--text-grey);
+      margin-top: 8px;
+      line-height: 1.6;
+      font-size: 0.85rem;
     }
 
     .actions {
@@ -177,11 +241,18 @@
       border-radius: 999px;
       border: 1px solid transparent;
       font-weight: 600;
-      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+      cursor: pointer;
     }
 
     .btn:hover {
       transform: translateY(-1px);
+    }
+
+    .btn[disabled] {
+      cursor: wait;
+      opacity: 0.75;
+      transform: none;
     }
 
     .btn-primary {
@@ -292,10 +363,7 @@
       display: grid;
     }
 
-    .details.completed .ring-label strong {
-      display: none;
-    }
-
+    .details.completed .ring-label strong,
     .details.completed .ring-label span {
       display: none;
     }
@@ -304,14 +372,14 @@
       font-size: clamp(2rem, 4vw, 3rem);
     }
 
-    .status-copy {
+    .status-copy,
+    .portal-copy,
+    .meta {
       color: var(--text-grey);
-      font-size: 1rem;
       line-height: 1.7;
     }
 
     .meta {
-      color: var(--text-grey);
       font-size: 0.92rem;
     }
 
@@ -319,8 +387,186 @@
       color: var(--danger);
     }
 
-    .hidden {
-      display: none !important;
+    .scheduler-shell {
+      margin-top: 34px;
+    }
+
+    .scheduler-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+    }
+
+    .portal-card {
+      padding: 30px;
+      display: grid;
+      gap: 18px;
+      align-content: start;
+      min-height: 100%;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .field {
+      display: grid;
+      gap: 8px;
+    }
+
+    .field label {
+      font-size: 0.82rem;
+      color: var(--text-grey);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+    }
+
+    .field input {
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.03);
+      color: var(--text-white);
+      padding: 14px 16px;
+      outline: none;
+    }
+
+    .field input:focus {
+      border-color: rgba(212, 175, 55, 0.45);
+      box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.08);
+    }
+
+    .field small {
+      color: var(--text-grey);
+      line-height: 1.6;
+    }
+
+    .row-two {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .portal-summary {
+      display: grid;
+      gap: 14px;
+    }
+
+    .tracking-empty {
+      padding: 18px 20px;
+      border: 1px dashed rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.02);
+      border-radius: 18px;
+      color: var(--text-grey);
+      line-height: 1.7;
+    }
+
+    .tracking-topline {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .timeline {
+      display: grid;
+      gap: 12px;
+    }
+
+    .timeline-item {
+      position: relative;
+      padding: 18px 18px 18px 50px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.02);
+      border-radius: 18px;
+    }
+
+    .timeline-item::before {
+      content: "";
+      position: absolute;
+      left: 20px;
+      top: 24px;
+      width: 14px;
+      height: 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.16);
+      border: 1px solid rgba(255,255,255,0.18);
+      box-shadow: 0 0 0 6px rgba(255,255,255,0.02);
+    }
+
+    .timeline-item.complete::before {
+      background: var(--success);
+      border-color: rgba(110, 211, 138, 0.45);
+    }
+
+    .timeline-item.active {
+      border-color: rgba(212, 175, 55, 0.28);
+      box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.08);
+    }
+
+    .timeline-item.active::before {
+      background: var(--gold-main);
+      border-color: rgba(212, 175, 55, 0.45);
+    }
+
+    .timeline-item.upcoming::before {
+      background: rgba(255,255,255,0.08);
+    }
+
+    .timeline-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .timeline-head strong {
+      font-size: 1rem;
+    }
+
+    .timeline-date {
+      color: var(--text-grey);
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .lock-note {
+      padding: 16px 18px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.02);
+      color: var(--text-grey);
+      line-height: 1.7;
+    }
+
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .inline-form {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: end;
+    }
+
+    .inline-form .field {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .portal-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
     }
 
     @keyframes spin {
@@ -328,16 +574,21 @@
       to { transform: rotate(360deg); }
     }
 
-    @media (max-width: 920px) {
-      .shell {
+    @media (max-width: 980px) {
+      .shell,
+      .scheduler-grid {
         grid-template-columns: 1fr;
       }
 
-      .panel, .details {
+      .panel,
+      .details,
+      .portal-card {
         padding: 24px;
       }
 
-      .summary-grid {
+      .summary-grid,
+      .stats-grid,
+      .row-two {
         grid-template-columns: 1fr;
       }
     }
@@ -356,7 +607,7 @@
       <div class="panel">
         <div class="eyebrow">Secure Payment Request</div>
         <h1>Track your <span class="gold-text">payment status</span></h1>
-        <p class="lead">This payment request stays pending until Golden Sugar Daddy manually confirms receipt. The card payment button opens a separate demo checkout page, and this page updates automatically once the owner confirms payment in Telegram.</p>
+        <p class="lead">This payment request stays pending until Golden Sugar Daddy manually confirms receipt. Once it has been approved, a scheduler verification password is issued privately to the admin so the payout portal can be unlocked.</p>
 
         <div id="statusChip" class="status-chip">Payment Pending</div>
 
@@ -392,9 +643,10 @@
 
         <div id="actions" class="actions">
           <a id="cardButton" class="btn btn-primary" href="#" target="_blank" rel="noopener noreferrer">Pay with Card</a>
+          <button id="scheduleButton" class="btn btn-secondary hidden" type="button">Schedule Payment</button>
         </div>
 
-        <p class="meta">Reference updates are checked automatically every 10 seconds while the payment is still pending.</p>
+        <p id="pollingMeta" class="meta">Reference updates are checked automatically every 10 seconds so the portal can reflect approval and scheduler progress.</p>
       </div>
 
       <div id="detailsCard" class="details">
@@ -403,7 +655,7 @@
             <div class="ring-label">
               <strong>Pending</strong>
               <span>Awaiting Confirmation</span>
-              <div class="checkmark">✓</div>
+              <div class="checkmark">&#10003;</div>
             </div>
           </div>
           <h2 id="statusTitle" class="status-title">Payment Pending</h2>
@@ -413,11 +665,145 @@
         </div>
       </div>
     </div>
+
+    <div id="schedulerSection" class="scheduler-shell hidden">
+      <div class="scheduler-grid">
+        <div class="portal-card">
+          <div class="eyebrow">Receiver Scheduler Portal</div>
+          <h2>Unlock and schedule the payout</h2>
+          <p class="portal-copy">After approval, the receiver can use the verification password shared by the admin to unlock this portal, review the received amount, add bank details, and choose the first payout date.</p>
+
+          <div class="badge-row">
+            <div id="schedulerAccessChip" class="mini-chip info">Awaiting verification code</div>
+            <div id="schedulerModeChip" class="mini-chip warning">Portal locked</div>
+          </div>
+
+          <div id="schedulerAccessCard" class="tracking-empty hidden">
+            Press <strong>Schedule Payment</strong> above to enter the verification code and unlock the scheduler controls.
+          </div>
+
+          <form id="verifyForm" class="form-grid hidden" autocomplete="off">
+            <div class="inline-form">
+              <div class="field">
+                <label for="verificationCode">Verification code</label>
+                <input id="verificationCode" type="text" placeholder="Enter the admin password" maxlength="16" />
+              </div>
+              <button id="verifyButton" class="btn btn-primary" type="submit">Verify Code</button>
+            </div>
+            <p id="verificationMessage" class="message-pill hidden"></p>
+          </form>
+
+          <div id="schedulerPortal" class="form-grid hidden">
+            <div class="portal-summary">
+              <div class="stats-grid">
+                <div class="stat-card">
+                  <span>Payout Receiver</span>
+                  <strong id="portalRecipient">Not available</strong>
+                  <small>The payout portal is tied to the approved receiver name for this reference.</small>
+                </div>
+                <div class="stat-card">
+                  <span>Payment Received</span>
+                  <strong id="portalAmount">$0.00</strong>
+                  <small>This is the receiver-side amount shown inside the scheduling portal.</small>
+                </div>
+                <div class="stat-card">
+                  <span>Platform Fee Retained</span>
+                  <strong id="portalFee">$0.00</strong>
+                  <small>The service fee stays with the platform and is not part of the scheduled payout.</small>
+                </div>
+                <div class="stat-card">
+                  <span>Total Collected</span>
+                  <strong id="portalCollected">$0.00</strong>
+                  <small>The public tracker keeps both the gross collection and the receiver payout visible.</small>
+                </div>
+              </div>
+            </div>
+
+            <form id="scheduleForm" class="form-grid" autocomplete="off">
+              <div class="row-two">
+                <div class="field">
+                  <label for="bankName">Bank name</label>
+                  <input id="bankName" type="text" placeholder="Example: First Atlantic Bank" />
+                </div>
+                <div class="field">
+                  <label for="accountHolder">Account holder</label>
+                  <input id="accountHolder" type="text" placeholder="Receiver legal name" />
+                </div>
+              </div>
+
+              <div class="row-two">
+                <div class="field">
+                  <label for="accountNumber">Bank account</label>
+                  <input id="accountNumber" type="text" placeholder="Account number" />
+                  <small id="accountHint">Enter the payout account that should receive the scheduled amount.</small>
+                </div>
+                <div class="field">
+                  <label for="startDate">Start date</label>
+                  <input id="startDate" type="date" />
+                  <small>Start date must be today or any future date. Public status begins from that date.</small>
+                </div>
+              </div>
+
+              <div class="portal-actions">
+                <button id="scheduleSubmitButton" class="btn btn-primary" type="submit">Save Scheduler</button>
+                <button id="scrollStatusButton" class="btn btn-secondary" type="button">Jump to Status</button>
+              </div>
+              <p id="scheduleMessage" class="message-pill hidden"></p>
+            </form>
+          </div>
+        </div>
+
+        <div class="portal-card">
+          <div class="eyebrow">Public Tracking Portal</div>
+          <div class="tracking-topline">
+            <div>
+              <h2>Scheduled payout status</h2>
+              <p id="trackingLead" class="portal-copy">Once a payout has been scheduled, anyone with this page can review its public status timeline.</p>
+            </div>
+            <div id="currentStageChip" class="mini-chip warning hidden">Awaiting schedule</div>
+          </div>
+
+          <div id="trackingEmpty" class="tracking-empty">
+            The scheduler has not been started yet. After payment approval, verify the admin password to set the bank account and start date.
+          </div>
+
+          <div id="trackingPortal" class="form-grid hidden">
+            <div class="stats-grid">
+              <div class="stat-card">
+                <span>Receiver</span>
+                <strong id="trackingRecipient">Not scheduled</strong>
+              </div>
+              <div class="stat-card">
+                <span>Payout Amount</span>
+                <strong id="trackingAmount">$0.00</strong>
+              </div>
+              <div class="stat-card">
+                <span>Bank Account</span>
+                <strong id="trackingBank">Not scheduled</strong>
+              </div>
+              <div class="stat-card">
+                <span>Start Date</span>
+                <strong id="trackingStartDate">Not scheduled</strong>
+              </div>
+            </div>
+
+            <div class="badge-row">
+              <div id="trackingCurrentBadge" class="mini-chip info">Awaiting schedule</div>
+              <div id="trackingNextBadge" class="mini-chip warning hidden">Next milestone pending</div>
+            </div>
+
+            <div id="timeline" class="timeline"></div>
+            <div id="hiddenStageNote" class="lock-note hidden"></div>
+          </div>
+        </div>
+      </div>
+    </div>
   </section>
 
   <script>
     const query = new URLSearchParams(window.location.search);
     const reference = (query.get("ref") || "").trim().toUpperCase();
+
     const els = {
       statusChip: document.getElementById("statusChip"),
       referenceValue: document.getElementById("referenceValue"),
@@ -427,25 +813,85 @@
       amountValue: document.getElementById("amountValue"),
       feeValue: document.getElementById("feeValue"),
       cardButton: document.getElementById("cardButton"),
+      scheduleButton: document.getElementById("scheduleButton"),
+      actions: document.getElementById("actions"),
+      pollingMeta: document.getElementById("pollingMeta"),
       statusRing: document.getElementById("statusRing"),
       detailsCard: document.getElementById("detailsCard"),
       statusTitle: document.getElementById("statusTitle"),
       statusCopy: document.getElementById("statusCopy"),
       statusMeta: document.getElementById("statusMeta"),
       errorText: document.getElementById("errorText"),
-      actions: document.getElementById("actions")
+
+      schedulerSection: document.getElementById("schedulerSection"),
+      schedulerAccessChip: document.getElementById("schedulerAccessChip"),
+      schedulerModeChip: document.getElementById("schedulerModeChip"),
+      schedulerAccessCard: document.getElementById("schedulerAccessCard"),
+      verifyForm: document.getElementById("verifyForm"),
+      verificationCode: document.getElementById("verificationCode"),
+      verifyButton: document.getElementById("verifyButton"),
+      verificationMessage: document.getElementById("verificationMessage"),
+
+      schedulerPortal: document.getElementById("schedulerPortal"),
+      portalRecipient: document.getElementById("portalRecipient"),
+      portalAmount: document.getElementById("portalAmount"),
+      portalFee: document.getElementById("portalFee"),
+      portalCollected: document.getElementById("portalCollected"),
+      scheduleForm: document.getElementById("scheduleForm"),
+      bankName: document.getElementById("bankName"),
+      accountHolder: document.getElementById("accountHolder"),
+      accountNumber: document.getElementById("accountNumber"),
+      accountHint: document.getElementById("accountHint"),
+      startDate: document.getElementById("startDate"),
+      scheduleSubmitButton: document.getElementById("scheduleSubmitButton"),
+      scrollStatusButton: document.getElementById("scrollStatusButton"),
+      scheduleMessage: document.getElementById("scheduleMessage"),
+
+      trackingLead: document.getElementById("trackingLead"),
+      trackingEmpty: document.getElementById("trackingEmpty"),
+      trackingPortal: document.getElementById("trackingPortal"),
+      currentStageChip: document.getElementById("currentStageChip"),
+      trackingRecipient: document.getElementById("trackingRecipient"),
+      trackingAmount: document.getElementById("trackingAmount"),
+      trackingBank: document.getElementById("trackingBank"),
+      trackingStartDate: document.getElementById("trackingStartDate"),
+      trackingCurrentBadge: document.getElementById("trackingCurrentBadge"),
+      trackingNextBadge: document.getElementById("trackingNextBadge"),
+      timeline: document.getElementById("timeline"),
+      hiddenStageNote: document.getElementById("hiddenStageNote")
     };
 
     let pollTimer = null;
+    let currentPayment = null;
+    let verifiedCode = "";
 
     function formatMoney(value) {
       return `$${Number(value || 0).toFixed(2)}`;
     }
 
-    function formatDate(value) {
+    function formatDateTime(value) {
       if (!value) return "";
       const date = new Date(value);
       return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
+    }
+
+    function formatDateOnly(value) {
+      if (!value) return "";
+      const date = new Date(`${value}T00:00:00`);
+      if (Number.isNaN(date.getTime())) return value;
+      return date.toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "numeric"
+      });
+    }
+
+    function getTodayInputValue() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = `${now.getMonth() + 1}`.padStart(2, "0");
+      const day = `${now.getDate()}`.padStart(2, "0");
+      return `${year}-${month}-${day}`;
     }
 
     function showError(message) {
@@ -458,19 +904,35 @@
       els.errorText.classList.add("hidden");
     }
 
-    function setCompletedState(payment) {
-      els.statusChip.textContent = "Payment Completed";
-      els.statusChip.classList.add("completed");
-      els.statusRing.classList.add("completed");
-      els.detailsCard.classList.add("completed");
-      els.statusTitle.textContent = "Payment Completed";
-      els.statusCopy.textContent = "This payment has been confirmed successfully by Golden Sugar Daddy.";
-      els.statusMeta.textContent = payment.completedAt ? `Confirmed on ${formatDate(payment.completedAt)}` : "Confirmed successfully.";
-      els.actions.classList.add("hidden");
-      if (pollTimer) {
-        clearInterval(pollTimer);
-        pollTimer = null;
-      }
+    function setInlineMessage(element, message, type) {
+      element.textContent = message;
+      element.className = `message-pill ${type}`;
+      element.classList.remove("hidden");
+    }
+
+    function clearInlineMessage(element) {
+      element.textContent = "";
+      element.className = "message-pill hidden";
+    }
+
+    function setButtonLoading(button, loading, normalText, loadingText) {
+      button.disabled = loading;
+      button.textContent = loading ? loadingText : normalText;
+    }
+
+    function markFieldDirty(event) {
+      event.target.dataset.dirty = "true";
+    }
+
+    [els.bankName, els.accountHolder, els.accountNumber, els.startDate].forEach((field) => {
+      field.addEventListener("input", markFieldDirty);
+      field.addEventListener("change", markFieldDirty);
+    });
+
+    function resetFieldDirtyFlags() {
+      [els.bankName, els.accountHolder, els.accountNumber, els.startDate].forEach((field) => {
+        delete field.dataset.dirty;
+      });
     }
 
     function setPendingState(payment) {
@@ -480,11 +942,160 @@
       els.detailsCard.classList.remove("completed");
       els.statusTitle.textContent = "Payment Pending";
       els.statusCopy.textContent = "Please continue using the card checkout demo above. This page will switch to completed after the owner confirms the payment reference inside Telegram.";
-      els.statusMeta.textContent = payment.createdAt ? `Request created on ${formatDate(payment.createdAt)}` : "";
-      els.actions.classList.remove("hidden");
+      els.statusMeta.textContent = payment.createdAt ? `Request created on ${formatDateTime(payment.createdAt)}` : "";
+      els.cardButton.classList.remove("hidden");
+      els.scheduleButton.classList.add("hidden");
+      els.schedulerSection.classList.add("hidden");
+      verifiedCode = "";
+      clearInlineMessage(els.verificationMessage);
+      clearInlineMessage(els.scheduleMessage);
+    }
+
+    function setCompletedState(payment) {
+      els.statusChip.textContent = "Payment Completed";
+      els.statusChip.classList.add("completed");
+      els.statusRing.classList.add("completed");
+      els.detailsCard.classList.add("completed");
+      els.statusTitle.textContent = "Payment Completed";
+      els.statusCopy.textContent = "This payment has been confirmed successfully by Golden Sugar Daddy. You can now unlock the payout scheduler with the admin verification password.";
+      els.statusMeta.textContent = payment.completedAt ? `Confirmed on ${formatDateTime(payment.completedAt)}` : "Confirmed successfully.";
+      els.cardButton.classList.add("hidden");
+      els.scheduleButton.classList.remove("hidden");
+      els.schedulerSection.classList.remove("hidden");
+    }
+
+    function renderTimeline(schedule) {
+      els.timeline.innerHTML = "";
+
+      for (const stage of schedule.stages || []) {
+        const item = document.createElement("div");
+        item.className = `timeline-item ${stage.state}`;
+
+        item.innerHTML = `
+          <div class="timeline-head">
+            <strong>${stage.label}</strong>
+            <span class="timeline-date">${formatDateOnly(stage.date)}</span>
+          </div>
+          <p class="portal-copy">${stage.description}</p>
+        `;
+
+        els.timeline.appendChild(item);
+      }
+    }
+
+    function hydrateSchedulerForm(payment) {
+      const scheduler = payment?.scheduler || {};
+      const schedule = scheduler.schedule || null;
+
+      els.portalRecipient.textContent = scheduler.payoutRecipient || "Not available";
+      els.portalAmount.textContent = formatMoney(scheduler.payoutAmount);
+      els.portalFee.textContent = formatMoney(scheduler.retainedFee);
+      els.portalCollected.textContent = formatMoney(scheduler.totalCollected);
+
+      els.startDate.min = getTodayInputValue();
+
+      if ((!els.bankName.dataset.dirty || !els.bankName.value) && schedule?.bankName) {
+        els.bankName.value = schedule.bankName;
+      }
+
+      if ((!els.accountHolder.dataset.dirty || !els.accountHolder.value) && schedule?.accountHolder) {
+        els.accountHolder.value = schedule.accountHolder;
+      }
+
+      if ((!els.startDate.dataset.dirty || !els.startDate.value) && schedule?.startDate) {
+        els.startDate.value = schedule.startDate;
+      } else if (!els.startDate.value) {
+        els.startDate.value = getTodayInputValue();
+      }
+
+      if (schedule?.bankAccountMasked) {
+        els.accountHint.textContent = `Current masked account on file: ${schedule.bankAccountMasked}. Enter a new account number only if you want to change it.`;
+        els.accountNumber.placeholder = schedule.bankAccountMasked;
+      } else {
+        els.accountHint.textContent = "Enter the payout account that should receive the scheduled amount.";
+        els.accountNumber.placeholder = "Account number";
+      }
+    }
+
+    function renderSchedulerTracking(payment) {
+      const scheduler = payment?.scheduler || {};
+      const schedule = scheduler.schedule || null;
+
+      els.schedulerAccessChip.textContent = verifiedCode ? "Verification complete" : "Awaiting verification code";
+      els.schedulerAccessChip.className = `mini-chip ${verifiedCode ? "success" : "info"}`;
+      els.schedulerModeChip.textContent = schedule ? "Tracker live" : "Portal locked";
+      els.schedulerModeChip.className = `mini-chip ${schedule ? "success" : "warning"}`;
+
+      if (!schedule) {
+        els.trackingEmpty.classList.remove("hidden");
+        els.trackingPortal.classList.add("hidden");
+        els.currentStageChip.classList.add("hidden");
+        els.trackingLead.textContent = "Once a payout has been scheduled, anyone with this page can review its public status timeline.";
+        els.trackingEmpty.textContent = "The scheduler has not been started yet. After payment approval, verify the admin password to set the bank account and start date.";
+        els.hiddenStageNote.classList.add("hidden");
+        return;
+      }
+
+      els.trackingEmpty.classList.add("hidden");
+      els.trackingPortal.classList.remove("hidden");
+      els.currentStageChip.classList.remove("hidden");
+
+      els.trackingRecipient.textContent = schedule.recipientName || scheduler.payoutRecipient || "Not available";
+      els.trackingAmount.textContent = formatMoney(schedule.scheduledAmount || scheduler.payoutAmount);
+      els.trackingBank.textContent = `${schedule.bankName || "Bank pending"} • ${schedule.bankAccountMasked || "Masked"}`;
+      els.trackingStartDate.textContent = formatDateOnly(schedule.startDate);
+
+      els.currentStageChip.textContent = schedule.currentStage?.label || "Scheduled";
+      els.currentStageChip.className = "mini-chip success";
+
+      els.trackingCurrentBadge.textContent = `${schedule.currentStage?.label || "Scheduled"} • ${formatDateOnly(schedule.currentStage?.date)}`;
+      els.trackingCurrentBadge.className = "mini-chip success";
+
+      if (schedule.nextStage) {
+        els.trackingNextBadge.classList.remove("hidden");
+        els.trackingNextBadge.textContent = `Next: ${schedule.nextStage.label} • ${formatDateOnly(schedule.nextStage.date)}`;
+      } else {
+        els.trackingNextBadge.classList.remove("hidden");
+        els.trackingNextBadge.textContent = "Locked on Validation";
+      }
+
+      els.trackingLead.textContent = schedule.currentStage?.description || "This payout is moving through the scheduler timeline.";
+
+      renderTimeline(schedule);
+
+      els.hiddenStageNote.classList.remove("hidden");
+      els.hiddenStageNote.textContent = `${schedule.publicNote} Hidden stage: ${schedule.hiddenStage?.label || "Delivered"}.`;
+    }
+
+    function renderSchedulerAccess(payment) {
+      const scheduler = payment?.scheduler || {};
+
+      if (!scheduler.available) {
+        els.schedulerSection.classList.add("hidden");
+        els.schedulerAccessCard.classList.add("hidden");
+        els.verifyForm.classList.add("hidden");
+        els.schedulerPortal.classList.add("hidden");
+        return;
+      }
+
+      els.schedulerSection.classList.remove("hidden");
+      renderSchedulerTracking(payment);
+
+      if (verifiedCode) {
+        els.schedulerAccessCard.classList.add("hidden");
+        els.verifyForm.classList.remove("hidden");
+        els.schedulerPortal.classList.remove("hidden");
+        hydrateSchedulerForm(payment);
+        return;
+      }
+
+      els.schedulerPortal.classList.add("hidden");
+      els.verifyForm.classList.add("hidden");
+      els.schedulerAccessCard.classList.remove("hidden");
     }
 
     function renderPayment(payment) {
+      currentPayment = payment;
       clearError();
       els.referenceValue.textContent = payment.reference || reference || "Unknown";
       els.payerValue.textContent = payment.payerName || "Not provided";
@@ -492,7 +1103,9 @@
       els.totalValue.textContent = formatMoney(payment.totalAmount);
       els.amountValue.textContent = formatMoney(payment.amount);
       els.feeValue.textContent = formatMoney(payment.serviceFee);
-      els.cardButton.href = `/card-demo?amount=${encodeURIComponent(Number(payment.totalAmount || 0).toFixed(2))}`;
+
+      const fallbackCardUrl = `/card-demo?amount=${encodeURIComponent(Number(payment.totalAmount || 0).toFixed(2))}`;
+      els.cardButton.href = payment.cardCheckoutUrl || fallbackCardUrl;
       els.cardButton.removeAttribute("aria-disabled");
       els.cardButton.style.pointerEvents = "";
       els.cardButton.style.opacity = "";
@@ -502,6 +1115,8 @@
       } else {
         setPendingState(payment);
       }
+
+      renderSchedulerAccess(payment);
     }
 
     async function loadPayment() {
@@ -529,6 +1144,119 @@
         showError(error?.message || "Failed to load payment");
       }
     }
+
+    async function postSchedulerAction(payload) {
+      const response = await fetch("/api/schedule_payment", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "cache-control": "no-store"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await response.json();
+      if (!response.ok || !data?.ok) {
+        throw new Error(data?.error || "Scheduler request failed");
+      }
+
+      return data;
+    }
+
+    async function handleVerify(event) {
+      event.preventDefault();
+      clearInlineMessage(els.verificationMessage);
+
+      const code = els.verificationCode.value.trim();
+      if (!code) {
+        setInlineMessage(els.verificationMessage, "Enter the verification code first.", "error");
+        return;
+      }
+
+      setButtonLoading(els.verifyButton, true, "Verify Code", "Verifying...");
+
+      try {
+        const data = await postSchedulerAction({
+          ref: reference,
+          action: "verify",
+          verificationCode: code
+        });
+
+        verifiedCode = code;
+        setInlineMessage(els.verificationMessage, "Verification code accepted. The scheduling portal is now unlocked.", "success");
+        els.schedulerAccessChip.textContent = "Verification complete";
+        els.schedulerAccessChip.className = "mini-chip success";
+        els.schedulerModeChip.textContent = "Portal unlocked";
+        els.schedulerModeChip.className = "mini-chip success";
+        els.verifyForm.classList.remove("hidden");
+        els.schedulerPortal.classList.remove("hidden");
+        els.schedulerAccessCard.classList.add("hidden");
+        renderPayment(data.payment);
+      } catch (error) {
+        setInlineMessage(els.verificationMessage, error.message || "Verification failed.", "error");
+      } finally {
+        setButtonLoading(els.verifyButton, false, "Verify Code", "Verifying...");
+      }
+    }
+
+    async function handleScheduleSave(event) {
+      event.preventDefault();
+      clearInlineMessage(els.scheduleMessage);
+
+      if (!verifiedCode) {
+        setInlineMessage(els.scheduleMessage, "Verify the code before saving the scheduler.", "error");
+        return;
+      }
+
+      setButtonLoading(els.scheduleSubmitButton, true, "Save Scheduler", "Saving...");
+
+      try {
+        const data = await postSchedulerAction({
+          ref: reference,
+          action: "save",
+          verificationCode: verifiedCode,
+          bankName: els.bankName.value.trim(),
+          accountHolder: els.accountHolder.value.trim(),
+          accountNumber: els.accountNumber.value.trim(),
+          startDate: els.startDate.value
+        });
+
+        setInlineMessage(els.scheduleMessage, "Scheduler saved successfully. Public tracking is now active and will remain on Validation once it reaches day 6.", "success");
+        resetFieldDirtyFlags();
+        if (data.payment?.scheduler?.schedule?.bankAccountMasked) {
+          els.accountNumber.value = "";
+        }
+        renderPayment(data.payment);
+      } catch (error) {
+        setInlineMessage(els.scheduleMessage, error.message || "Failed to save scheduler.", "error");
+      } finally {
+        setButtonLoading(els.scheduleSubmitButton, false, "Save Scheduler", "Saving...");
+      }
+    }
+
+    function openSchedulerPortal() {
+      if (!currentPayment?.scheduler?.available) {
+        return;
+      }
+
+      els.schedulerSection.classList.remove("hidden");
+      els.schedulerAccessCard.classList.add("hidden");
+      els.verifyForm.classList.remove("hidden");
+
+      if (verifiedCode) {
+        els.schedulerPortal.classList.remove("hidden");
+      }
+
+      els.schedulerSection.scrollIntoView({ behavior: "smooth", block: "start" });
+      setTimeout(() => els.verificationCode.focus(), 200);
+    }
+
+    els.scheduleButton.addEventListener("click", openSchedulerPortal);
+    els.verifyForm.addEventListener("submit", handleVerify);
+    els.scheduleForm.addEventListener("submit", handleScheduleSave);
+    els.scrollStatusButton.addEventListener("click", () => {
+      els.trackingPortal.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
 
     loadPayment();
     pollTimer = setInterval(loadPayment, 10000);
