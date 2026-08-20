@@ -23,14 +23,12 @@ const SCHEDULER_STAGE_COPY = {
   },
   validation: {
     label: "Validation",
-    description: "Validation is in progress. Public tracking remains locked on this stage."
+    description: "Validation is in progress while the final delivery confirmation is pending."
+  },
+  delivered: {
+    label: "Delivered",
+    description: "Amount delivered."
   }
-};
-
-const HIDDEN_STAGE_COPY = {
-  key: "delivered",
-  label: "Delivered",
-  description: "This internal final stage stays hidden from the public portal."
 };
 
 const PAYOUT_METHODS = {
@@ -397,6 +395,14 @@ export function parsePaymentCompletionText(text = "") {
   return match[1].toUpperCase();
 }
 
+export function parsePaymentDeliveredText(text = "") {
+  const match = String(text).trim().match(/^([A-Z0-9-]{4,})\s+DELIVERED$/i);
+  if (!match) {
+    return null;
+  }
+  return match[1].toUpperCase();
+}
+
 export function normalizeScheduleVerificationCode(rawValue = "") {
   return String(rawValue || "")
     .trim()
@@ -438,22 +444,28 @@ export function buildScheduleStatus(schedule, now = new Date()) {
   const receivedDate = startDate;
   const dispatchedDate = addUtcDays(startDate, 3);
   const validationDate = addUtcDays(startDate, 5);
-  const currentStageKey = today < startDate
-    ? "scheduled"
-    : today >= validationDate
-      ? "validation"
-      : today >= dispatchedDate
-        ? "dispatched"
-        : "received";
+  const deliveredDate = schedule.deliveredAt
+    ? startOfUtcDay(schedule.deliveredAt)
+    : addUtcDays(startDate, 7);
+  const currentStageKey = schedule.deliveredAt
+    ? "delivered"
+    : today < startDate
+      ? "scheduled"
+      : today >= validationDate
+        ? "validation"
+        : today >= dispatchedDate
+          ? "dispatched"
+          : "received";
 
   const stageDates = {
     scheduled: schedule.createdAt ? schedule.createdAt.slice(0, 10) : formatDateOnly(today),
     received: formatDateOnly(receivedDate),
     dispatched: formatDateOnly(dispatchedDate),
-    validation: formatDateOnly(validationDate)
+    validation: formatDateOnly(validationDate),
+    delivered: formatDateOnly(deliveredDate)
   };
 
-  const order = ["scheduled", "received", "dispatched", "validation"];
+  const order = ["scheduled", "received", "dispatched", "validation", "delivered"];
   const currentIndex = order.indexOf(currentStageKey);
   const stages = order.map((key, index) => ({
     key,
@@ -463,7 +475,7 @@ export function buildScheduleStatus(schedule, now = new Date()) {
     state: index < currentIndex ? "complete" : index === currentIndex ? "active" : "upcoming"
   }));
 
-  const nextStageKey = currentStageKey === "validation"
+  const nextStageKey = currentStageKey === "delivered"
     ? null
     : order[Math.min(currentIndex + 1, order.length - 1)];
 
@@ -483,6 +495,7 @@ export function buildScheduleStatus(schedule, now = new Date()) {
     startDate: schedule.startDate,
     createdAt: schedule.createdAt,
     updatedAt: schedule.updatedAt,
+    deliveredAt: schedule.deliveredAt || null,
     scheduledAmount: schedule.scheduledAmount,
     recipientName: schedule.recipientName,
     currentStage: {
@@ -499,8 +512,9 @@ export function buildScheduleStatus(schedule, now = new Date()) {
         }
       : null,
     stages,
-    hiddenStage: HIDDEN_STAGE_COPY,
-    publicNote: "Public tracking intentionally stops at Validation. The hidden Delivered stage is never shown as complete here."
+    publicNote: schedule.deliveredAt
+      ? `Delivered was manually confirmed by the admin on ${stageDates.delivered}.`
+      : `Delivered will remain pending until the admin manually marks the payout as delivered.`
   };
 }
 
@@ -557,6 +571,26 @@ export async function markPaymentCompleted(reference) {
     completedAt: existing.completedAt || new Date().toISOString(),
     scheduleVerificationCode: existing.scheduleVerificationCode || buildScheduleVerificationCode(),
     scheduleVerificationIssuedAt: existing.scheduleVerificationIssuedAt || new Date().toISOString()
+  };
+
+  await savePaymentRecord(updated);
+  return updated;
+}
+
+export async function markPaymentDelivered(reference, now = new Date()) {
+  const existing = await getPaymentRecord(reference);
+  if (!existing || existing.status !== "completed" || !existing.schedule) {
+    return null;
+  }
+
+  const timestamp = new Date(now).toISOString();
+  const updated = {
+    ...existing,
+    schedule: {
+      ...existing.schedule,
+      deliveredAt: existing.schedule.deliveredAt || timestamp,
+      updatedAt: timestamp
+    }
   };
 
   await savePaymentRecord(updated);
@@ -632,7 +666,8 @@ export async function upsertPaymentSchedule(reference, scheduleInput = {}, now =
       scheduledAmount: formatMoneyNumber(record.amount),
       recipientName: record.recipientName,
       createdAt: record.schedule?.createdAt || timestamp,
-      updatedAt: timestamp
+      updatedAt: timestamp,
+      deliveredAt: record.schedule?.deliveredAt || null
     }
   };
 

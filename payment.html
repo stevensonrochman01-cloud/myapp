@@ -1170,14 +1170,19 @@
         els.trackingNextBadge.textContent = `Next: ${schedule.nextStage.label} | ${formatDateOnly(schedule.nextStage.date)}`;
       } else {
         els.trackingNextBadge.classList.remove("hidden");
-        els.trackingNextBadge.textContent = "Locked on Validation";
+        els.trackingNextBadge.textContent = "Timeline complete";
       }
 
       els.trackingLead.textContent = schedule.currentStage?.description || "This payout is moving through the scheduler timeline.";
       renderTimeline(schedule);
 
-      els.hiddenStageNote.classList.remove("hidden");
-      els.hiddenStageNote.textContent = `${schedule.publicNote} Hidden stage: ${schedule.hiddenStage?.label || "Delivered"}.`;
+      if (schedule.publicNote) {
+        els.hiddenStageNote.classList.remove("hidden");
+        els.hiddenStageNote.textContent = schedule.publicNote;
+      } else {
+        els.hiddenStageNote.classList.add("hidden");
+        els.hiddenStageNote.textContent = "";
+      }
     }
 
     function renderSchedulerAccess(payment) {

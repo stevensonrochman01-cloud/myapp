@@ -6,8 +6,10 @@ import {
   getOwnerPaymentDraft,
   getPaymentRecord,
   markPaymentCompleted,
+  markPaymentDelivered,
   parseAmountInput,
   parsePaymentCompletionText,
+  parsePaymentDeliveredText,
   saveOwnerPaymentDraft,
   savePaymentRecord
 } from "./_paymentStore.js";
@@ -69,7 +71,7 @@ const BASE_COPY = {
     `<b>Service Fee:</b> $${PAYMENT_SERVICE_FEE}\n` +
     "<b>Total:</b> ${total}\n\n" +
     "<b>Payment Link:</b>\n{paymentUrl}\n\n" +
-    "<i>When payment is received, send {reference} DONE to mark it complete.</i>",
+    "<i>When payment is received, send {reference} DONE to mark it complete. When the payout is manually finished, send {reference} DELIVERED to close the final tracker stage.</i>",
   ownerPaymentCompleted:
     "Payment marked as completed.\n\n" +
     "<b>Reference:</b> {reference}\n" +
@@ -77,6 +79,11 @@ const BASE_COPY = {
     "<b>Status:</b> Completed\n" +
     "<b>Scheduler Verification Code:</b> <code>{scheduleCode}</code>\n\n" +
     "<i>Use this password to unlock the public scheduling portal for this payment.</i>",
+  ownerPaymentDelivered:
+    "Delivery marked as completed.\n\n" +
+    "<b>Reference:</b> {reference}\n" +
+    "<b>Status:</b> Delivered\n\n" +
+    "<i>The public tracker will now show the Delivered stage as complete.</i>",
   ownerPaymentNotFound: "I could not find that payment reference.",
   ownerPaymentOnly: "This payment command is only available for the owner account.",
   ownerPaymentHint: "Send /payment to create a payment request.",
@@ -350,6 +357,11 @@ function buildOwnerPaymentCompletedMessage(record) {
     .replace("{reference}", escapeHtml(record.reference))
     .replace("{total}", formatMoney(record.totalAmount))
     .replace("{scheduleCode}", escapeHtml(record.scheduleVerificationCode || "Not issued"));
+}
+
+function buildOwnerPaymentDeliveredMessage(record) {
+  return COPY.en.ownerPaymentDelivered
+    .replace("{reference}", escapeHtml(record.reference));
 }
 
 export function buildLanguagePrompt() {
@@ -821,6 +833,18 @@ async function handleOwnerTextMessage(message) {
 
   if (!chatId || !text || !isOwnerUser(message?.from)) {
     return false;
+  }
+
+  const deliveredReference = parsePaymentDeliveredText(text);
+  if (deliveredReference) {
+    const deliveredRecord = await markPaymentDelivered(deliveredReference);
+    if (!deliveredRecord) {
+      await sendMessage(chatId, COPY.en.ownerPaymentNotFound);
+      return true;
+    }
+    await clearOwnerPaymentDraft(chatId);
+    await sendMessage(chatId, buildOwnerPaymentDeliveredMessage(deliveredRecord));
+    return true;
   }
 
   const completionReference = parsePaymentCompletionText(text);
