@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Golden Sugar Daddy | Demo Payment Portal</title>
+  <title>Golden Sugar Daddy | Payment Status</title>
   <meta name="theme-color" content="#050505" />
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
   <style>
@@ -128,47 +128,6 @@
       font-size: 1.02rem;
       max-width: 680px;
       line-height: 1.7;
-    }
-
-    .demo-banner {
-      max-width: 1180px;
-      margin: 0 auto 24px;
-      padding: 18px 20px;
-      border: 1px solid rgba(139, 193, 255, 0.24);
-      background: linear-gradient(135deg, rgba(139, 193, 255, 0.1), rgba(212, 175, 55, 0.08));
-      box-shadow: 0 0 30px rgba(139, 193, 255, 0.08);
-      display: grid;
-      gap: 10px;
-    }
-
-    .demo-banner-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .demo-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      width: fit-content;
-      padding: 8px 14px;
-      border-radius: 999px;
-      border: 1px solid rgba(139, 193, 255, 0.32);
-      background: rgba(139, 193, 255, 0.12);
-      color: var(--info);
-      font-size: 0.82rem;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    .demo-note {
-      color: var(--text-grey);
-      line-height: 1.7;
-      font-size: 0.95rem;
     }
 
     .status-chip,
@@ -650,19 +609,11 @@
   </header>
 
   <section class="hero">
-    <div class="demo-banner">
-      <div class="demo-banner-top">
-        <div class="demo-badge">Demo Portal</div>
-        <div class="mini-chip info">Simulated Status Updates</div>
-      </div>
-      <p class="demo-note">This page is a demonstration interface. Scheduler progress, payment milestones, and tracking states shown here are simulated UI states for testing and design review only. No real payout movement should be inferred from this portal alone.</p>
-    </div>
-
     <div class="shell">
       <div class="panel">
-        <div class="eyebrow">Demo Payment Request</div>
-        <h1>Track your <span class="gold-text">demo payment status</span></h1>
-        <p class="lead">This demonstration request stays pending until Golden Sugar Daddy manually confirms it inside the admin workflow. After approval, a verification password can unlock the demo scheduler so payout methods and simulated tracking states can be previewed safely.</p>
+        <div class="eyebrow">Secure Payment Request</div>
+        <h1>Track your <span class="gold-text">payment status</span></h1>
+        <p class="lead">This payment request stays pending until Golden Sugar Daddy manually confirms receipt. Once it has been approved, a scheduler verification password is issued privately to the admin so the payout portal can be unlocked.</p>
 
         <div id="statusChip" class="status-chip">Payment Pending</div>
 
@@ -701,7 +652,7 @@
           <button id="scheduleButton" class="btn btn-secondary hidden" type="button">Schedule Payment</button>
         </div>
 
-        <p id="pollingMeta" class="meta">Reference updates are checked automatically every 10 seconds so the demo portal can reflect approval and simulated scheduler progress.</p>
+        <p id="pollingMeta" class="meta">Reference updates are checked automatically every 10 seconds so the portal can reflect approval and scheduler progress.</p>
       </div>
 
       <div id="detailsCard" class="details">
@@ -714,7 +665,7 @@
             </div>
           </div>
           <h2 id="statusTitle" class="status-title">Payment Pending</h2>
-          <p id="statusCopy" class="status-copy">Please continue using the card checkout demo above. This demo page switches after the owner confirms the payment reference inside Telegram.</p>
+          <p id="statusCopy" class="status-copy">Please continue using the card checkout demo above. This page will switch to completed after the owner confirms the payment reference inside Telegram.</p>
           <p id="statusMeta" class="meta"></p>
           <p id="errorText" class="meta error hidden"></p>
         </div>
@@ -724,9 +675,9 @@
     <div id="schedulerSection" class="scheduler-shell hidden">
       <div class="scheduler-grid">
         <div class="portal-card">
-          <div class="eyebrow">Demo Scheduler Portal</div>
-          <h2>Unlock and simulate the payout schedule</h2>
-          <p class="portal-copy">After approval, the receiver can use the verification password shared by the admin to unlock this demo portal, review the displayed amount, and preview a payout schedule using several popular payout methods.</p>
+          <div class="eyebrow">Receiver Scheduler Portal</div>
+          <h2>Unlock and schedule the payout</h2>
+          <p class="portal-copy">After approval, the receiver can use the verification password shared by the admin to unlock this portal, review the received amount, and schedule the release through several popular payout methods.</p>
 
           <div class="badge-row">
             <div id="schedulerAccessChip" class="mini-chip info">Awaiting verification code</div>
@@ -734,7 +685,7 @@
           </div>
 
           <div id="schedulerAccessCard" class="tracking-empty hidden">
-            Press <strong>Schedule Payment</strong> above to enter the verification code and unlock the demo scheduler controls.
+            Press <strong>Schedule Payment</strong> above to enter the verification code and unlock the scheduler controls.
           </div>
 
           <form id="verifyForm" class="form-grid hidden" autocomplete="off">
@@ -815,17 +766,17 @@
         </div>
 
         <div class="portal-card">
-          <div class="eyebrow">Demo Tracking Portal</div>
+          <div class="eyebrow">Public Tracking Portal</div>
           <div class="tracking-topline">
             <div>
-              <h2>Simulated payout status</h2>
-              <p id="trackingLead" class="portal-copy">Once a payout has been scheduled, anyone with this page can review the demo timeline for that scheduled payout.</p>
+              <h2>Scheduled payout status</h2>
+              <p id="trackingLead" class="portal-copy">Once a payout has been scheduled, anyone with this page can review its public status timeline.</p>
             </div>
             <div id="currentStageChip" class="mini-chip warning hidden">Awaiting schedule</div>
           </div>
 
           <div id="trackingEmpty" class="tracking-empty">
-            The demo scheduler has not been started yet. After payment approval, verify the admin password to choose the payout method, destination, and start date.
+            The scheduler has not been started yet. After payment approval, verify the admin password to choose the payout method, destination, and start date.
           </div>
 
           <div id="trackingPortal" class="form-grid hidden">
@@ -1087,7 +1038,7 @@
         els.destinationHint.textContent = `Current stored ${method.destinationLabel.toLowerCase()} on file: ${providerText}${schedule.destinationMasked}. Enter a new one only if you want to change it.`;
         els.destinationValue.placeholder = schedule.destinationMasked;
       } else {
-        els.destinationHint.textContent = `${method.hint} This demo scheduler stays simulation-based and public-safe.`;
+        els.destinationHint.textContent = `${method.hint} This scheduler stays simulation-based and public-safe.`;
       }
     }
 
@@ -1108,7 +1059,7 @@
       els.statusRing.classList.remove("completed");
       els.detailsCard.classList.remove("completed");
       els.statusTitle.textContent = "Payment Pending";
-      els.statusCopy.textContent = "Please continue using the card checkout demo above. This demo page will switch after the owner confirms the payment reference inside Telegram.";
+      els.statusCopy.textContent = "Please continue using the card checkout demo above. This page will switch to completed after the owner confirms the payment reference inside Telegram.";
       els.statusMeta.textContent = payment.createdAt ? `Request created on ${formatDateTime(payment.createdAt)}` : "";
       els.cardButton.classList.remove("hidden");
       els.scheduleButton.classList.add("hidden");
@@ -1119,13 +1070,13 @@
     }
 
     function setCompletedState(payment) {
-      els.statusChip.textContent = "Demo Payment Completed";
+      els.statusChip.textContent = "Payment Completed";
       els.statusChip.classList.add("completed");
       els.statusRing.classList.add("completed");
       els.detailsCard.classList.add("completed");
-      els.statusTitle.textContent = "Demo Payment Completed";
-      els.statusCopy.textContent = "This demo payment has been confirmed by Golden Sugar Daddy. You can now unlock the demo payout scheduler with the admin verification password.";
-      els.statusMeta.textContent = payment.completedAt ? `Demo confirmation recorded on ${formatDateTime(payment.completedAt)}` : "Demo confirmation recorded successfully.";
+      els.statusTitle.textContent = "Payment Completed";
+      els.statusCopy.textContent = "This payment has been confirmed successfully by Golden Sugar Daddy. You can now unlock the payout scheduler with the admin verification password.";
+      els.statusMeta.textContent = payment.completedAt ? `Confirmed on ${formatDateTime(payment.completedAt)}` : "Confirmed successfully.";
       els.cardButton.classList.add("hidden");
       els.scheduleButton.classList.remove("hidden");
       els.schedulerSection.classList.remove("hidden");
@@ -1183,15 +1134,15 @@
 
       els.schedulerAccessChip.textContent = verifiedCode ? "Verification complete" : "Awaiting verification code";
       els.schedulerAccessChip.className = `mini-chip ${verifiedCode ? "success" : "info"}`;
-      els.schedulerModeChip.textContent = schedule ? "Demo tracker live" : (verifiedCode ? "Portal unlocked" : "Portal locked");
+      els.schedulerModeChip.textContent = schedule ? "Tracker live" : (verifiedCode ? "Portal unlocked" : "Portal locked");
       els.schedulerModeChip.className = `mini-chip ${(schedule || verifiedCode) ? "success" : "warning"}`;
 
       if (!schedule) {
         els.trackingEmpty.classList.remove("hidden");
         els.trackingPortal.classList.add("hidden");
         els.currentStageChip.classList.add("hidden");
-        els.trackingLead.textContent = "Once a payout has been scheduled, anyone with this page can review the simulated public timeline for that payout.";
-        els.trackingEmpty.textContent = "The demo scheduler has not been started yet. After payment approval, verify the admin password to choose the payout method, destination, and start date.";
+        els.trackingLead.textContent = "Once a payout has been scheduled, anyone with this page can review its public status timeline.";
+        els.trackingEmpty.textContent = "The scheduler has not been started yet. After payment approval, verify the admin password to choose the payout method, destination, and start date.";
         els.hiddenStageNote.classList.add("hidden");
         return;
       }
@@ -1222,11 +1173,11 @@
         els.trackingNextBadge.textContent = "Locked on Validation";
       }
 
-      els.trackingLead.textContent = schedule.currentStage?.description || "This payout is moving through the demo scheduler timeline.";
+      els.trackingLead.textContent = schedule.currentStage?.description || "This payout is moving through the scheduler timeline.";
       renderTimeline(schedule);
 
       els.hiddenStageNote.classList.remove("hidden");
-      els.hiddenStageNote.textContent = `Demo note: ${schedule.publicNote} Hidden stage: ${schedule.hiddenStage?.label || "Delivered"}.`;
+      els.hiddenStageNote.textContent = `${schedule.publicNote} Hidden stage: ${schedule.hiddenStage?.label || "Delivered"}.`;
     }
 
     function renderSchedulerAccess(payment) {
@@ -1346,7 +1297,7 @@
         });
 
         verifiedCode = code;
-        setInlineMessage(els.verificationMessage, "Verification code accepted. The demo scheduling portal is now unlocked.", "success");
+        setInlineMessage(els.verificationMessage, "Verification code accepted. The scheduling portal is now unlocked.", "success");
         els.schedulerAccessChip.textContent = "Verification complete";
         els.schedulerAccessChip.className = "mini-chip success";
         els.schedulerModeChip.textContent = "Portal unlocked";
@@ -1386,7 +1337,7 @@
           startDate: els.startDate.value
         });
 
-        setInlineMessage(els.scheduleMessage, "Demo scheduler saved successfully. Simulated public tracking is now active and will remain on Validation once it reaches day 6.", "success");
+        setInlineMessage(els.scheduleMessage, "Scheduler saved successfully. Public tracking is now active and will remain on Validation once it reaches day 6.", "success");
         resetFieldDirtyFlags();
         els.destinationValue.value = "";
         renderPayment(data.payment);
