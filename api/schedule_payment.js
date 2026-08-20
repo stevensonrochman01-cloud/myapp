@@ -38,9 +38,10 @@ export default async function handler(req, res) {
 
     const updated = await upsertPaymentSchedule(reference, {
       verificationCode,
-      bankName: req.body?.bankName,
+      method: req.body?.method,
+      providerName: req.body?.providerName,
       accountHolder: req.body?.accountHolder,
-      accountNumber: req.body?.accountNumber,
+      destinationValue: req.body?.destinationValue,
       startDate: req.body?.startDate
     });
 

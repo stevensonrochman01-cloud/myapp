@@ -24,7 +24,6 @@
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
       min-height: 100vh;
       color: var(--text-white);
@@ -35,12 +34,8 @@
     }
 
     a { color: inherit; text-decoration: none; }
-    button, input {
-      font: inherit;
-    }
-    h1, h2, h3 {
-      font-family: "Playfair Display", serif;
-    }
+    button, input { font: inherit; }
+    h1, h2, h3 { font-family: "Playfair Display", serif; }
 
     .gold-text {
       background: linear-gradient(to right, var(--gold-light), var(--gold-main), var(--gold-dark));
@@ -48,9 +43,7 @@
       -webkit-text-fill-color: transparent;
     }
 
-    .hidden {
-      display: none !important;
-    }
+    .hidden { display: none !important; }
 
     header {
       display: flex;
@@ -245,9 +238,7 @@
       cursor: pointer;
     }
 
-    .btn:hover {
-      transform: translateY(-1px);
-    }
+    .btn:hover { transform: translateY(-1px); }
 
     .btn[disabled] {
       cursor: wait;
@@ -359,14 +350,9 @@
       place-items: center;
     }
 
-    .details.completed .checkmark {
-      display: grid;
-    }
-
+    .details.completed .checkmark { display: grid; }
     .details.completed .ring-label strong,
-    .details.completed .ring-label span {
-      display: none;
-    }
+    .details.completed .ring-label span { display: none; }
 
     .status-title {
       font-size: clamp(2rem, 4vw, 3rem);
@@ -379,17 +365,10 @@
       line-height: 1.7;
     }
 
-    .meta {
-      font-size: 0.92rem;
-    }
+    .meta { font-size: 0.92rem; }
+    .error { color: var(--danger); }
 
-    .error {
-      color: var(--danger);
-    }
-
-    .scheduler-shell {
-      margin-top: 34px;
-    }
+    .scheduler-shell { margin-top: 34px; }
 
     .scheduler-grid {
       display: grid;
@@ -405,15 +384,9 @@
       min-height: 100%;
     }
 
-    .form-grid {
-      display: grid;
-      gap: 16px;
-    }
+    .form-grid { display: grid; gap: 16px; }
 
-    .field {
-      display: grid;
-      gap: 8px;
-    }
+    .field { display: grid; gap: 8px; }
 
     .field label {
       font-size: 0.82rem;
@@ -443,16 +416,54 @@
       line-height: 1.6;
     }
 
+    .method-grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .method-card {
+      padding: 14px 16px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.02);
+      color: var(--text-white);
+      text-align: left;
+      cursor: pointer;
+      transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .method-card:hover {
+      transform: translateY(-1px);
+      border-color: rgba(212, 175, 55, 0.24);
+    }
+
+    .method-card.active {
+      border-color: rgba(212, 175, 55, 0.42);
+      box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.1);
+      background: rgba(212, 175, 55, 0.08);
+    }
+
+    .method-card strong {
+      display: block;
+      font-size: 0.98rem;
+      margin-bottom: 6px;
+    }
+
+    .method-card span {
+      display: block;
+      color: var(--text-grey);
+      line-height: 1.5;
+      font-size: 0.84rem;
+    }
+
     .row-two {
       display: grid;
       gap: 14px;
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .portal-summary {
-      display: grid;
-      gap: 14px;
-    }
+    .portal-summary { display: grid; gap: 14px; }
 
     .tracking-empty {
       padding: 18px 20px;
@@ -512,10 +523,6 @@
       border-color: rgba(212, 175, 55, 0.45);
     }
 
-    .timeline-item.upcoming::before {
-      background: rgba(255,255,255,0.08);
-    }
-
     .timeline-head {
       display: flex;
       justify-content: space-between;
@@ -525,9 +532,7 @@
       margin-bottom: 8px;
     }
 
-    .timeline-head strong {
-      font-size: 1rem;
-    }
+    .timeline-head strong { font-size: 1rem; }
 
     .timeline-date {
       color: var(--text-grey);
@@ -588,7 +593,8 @@
 
       .summary-grid,
       .stats-grid,
-      .row-two {
+      .row-two,
+      .method-grid {
         grid-template-columns: 1fr;
       }
     }
@@ -671,7 +677,7 @@
         <div class="portal-card">
           <div class="eyebrow">Receiver Scheduler Portal</div>
           <h2>Unlock and schedule the payout</h2>
-          <p class="portal-copy">After approval, the receiver can use the verification password shared by the admin to unlock this portal, review the received amount, add bank details, and choose the first payout date.</p>
+          <p class="portal-copy">After approval, the receiver can use the verification password shared by the admin to unlock this portal, review the received amount, and schedule the release through several popular payout methods.</p>
 
           <div class="badge-row">
             <div id="schedulerAccessChip" class="mini-chip info">Awaiting verification code</div>
@@ -720,12 +726,18 @@
             </div>
 
             <form id="scheduleForm" class="form-grid" autocomplete="off">
+              <div class="field">
+                <label>Payout method</label>
+                <div id="methodGrid" class="method-grid"></div>
+                <small id="methodHint">Choose the payout method the receiver wants to use for the scheduled release.</small>
+              </div>
+
               <div class="row-two">
-                <div class="field">
-                  <label for="bankName">Bank name</label>
-                  <input id="bankName" type="text" placeholder="Example: First Atlantic Bank" />
+                <div id="providerField" class="field">
+                  <label id="providerLabel" for="providerName">Bank name</label>
+                  <input id="providerName" type="text" placeholder="Example: First Atlantic Bank" />
                 </div>
-                <div class="field">
+                <div id="accountHolderField" class="field">
                   <label for="accountHolder">Account holder</label>
                   <input id="accountHolder" type="text" placeholder="Receiver legal name" />
                 </div>
@@ -733,9 +745,9 @@
 
               <div class="row-two">
                 <div class="field">
-                  <label for="accountNumber">Bank account</label>
-                  <input id="accountNumber" type="text" placeholder="Account number" />
-                  <small id="accountHint">Enter the payout account that should receive the scheduled amount.</small>
+                  <label id="destinationLabel" for="destinationValue">Bank account</label>
+                  <input id="destinationValue" type="text" placeholder="Account number" />
+                  <small id="destinationHint">Enter the payout destination that should receive the scheduled amount.</small>
                 </div>
                 <div class="field">
                   <label for="startDate">Start date</label>
@@ -764,7 +776,7 @@
           </div>
 
           <div id="trackingEmpty" class="tracking-empty">
-            The scheduler has not been started yet. After payment approval, verify the admin password to set the bank account and start date.
+            The scheduler has not been started yet. After payment approval, verify the admin password to choose the payout method, destination, and start date.
           </div>
 
           <div id="trackingPortal" class="form-grid hidden">
@@ -778,8 +790,12 @@
                 <strong id="trackingAmount">$0.00</strong>
               </div>
               <div class="stat-card">
-                <span>Bank Account</span>
-                <strong id="trackingBank">Not scheduled</strong>
+                <span>Payout Method</span>
+                <strong id="trackingMethod">Not scheduled</strong>
+              </div>
+              <div class="stat-card">
+                <span>Destination</span>
+                <strong id="trackingDestination">Not scheduled</strong>
               </div>
               <div class="stat-card">
                 <span>Start Date</span>
@@ -838,10 +854,16 @@
       portalFee: document.getElementById("portalFee"),
       portalCollected: document.getElementById("portalCollected"),
       scheduleForm: document.getElementById("scheduleForm"),
-      bankName: document.getElementById("bankName"),
+      methodGrid: document.getElementById("methodGrid"),
+      methodHint: document.getElementById("methodHint"),
+      providerField: document.getElementById("providerField"),
+      providerLabel: document.getElementById("providerLabel"),
+      providerName: document.getElementById("providerName"),
+      accountHolderField: document.getElementById("accountHolderField"),
       accountHolder: document.getElementById("accountHolder"),
-      accountNumber: document.getElementById("accountNumber"),
-      accountHint: document.getElementById("accountHint"),
+      destinationLabel: document.getElementById("destinationLabel"),
+      destinationValue: document.getElementById("destinationValue"),
+      destinationHint: document.getElementById("destinationHint"),
       startDate: document.getElementById("startDate"),
       scheduleSubmitButton: document.getElementById("scheduleSubmitButton"),
       scrollStatusButton: document.getElementById("scrollStatusButton"),
@@ -853,7 +875,8 @@
       currentStageChip: document.getElementById("currentStageChip"),
       trackingRecipient: document.getElementById("trackingRecipient"),
       trackingAmount: document.getElementById("trackingAmount"),
-      trackingBank: document.getElementById("trackingBank"),
+      trackingMethod: document.getElementById("trackingMethod"),
+      trackingDestination: document.getElementById("trackingDestination"),
       trackingStartDate: document.getElementById("trackingStartDate"),
       trackingCurrentBadge: document.getElementById("trackingCurrentBadge"),
       trackingNextBadge: document.getElementById("trackingNextBadge"),
@@ -864,6 +887,8 @@
     let pollTimer = null;
     let currentPayment = null;
     let verifiedCode = "";
+    let selectedMethod = "bank_transfer";
+    const methodDrafts = {};
 
     function formatMoney(value) {
       return `$${Number(value || 0).toFixed(2)}`;
@@ -878,12 +903,9 @@
     function formatDateOnly(value) {
       if (!value) return "";
       const date = new Date(`${value}T00:00:00`);
-      if (Number.isNaN(date.getTime())) return value;
-      return date.toLocaleDateString(undefined, {
-        year: "numeric",
-        month: "short",
-        day: "numeric"
-      });
+      return Number.isNaN(date.getTime())
+        ? value
+        : date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
     }
 
     function getTodayInputValue() {
@@ -924,15 +946,111 @@
       event.target.dataset.dirty = "true";
     }
 
-    [els.bankName, els.accountHolder, els.accountNumber, els.startDate].forEach((field) => {
+    [els.providerName, els.accountHolder, els.destinationValue, els.startDate].forEach((field) => {
       field.addEventListener("input", markFieldDirty);
       field.addEventListener("change", markFieldDirty);
     });
 
     function resetFieldDirtyFlags() {
-      [els.bankName, els.accountHolder, els.accountNumber, els.startDate].forEach((field) => {
+      [els.providerName, els.accountHolder, els.destinationValue, els.startDate].forEach((field) => {
         delete field.dataset.dirty;
       });
+    }
+
+    function getSupportedMethods() {
+      return currentPayment?.scheduler?.supportedMethods || [];
+    }
+
+    function getMethodConfig(methodCode = selectedMethod) {
+      return getSupportedMethods().find((method) => method.code === methodCode)
+        || getSupportedMethods()[0]
+        || {
+          code: "bank_transfer",
+          label: "Bank Transfer",
+          providerLabel: "Bank name",
+          providerRequired: true,
+          destinationLabel: "Bank account",
+          destinationPlaceholder: "Checking or savings account number",
+          hint: "Traditional payout routed to a checking or savings account."
+        };
+    }
+
+    function rememberMethodDraft(methodCode = selectedMethod) {
+      if (!methodCode) return;
+
+      methodDrafts[methodCode] = {
+        providerName: els.providerName.value,
+        destinationValue: els.destinationValue.value
+      };
+    }
+
+    function renderMethodGrid(methods = getSupportedMethods()) {
+      els.methodGrid.innerHTML = "";
+
+      for (const method of methods) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `method-card ${method.code === selectedMethod ? "active" : ""}`;
+        button.dataset.methodCode = method.code;
+        button.innerHTML = `
+          <strong>${method.label}</strong>
+          <span>${method.hint}</span>
+        `;
+        els.methodGrid.appendChild(button);
+      }
+    }
+
+    function applyMethodConfig(methodCode, schedule = null) {
+      const method = getMethodConfig(methodCode);
+      const scheduleMatches = schedule?.payoutMethod === method.code;
+      const draft = methodDrafts[method.code] || {};
+
+      els.methodHint.textContent = method.hint;
+      els.providerLabel.textContent = method.providerLabel || "Provider / note";
+      els.destinationLabel.textContent = method.destinationLabel;
+      els.destinationValue.placeholder = method.destinationPlaceholder;
+
+      els.providerField.classList.toggle("hidden", !method.providerRequired);
+      els.accountHolderField.style.gridColumn = method.providerRequired ? "" : "1 / -1";
+
+      if (method.providerRequired) {
+        els.providerName.placeholder = method.providerLabel === "Bank name"
+          ? "Example: First Atlantic Bank"
+          : method.providerLabel;
+
+        if (!els.providerName.dataset.dirty) {
+          els.providerName.value = draft.providerName || (scheduleMatches ? (schedule.providerName || "") : "");
+        }
+      } else if (!els.providerName.dataset.dirty) {
+        els.providerName.value = draft.providerName || "";
+      }
+
+      if (!els.destinationValue.dataset.dirty) {
+        els.destinationValue.value = draft.destinationValue || "";
+      }
+
+      if (scheduleMatches && schedule?.destinationMasked) {
+        if (!els.destinationValue.dataset.dirty && !draft.destinationValue) {
+          els.destinationValue.value = "";
+        }
+
+        const providerText = schedule.providerName ? `${schedule.providerName} | ` : "";
+        els.destinationHint.textContent = `Current stored ${method.destinationLabel.toLowerCase()} on file: ${providerText}${schedule.destinationMasked}. Enter a new one only if you want to change it.`;
+        els.destinationValue.placeholder = schedule.destinationMasked;
+      } else {
+        els.destinationHint.textContent = `${method.hint} This scheduler stays simulation-based and public-safe.`;
+      }
+    }
+
+    function selectMethod(methodCode) {
+      if (!methodCode || methodCode === selectedMethod) {
+        return;
+      }
+
+      rememberMethodDraft(selectedMethod);
+      selectedMethod = methodCode;
+      renderMethodGrid();
+      applyMethodConfig(selectedMethod, currentPayment?.scheduler?.schedule || null);
     }
 
     function setPendingState(payment) {
@@ -970,7 +1088,6 @@
       for (const stage of schedule.stages || []) {
         const item = document.createElement("div");
         item.className = `timeline-item ${stage.state}`;
-
         item.innerHTML = `
           <div class="timeline-head">
             <strong>${stage.label}</strong>
@@ -978,7 +1095,6 @@
           </div>
           <p class="portal-copy">${stage.description}</p>
         `;
-
         els.timeline.appendChild(item);
       }
     }
@@ -986,16 +1102,16 @@
     function hydrateSchedulerForm(payment) {
       const scheduler = payment?.scheduler || {};
       const schedule = scheduler.schedule || null;
+      const methods = scheduler.supportedMethods || [];
 
       els.portalRecipient.textContent = scheduler.payoutRecipient || "Not available";
       els.portalAmount.textContent = formatMoney(scheduler.payoutAmount);
       els.portalFee.textContent = formatMoney(scheduler.retainedFee);
       els.portalCollected.textContent = formatMoney(scheduler.totalCollected);
-
       els.startDate.min = getTodayInputValue();
 
-      if ((!els.bankName.dataset.dirty || !els.bankName.value) && schedule?.bankName) {
-        els.bankName.value = schedule.bankName;
+      if (!methods.some((method) => method.code === selectedMethod)) {
+        selectedMethod = schedule?.payoutMethod || methods[0]?.code || "bank_transfer";
       }
 
       if ((!els.accountHolder.dataset.dirty || !els.accountHolder.value) && schedule?.accountHolder) {
@@ -1008,13 +1124,8 @@
         els.startDate.value = getTodayInputValue();
       }
 
-      if (schedule?.bankAccountMasked) {
-        els.accountHint.textContent = `Current masked account on file: ${schedule.bankAccountMasked}. Enter a new account number only if you want to change it.`;
-        els.accountNumber.placeholder = schedule.bankAccountMasked;
-      } else {
-        els.accountHint.textContent = "Enter the payout account that should receive the scheduled amount.";
-        els.accountNumber.placeholder = "Account number";
-      }
+      renderMethodGrid(methods);
+      applyMethodConfig(selectedMethod, schedule);
     }
 
     function renderSchedulerTracking(payment) {
@@ -1023,15 +1134,15 @@
 
       els.schedulerAccessChip.textContent = verifiedCode ? "Verification complete" : "Awaiting verification code";
       els.schedulerAccessChip.className = `mini-chip ${verifiedCode ? "success" : "info"}`;
-      els.schedulerModeChip.textContent = schedule ? "Tracker live" : "Portal locked";
-      els.schedulerModeChip.className = `mini-chip ${schedule ? "success" : "warning"}`;
+      els.schedulerModeChip.textContent = schedule ? "Tracker live" : (verifiedCode ? "Portal unlocked" : "Portal locked");
+      els.schedulerModeChip.className = `mini-chip ${(schedule || verifiedCode) ? "success" : "warning"}`;
 
       if (!schedule) {
         els.trackingEmpty.classList.remove("hidden");
         els.trackingPortal.classList.add("hidden");
         els.currentStageChip.classList.add("hidden");
         els.trackingLead.textContent = "Once a payout has been scheduled, anyone with this page can review its public status timeline.";
-        els.trackingEmpty.textContent = "The scheduler has not been started yet. After payment approval, verify the admin password to set the bank account and start date.";
+        els.trackingEmpty.textContent = "The scheduler has not been started yet. After payment approval, verify the admin password to choose the payout method, destination, and start date.";
         els.hiddenStageNote.classList.add("hidden");
         return;
       }
@@ -1042,25 +1153,27 @@
 
       els.trackingRecipient.textContent = schedule.recipientName || scheduler.payoutRecipient || "Not available";
       els.trackingAmount.textContent = formatMoney(schedule.scheduledAmount || scheduler.payoutAmount);
-      els.trackingBank.textContent = `${schedule.bankName || "Bank pending"} • ${schedule.bankAccountMasked || "Masked"}`;
+      els.trackingMethod.textContent = schedule.payoutMethodLabel || "Not scheduled";
+      els.trackingDestination.textContent = schedule.providerName
+        ? `${schedule.providerName} | ${schedule.destinationMasked || "Masked"}`
+        : (schedule.destinationMasked || "Not scheduled");
       els.trackingStartDate.textContent = formatDateOnly(schedule.startDate);
 
       els.currentStageChip.textContent = schedule.currentStage?.label || "Scheduled";
       els.currentStageChip.className = "mini-chip success";
 
-      els.trackingCurrentBadge.textContent = `${schedule.currentStage?.label || "Scheduled"} • ${formatDateOnly(schedule.currentStage?.date)}`;
+      els.trackingCurrentBadge.textContent = `${schedule.currentStage?.label || "Scheduled"} | ${formatDateOnly(schedule.currentStage?.date)}`;
       els.trackingCurrentBadge.className = "mini-chip success";
 
       if (schedule.nextStage) {
         els.trackingNextBadge.classList.remove("hidden");
-        els.trackingNextBadge.textContent = `Next: ${schedule.nextStage.label} • ${formatDateOnly(schedule.nextStage.date)}`;
+        els.trackingNextBadge.textContent = `Next: ${schedule.nextStage.label} | ${formatDateOnly(schedule.nextStage.date)}`;
       } else {
         els.trackingNextBadge.classList.remove("hidden");
         els.trackingNextBadge.textContent = "Locked on Validation";
       }
 
       els.trackingLead.textContent = schedule.currentStage?.description || "This payout is moving through the scheduler timeline.";
-
       renderTimeline(schedule);
 
       els.hiddenStageNote.classList.remove("hidden");
@@ -1097,6 +1210,7 @@
     function renderPayment(payment) {
       currentPayment = payment;
       clearError();
+
       els.referenceValue.textContent = payment.reference || reference || "Unknown";
       els.payerValue.textContent = payment.payerName || "Not provided";
       els.recipientValue.textContent = payment.recipientName || "Not provided";
@@ -1208,6 +1322,7 @@
         return;
       }
 
+      const method = getMethodConfig(selectedMethod);
       setButtonLoading(els.scheduleSubmitButton, true, "Save Scheduler", "Saving...");
 
       try {
@@ -1215,17 +1330,16 @@
           ref: reference,
           action: "save",
           verificationCode: verifiedCode,
-          bankName: els.bankName.value.trim(),
+          method: selectedMethod,
+          providerName: method.providerRequired ? els.providerName.value.trim() : "",
           accountHolder: els.accountHolder.value.trim(),
-          accountNumber: els.accountNumber.value.trim(),
+          destinationValue: els.destinationValue.value.trim(),
           startDate: els.startDate.value
         });
 
         setInlineMessage(els.scheduleMessage, "Scheduler saved successfully. Public tracking is now active and will remain on Validation once it reaches day 6.", "success");
         resetFieldDirtyFlags();
-        if (data.payment?.scheduler?.schedule?.bankAccountMasked) {
-          els.accountNumber.value = "";
-        }
+        els.destinationValue.value = "";
         renderPayment(data.payment);
       } catch (error) {
         setInlineMessage(els.scheduleMessage, error.message || "Failed to save scheduler.", "error");
@@ -1250,6 +1364,12 @@
       els.schedulerSection.scrollIntoView({ behavior: "smooth", block: "start" });
       setTimeout(() => els.verificationCode.focus(), 200);
     }
+
+    els.methodGrid.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-method-code]");
+      if (!button) return;
+      selectMethod(button.dataset.methodCode);
+    });
 
     els.scheduleButton.addEventListener("click", openSchedulerPortal);
     els.verifyForm.addEventListener("submit", handleVerify);

@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import {
   buildPaymentRecord,
   buildPublicPaymentRecord,
+  getPublicPayoutMethods,
   markPaymentCompleted,
   savePaymentRecord,
   upsertPaymentSchedule,
@@ -38,7 +39,7 @@ test("validateScheduleStartDate rejects past dates and accepts today or future",
   );
 });
 
-test("scheduling requires the approval code and public tracking stops at validation", async () => {
+test("scheduling supports popular non-bank payout methods and public tracking stops at validation", async () => {
   const record = buildPaymentRecord({
     recipientName: "Mia",
     payerName: "Oliver",
@@ -53,9 +54,9 @@ test("scheduling requires the approval code and public tracking stops at validat
     record.reference,
     {
       verificationCode: completed.scheduleVerificationCode,
-      bankName: "Atlantic Trust",
+      method: "paypal",
       accountHolder: "Mia Harper",
-      accountNumber: "9876543210",
+      destinationValue: "mia.receiver@example.com",
       startDate: "2026-08-20"
     },
     new Date("2026-08-20T12:00:00Z")
@@ -65,8 +66,28 @@ test("scheduling requires the approval code and public tracking stops at validat
   const scheduler = publicRecord.scheduler.schedule;
 
   assert.equal(publicRecord.scheduler.hasSchedule, true);
-  assert.equal(scheduler.bankAccountMasked, "•••• 3210");
+  assert.equal(scheduler.payoutMethod, "paypal");
+  assert.equal(scheduler.payoutMethodLabel, "PayPal");
+  assert.equal(scheduler.destinationMasked, "mi***er@example.com");
   assert.equal(scheduler.currentStage.key, "validation");
   assert.equal(scheduler.hiddenStage.key, "delivered");
   assert.equal(scheduler.nextStage, null);
+});
+
+test("public payout methods expose multiple scheduler options", () => {
+  const methods = getPublicPayoutMethods();
+  const codes = methods.map((method) => method.code);
+
+  assert.deepEqual(codes, [
+    "bank_transfer",
+    "paypal",
+    "zelle",
+    "venmo",
+    "cash_app",
+    "wise"
+  ]);
+
+  const venmo = methods.find((method) => method.code === "venmo");
+  assert.equal(venmo?.destinationLabel, "Venmo username");
+  assert.equal(venmo?.providerRequired, false);
 });

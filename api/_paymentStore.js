@@ -33,6 +33,63 @@ const HIDDEN_STAGE_COPY = {
   description: "This internal final stage stays hidden from the public portal."
 };
 
+const PAYOUT_METHODS = {
+  bank_transfer: {
+    code: "bank_transfer",
+    label: "Bank Transfer",
+    providerLabel: "Bank name",
+    providerRequired: true,
+    destinationLabel: "Bank account",
+    destinationPlaceholder: "Checking or savings account number",
+    hint: "Traditional payout routed to a checking or savings account."
+  },
+  paypal: {
+    code: "paypal",
+    label: "PayPal",
+    providerLabel: "",
+    providerRequired: false,
+    destinationLabel: "PayPal email",
+    destinationPlaceholder: "name@example.com",
+    hint: "Popular email-based payout to a PayPal account."
+  },
+  zelle: {
+    code: "zelle",
+    label: "Zelle",
+    providerLabel: "",
+    providerRequired: false,
+    destinationLabel: "Zelle email or phone",
+    destinationPlaceholder: "name@example.com or +1 555 123 4567",
+    hint: "Fast domestic payout using a Zelle-linked email or phone number."
+  },
+  venmo: {
+    code: "venmo",
+    label: "Venmo",
+    providerLabel: "",
+    providerRequired: false,
+    destinationLabel: "Venmo username",
+    destinationPlaceholder: "@username",
+    hint: "Use the receiver's public Venmo username."
+  },
+  cash_app: {
+    code: "cash_app",
+    label: "Cash App",
+    providerLabel: "",
+    providerRequired: false,
+    destinationLabel: "Cash App tag",
+    destinationPlaceholder: "$cashtag",
+    hint: "Popular instant payout using a Cash App $Cashtag."
+  },
+  wise: {
+    code: "wise",
+    label: "Wise",
+    providerLabel: "",
+    providerRequired: false,
+    destinationLabel: "Wise email",
+    destinationPlaceholder: "name@example.com",
+    hint: "Useful for cross-border payouts through Wise."
+  }
+};
+
 export class PaymentStoreError extends Error {
   constructor(statusCode, message) {
     super(message);
@@ -143,6 +200,137 @@ function maskBankAccountNumber(value) {
     return compact;
   }
   return `•••• ${compact.slice(-4)}`;
+}
+
+function getPayoutMethodConfig(methodCode = "bank_transfer") {
+  return PAYOUT_METHODS[methodCode] || null;
+}
+
+function maskGenericHandle(value, prefix = "") {
+  const compact = String(value || "").trim();
+  if (!compact) {
+    return "";
+  }
+
+  const visibleStart = compact.length <= 6 ? 1 : 2;
+  const visibleEnd = compact.length <= 6 ? 1 : 2;
+  const maskedCore = compact.length <= visibleStart + visibleEnd
+    ? compact
+    : `${compact.slice(0, visibleStart)}***${compact.slice(-visibleEnd)}`;
+
+  return `${prefix}${maskedCore}`;
+}
+
+function maskEmailAddress(value) {
+  const normalized = String(value || "").trim().toLowerCase();
+  const [localPart, domain] = normalized.split("@");
+  if (!localPart || !domain) {
+    return normalized;
+  }
+
+  return `${maskGenericHandle(localPart)}@${domain}`;
+}
+
+function maskPhoneNumber(value) {
+  const digits = String(value || "").replace(/\D/g, "");
+  if (!digits) {
+    return "";
+  }
+
+  if (digits.length <= 4) {
+    return digits;
+  }
+
+  return `***-***-${digits.slice(-4)}`;
+}
+
+function isLikelyEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || "").trim());
+}
+
+function normalizeProviderName(rawValue) {
+  return String(rawValue || "").trim();
+}
+
+function normalizeDestinationForMethod(methodCode, rawValue) {
+  const value = String(rawValue || "").trim();
+
+  switch (methodCode) {
+    case "bank_transfer": {
+      const compact = value.replace(/[^0-9A-Za-z]/g, "");
+      if (compact.length < 6) {
+        throw new PaymentStoreError(400, "Bank account number must be at least 6 characters.");
+      }
+      return compact;
+    }
+    case "paypal":
+    case "wise": {
+      const email = value.toLowerCase();
+      if (!isLikelyEmail(email)) {
+        throw new PaymentStoreError(400, `${getPayoutMethodConfig(methodCode).label} requires a valid email address.`);
+      }
+      return email;
+    }
+    case "zelle": {
+      if (isLikelyEmail(value)) {
+        return value.toLowerCase();
+      }
+
+      const digits = value.replace(/\D/g, "");
+      if (digits.length < 10) {
+        throw new PaymentStoreError(400, "Zelle requires a valid email address or phone number.");
+      }
+      return digits;
+    }
+    case "venmo": {
+      const handle = value.replace(/^@+/, "");
+      if (!/^[A-Za-z0-9_.-]{3,30}$/.test(handle)) {
+        throw new PaymentStoreError(400, "Venmo requires a valid username.");
+      }
+      return handle;
+    }
+    case "cash_app": {
+      const handle = value.replace(/^\$+/, "");
+      if (!/^[A-Za-z0-9_]{3,20}$/.test(handle)) {
+        throw new PaymentStoreError(400, "Cash App requires a valid $Cashtag.");
+      }
+      return handle;
+    }
+    default:
+      throw new PaymentStoreError(400, "Unsupported payout method.");
+  }
+}
+
+function maskDestinationForMethod(methodCode, normalizedValue) {
+  switch (methodCode) {
+    case "bank_transfer":
+      return maskBankAccountNumber(normalizedValue);
+    case "paypal":
+    case "wise":
+      return maskEmailAddress(normalizedValue);
+    case "zelle":
+      return isLikelyEmail(normalizedValue)
+        ? maskEmailAddress(normalizedValue)
+        : maskPhoneNumber(normalizedValue);
+    case "venmo":
+      return maskGenericHandle(normalizedValue.replace(/^@+/, ""), "@");
+    case "cash_app":
+      return maskGenericHandle(normalizedValue.replace(/^\$+/, ""), "$");
+    default:
+      return String(normalizedValue || "");
+  }
+}
+
+export function getPublicPayoutMethods() {
+  return Object.values(PAYOUT_METHODS).map((method) => ({
+    code: method.code,
+    label: method.label,
+    providerLabel: method.providerLabel,
+    providerRequired: method.providerRequired,
+    destinationLabel: method.destinationLabel,
+    destinationPlaceholder: method.destinationPlaceholder,
+    hint: method.hint
+  }));
 }
 
 export function buildPaymentReference() {
@@ -279,10 +467,19 @@ export function buildScheduleStatus(schedule, now = new Date()) {
     ? null
     : order[Math.min(currentIndex + 1, order.length - 1)];
 
+  const payoutMethod = schedule.payoutMethod || "bank_transfer";
+  const methodConfig = getPayoutMethodConfig(payoutMethod) || PAYOUT_METHODS.bank_transfer;
+  const providerName = schedule.providerName || schedule.bankName || "";
+  const destinationMasked = schedule.destinationMasked || schedule.bankAccountMasked || "";
+
   return {
-    bankName: schedule.bankName,
+    payoutMethod,
+    payoutMethodLabel: schedule.payoutMethodLabel || methodConfig.label,
+    providerLabel: methodConfig.providerLabel,
+    providerName,
+    destinationLabel: schedule.destinationLabel || methodConfig.destinationLabel,
+    destinationMasked,
     accountHolder: schedule.accountHolder,
-    bankAccountMasked: schedule.bankAccountMasked,
     startDate: schedule.startDate,
     createdAt: schedule.createdAt,
     updatedAt: schedule.updatedAt,
@@ -329,6 +526,7 @@ export function buildPublicPaymentRecord(record, now = new Date()) {
       payoutAmount: record.amount,
       retainedFee: record.serviceFee,
       totalCollected: record.totalAmount,
+      supportedMethods: getPublicPayoutMethods(),
       hasSchedule: Boolean(scheduleStatus),
       schedule: scheduleStatus
     }
@@ -385,36 +583,51 @@ export async function verifyScheduleAccess(reference, verificationCode) {
 export async function upsertPaymentSchedule(reference, scheduleInput = {}, now = new Date()) {
   const record = await verifyScheduleAccess(reference, scheduleInput.verificationCode);
 
-  const bankName = String(scheduleInput.bankName || "").trim();
+  const payoutMethod = String(
+    scheduleInput.method ||
+    record.schedule?.payoutMethod ||
+    "bank_transfer"
+  ).trim().toLowerCase();
+  const methodConfig = getPayoutMethodConfig(payoutMethod);
+  const providerName = normalizeProviderName(scheduleInput.providerName);
   const accountHolder = String(scheduleInput.accountHolder || "").trim();
-  const accountNumber = String(scheduleInput.accountNumber || "").replace(/[^0-9A-Za-z]/g, "");
+  const destinationValue = String(scheduleInput.destinationValue || "").trim();
   const startDate = validateScheduleStartDate(scheduleInput.startDate, now);
+  const existingScheduleMethod = record.schedule?.payoutMethod || (record.schedule?.bankAccountMasked ? "bank_transfer" : "");
+  const existingDestinationMasked = existingScheduleMethod === payoutMethod
+    ? (record.schedule?.destinationMasked || record.schedule?.bankAccountMasked || "")
+    : "";
 
-  if (bankName.length < 2) {
-    throw new PaymentStoreError(400, "Bank name is required.");
+  if (!methodConfig) {
+    throw new PaymentStoreError(400, "Unsupported payout method.");
+  }
+
+  if (methodConfig.providerRequired && providerName.length < 2) {
+    throw new PaymentStoreError(400, `${methodConfig.providerLabel} is required.`);
   }
 
   if (accountHolder.length < 2) {
     throw new PaymentStoreError(400, "Account holder name is required.");
   }
 
-  if (!accountNumber && !record.schedule?.bankAccountMasked) {
-    throw new PaymentStoreError(400, "Bank account number is required.");
+  if (!destinationValue && !existingDestinationMasked) {
+    throw new PaymentStoreError(400, `${methodConfig.destinationLabel} is required.`);
   }
 
-  if (accountNumber && accountNumber.length < 6) {
-    throw new PaymentStoreError(400, "Bank account number must be at least 6 characters.");
-  }
+  const destinationMasked = destinationValue
+    ? maskDestinationForMethod(payoutMethod, normalizeDestinationForMethod(payoutMethod, destinationValue))
+    : existingDestinationMasked;
 
   const timestamp = new Date(now).toISOString();
   const updated = {
     ...record,
     schedule: {
-      bankName,
+      payoutMethod,
+      payoutMethodLabel: methodConfig.label,
+      providerName,
+      destinationLabel: methodConfig.destinationLabel,
+      destinationMasked,
       accountHolder,
-      bankAccountMasked: accountNumber
-        ? maskBankAccountNumber(accountNumber)
-        : record.schedule?.bankAccountMasked || "",
       startDate,
       scheduledAmount: formatMoneyNumber(record.amount),
       recipientName: record.recipientName,
