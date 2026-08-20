@@ -579,7 +579,8 @@
       font-weight: 600;
     }
 
-    .field input {
+    .field input,
+    .field select {
       width: 100%;
       border-radius: 14px;
       border: 1px solid rgba(255,255,255,0.16);
@@ -590,7 +591,8 @@
       box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
     }
 
-    .field input:focus {
+    .field input:focus,
+    .field select:focus {
       border-color: rgba(212, 175, 55, 0.45);
       box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.08);
     }
@@ -600,46 +602,32 @@
       line-height: 1.6;
     }
 
-    .method-grid {
-      display: grid;
-      gap: 12px;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+    .select-wrap {
+      position: relative;
     }
 
-    .method-card {
-      padding: 14px 16px;
-      min-height: 104px;
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(12,12,12,0.98);
-      color: var(--text-white);
-      text-align: left;
+    .select-wrap::after {
+      content: "";
+      position: absolute;
+      right: 18px;
+      top: 50%;
+      width: 10px;
+      height: 10px;
+      border-right: 2px solid rgba(243, 229, 171, 0.9);
+      border-bottom: 2px solid rgba(243, 229, 171, 0.9);
+      transform: translateY(-65%) rotate(45deg);
+      pointer-events: none;
+    }
+
+    .field select {
+      appearance: none;
       cursor: pointer;
-      transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+      padding-right: 52px;
     }
 
-    .method-card:hover {
-      transform: translateY(-1px);
-      border-color: rgba(212, 175, 55, 0.24);
-    }
-
-    .method-card.active {
-      border-color: rgba(212, 175, 55, 0.42);
-      box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.1);
-      background: rgba(212, 175, 55, 0.08);
-    }
-
-    .method-card strong {
-      display: block;
-      font-size: 0.98rem;
-      margin-bottom: 6px;
-    }
-
-    .method-card span {
-      display: block;
-      color: var(--text-grey);
-      line-height: 1.5;
-      font-size: 0.84rem;
+    .field select option {
+      background: #0c0c0c;
+      color: var(--text-white);
     }
 
     .row-two {
@@ -780,7 +768,6 @@
       .summary-grid,
       .stats-grid,
       .row-two,
-      .method-grid,
       .workspace-stat-grid,
       .modal-steps {
         grid-template-columns: 1fr;
@@ -1011,8 +998,10 @@
 
           <form id="scheduleForm" class="form-panel" autocomplete="off">
             <div class="field">
-              <label>Payout method</label>
-              <div id="methodGrid" class="method-grid"></div>
+              <label for="methodSelect">Payout method</label>
+              <div class="select-wrap">
+                <select id="methodSelect"></select>
+              </div>
               <small id="methodHint">Choose the payout method the receiver wants to use for the scheduled release.</small>
             </div>
 
@@ -1153,7 +1142,7 @@
       portalFee: document.getElementById("portalFee"),
       portalCollected: document.getElementById("portalCollected"),
       scheduleForm: document.getElementById("scheduleForm"),
-      methodGrid: document.getElementById("methodGrid"),
+      methodSelect: document.getElementById("methodSelect"),
       methodHint: document.getElementById("methodHint"),
       providerField: document.getElementById("providerField"),
       providerLabel: document.getElementById("providerLabel"),
@@ -1329,20 +1318,17 @@
       };
     }
 
-    function renderMethodGrid(methods = getSupportedMethods()) {
-      els.methodGrid.innerHTML = "";
+    function renderMethodOptions(methods = getSupportedMethods()) {
+      els.methodSelect.innerHTML = "";
 
       for (const method of methods) {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = `method-card ${method.code === selectedMethod ? "active" : ""}`;
-        button.dataset.methodCode = method.code;
-        button.innerHTML = `
-          <strong>${method.label}</strong>
-          <span>${method.hint}</span>
-        `;
-        els.methodGrid.appendChild(button);
+        const option = document.createElement("option");
+        option.value = method.code;
+        option.textContent = method.label;
+        els.methodSelect.appendChild(option);
       }
+
+      els.methodSelect.value = selectedMethod;
     }
 
     function applyMethodConfig(methodCode, schedule = null) {
@@ -1350,6 +1336,7 @@
       const scheduleMatches = schedule?.payoutMethod === method.code;
       const draft = methodDrafts[method.code] || {};
 
+      els.methodSelect.value = method.code;
       els.methodHint.textContent = method.hint;
       els.providerLabel.textContent = method.providerLabel || "Provider / note";
       els.destinationLabel.textContent = method.destinationLabel;
@@ -1394,7 +1381,6 @@
 
       rememberMethodDraft(selectedMethod);
       selectedMethod = methodCode;
-      renderMethodGrid();
       applyMethodConfig(selectedMethod, currentPayment?.scheduler?.schedule || null);
     }
 
@@ -1471,7 +1457,7 @@
         els.startDate.value = getTodayInputValue();
       }
 
-      renderMethodGrid(methods);
+      renderMethodOptions(methods);
       applyMethodConfig(selectedMethod, schedule);
     }
 
@@ -1729,10 +1715,8 @@
       openModal(els.trackingModal);
     }
 
-    els.methodGrid.addEventListener("click", (event) => {
-      const button = event.target.closest("[data-method-code]");
-      if (!button) return;
-      selectMethod(button.dataset.methodCode);
+    els.methodSelect.addEventListener("change", (event) => {
+      selectMethod(event.target.value);
     });
 
     els.scheduleButton.addEventListener("click", openSchedulerPortal);
