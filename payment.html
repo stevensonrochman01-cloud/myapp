@@ -33,6 +33,10 @@
         linear-gradient(180deg, #0d0d0d 0%, #050505 100%);
     }
 
+    body.modal-open {
+      overflow: hidden;
+    }
+
     a { color: inherit; text-decoration: none; }
     button, input { font: inherit; }
     h1, h2, h3 { font-family: "Playfair Display", serif; }
@@ -223,6 +227,11 @@
       gap: 14px;
       flex-wrap: wrap;
       margin-top: 4px;
+      align-items: stretch;
+    }
+
+    .action-note {
+      margin-top: -4px;
     }
 
     .btn {
@@ -256,6 +265,10 @@
       background: rgba(255,255,255,0.03);
       border-color: rgba(255,255,255,0.12);
       color: var(--text-white);
+    }
+
+    .btn-block {
+      width: 100%;
     }
 
     .details {
@@ -370,6 +383,176 @@
 
     .scheduler-shell { margin-top: 34px; }
 
+    .workspace-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .workspace-grid {
+      display: grid;
+      grid-template-columns: 0.94fr 1.06fr;
+      gap: 22px;
+    }
+
+    .workspace-card {
+      padding: 26px;
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      box-shadow: var(--shadow-gold);
+      display: grid;
+      gap: 18px;
+      align-content: start;
+    }
+
+    .workspace-card-primary {
+      border-color: rgba(212, 175, 55, 0.22);
+      box-shadow: 0 0 26px rgba(212, 175, 55, 0.12);
+    }
+
+    .workspace-copy {
+      color: var(--text-grey);
+      line-height: 1.7;
+    }
+
+    .workspace-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .workspace-list-item,
+    .workspace-stat {
+      padding: 16px 18px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.02);
+    }
+
+    .workspace-list-item span,
+    .workspace-stat span {
+      display: block;
+      color: var(--gold-light);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-size: 0.74rem;
+      margin-bottom: 8px;
+    }
+
+    .workspace-list-item strong,
+    .workspace-stat strong {
+      display: block;
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+
+    .workspace-stat-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      padding: 24px;
+      display: grid;
+      place-items: center;
+      background: rgba(5, 5, 5, 0.78);
+      backdrop-filter: blur(12px);
+    }
+
+    .modal {
+      width: min(100%, 920px);
+      max-height: calc(100vh - 48px);
+      overflow: auto;
+      padding: 28px;
+      display: grid;
+      gap: 18px;
+      background: linear-gradient(180deg, rgba(18,18,18,0.98), rgba(10,10,10,0.98));
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 24px 80px rgba(0,0,0,0.45);
+    }
+
+    .modal-large {
+      width: min(100%, 1020px);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 18px;
+    }
+
+    .modal-close {
+      width: 46px;
+      height: 46px;
+      flex-shrink: 0;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.03);
+      color: var(--text-white);
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .modal-close:hover {
+      transform: translateY(-1px);
+      border-color: rgba(212, 175, 55, 0.32);
+    }
+
+    .modal-steps {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .step-pill {
+      padding: 14px 16px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.02);
+      color: var(--text-grey);
+      display: grid;
+      gap: 6px;
+    }
+
+    .step-pill small {
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-size: 0.72rem;
+    }
+
+    .step-pill strong {
+      font-size: 0.96rem;
+      line-height: 1.4;
+    }
+
+    .step-pill.complete {
+      border-color: rgba(110, 211, 138, 0.28);
+      background: rgba(110, 211, 138, 0.1);
+      color: var(--success);
+    }
+
+    .step-pill.active {
+      border-color: rgba(212, 175, 55, 0.28);
+      background: rgba(212, 175, 55, 0.1);
+      color: var(--gold-light);
+    }
+
+    .form-panel {
+      padding: 20px;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.02);
+      display: grid;
+      gap: 16px;
+    }
+
     .scheduler-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -390,7 +573,7 @@
 
     .field label {
       font-size: 0.82rem;
-      color: var(--text-grey);
+      color: var(--gold-light);
       text-transform: uppercase;
       letter-spacing: 0.08em;
       font-weight: 600;
@@ -399,11 +582,12 @@
     .field input {
       width: 100%;
       border-radius: 14px;
-      border: 1px solid rgba(255,255,255,0.1);
-      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(9,9,9,0.95);
       color: var(--text-white);
-      padding: 14px 16px;
+      padding: 16px 18px;
       outline: none;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
     }
 
     .field input:focus {
@@ -424,9 +608,10 @@
 
     .method-card {
       padding: 14px 16px;
+      min-height: 104px;
       border-radius: 16px;
       border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.02);
+      background: rgba(12,12,12,0.98);
       color: var(--text-white);
       text-align: left;
       cursor: pointer;
@@ -581,7 +766,8 @@
 
     @media (max-width: 980px) {
       .shell,
-      .scheduler-grid {
+      .scheduler-grid,
+      .workspace-grid {
         grid-template-columns: 1fr;
       }
 
@@ -594,8 +780,20 @@
       .summary-grid,
       .stats-grid,
       .row-two,
-      .method-grid {
+      .method-grid,
+      .workspace-stat-grid,
+      .modal-steps {
         grid-template-columns: 1fr;
+      }
+
+      .modal-backdrop {
+        padding: 12px;
+      }
+
+      .modal,
+      .modal-large {
+        padding: 20px;
+        max-height: calc(100vh - 24px);
       }
     }
   </style>
@@ -648,11 +846,12 @@
         </div>
 
         <div id="actions" class="actions">
-          <a id="cardButton" class="btn btn-primary" href="#" target="_blank" rel="noopener noreferrer">Pay with Card</a>
-          <button id="scheduleButton" class="btn btn-secondary hidden" type="button">Schedule Payment</button>
+          <a id="cardButton" class="btn btn-primary" href="#" target="_blank" rel="noopener noreferrer">Open Card Checkout</a>
+          <button id="scheduleButton" class="btn btn-primary hidden" type="button">Open Scheduler Setup</button>
         </div>
 
         <p id="pollingMeta" class="meta">Reference updates are checked automatically every 10 seconds so the portal can reflect approval and scheduler progress.</p>
+        <p class="meta action-note">After approval, the scheduler and tracker open in separate guided panels so each step stays clear and easier to follow.</p>
       </div>
 
       <div id="detailsCard" class="details">
@@ -673,144 +872,231 @@
     </div>
 
     <div id="schedulerSection" class="scheduler-shell hidden">
-      <div class="scheduler-grid">
-        <div class="portal-card">
-          <div class="eyebrow">Receiver Scheduler Portal</div>
-          <h2>Unlock and schedule the payout</h2>
-          <p class="portal-copy">After approval, the receiver can use the verification password shared by the admin to unlock this portal, review the received amount, and schedule the release through several popular payout methods.</p>
+      <div class="workspace-head">
+        <div>
+          <div class="eyebrow">Payout Workspace</div>
+          <h2>Use guided panels instead of one crowded page</h2>
+          <p class="portal-copy">Open the scheduler to verify access and save payout details. Open the tracker separately to review stages and delivery progress.</p>
+        </div>
+      </div>
+
+      <div class="workspace-grid">
+        <div class="workspace-card workspace-card-primary">
+          <div>
+            <div class="eyebrow">Step 1 &amp; 2</div>
+            <h3>Scheduler setup</h3>
+            <p class="workspace-copy">Verify the admin password first, then choose the payout method, destination, account holder, and start date inside a dedicated setup dialog.</p>
+          </div>
 
           <div class="badge-row">
             <div id="schedulerAccessChip" class="mini-chip info">Awaiting verification code</div>
             <div id="schedulerModeChip" class="mini-chip warning">Portal locked</div>
           </div>
 
-          <div id="schedulerAccessCard" class="tracking-empty hidden">
-            Press <strong>Schedule Payment</strong> above to enter the verification code and unlock the scheduler controls.
+          <div class="workspace-list">
+            <div class="workspace-list-item">
+              <span>Step 1</span>
+              <strong>Enter the verification code from the admin</strong>
+            </div>
+            <div class="workspace-list-item">
+              <span>Step 2</span>
+              <strong>Choose payout method, destination, and start date</strong>
+            </div>
+            <div class="workspace-list-item">
+              <span>Step 3</span>
+              <strong>Save the schedule and review it in the tracker</strong>
+            </div>
           </div>
 
-          <form id="verifyForm" class="form-grid hidden" autocomplete="off">
-            <div class="inline-form">
-              <div class="field">
-                <label for="verificationCode">Verification code</label>
-                <input id="verificationCode" type="text" placeholder="Enter the admin password" maxlength="16" />
-              </div>
-              <button id="verifyButton" class="btn btn-primary" type="submit">Verify Code</button>
+          <button id="openSchedulerModalButton" class="btn btn-primary btn-block" type="button">Open Scheduler Setup</button>
+        </div>
+
+        <div class="workspace-card">
+          <div>
+            <div class="eyebrow">Tracker Review</div>
+            <h3>Read the payout timeline separately</h3>
+            <p class="workspace-copy">The status tracker opens in its own panel so dates, stages, destination, and delivery progress are easier to read at a glance.</p>
+          </div>
+
+          <div class="workspace-stat-grid">
+            <div class="workspace-stat">
+              <span>Current Stage</span>
+              <strong id="workspaceCurrentStage">Awaiting schedule</strong>
             </div>
-            <p id="verificationMessage" class="message-pill hidden"></p>
-          </form>
-
-          <div id="schedulerPortal" class="form-grid hidden">
-            <div class="portal-summary">
-              <div class="stats-grid">
-                <div class="stat-card">
-                  <span>Payout Receiver</span>
-                  <strong id="portalRecipient">Not available</strong>
-                  <small>The payout portal is tied to the approved receiver name for this reference.</small>
-                </div>
-                <div class="stat-card">
-                  <span>Payment Received</span>
-                  <strong id="portalAmount">$0.00</strong>
-                  <small>This is the receiver-side amount shown inside the scheduling portal.</small>
-                </div>
-                <div class="stat-card">
-                  <span>Platform Fee Retained</span>
-                  <strong id="portalFee">$0.00</strong>
-                  <small>The service fee stays with the platform and is not part of the scheduled payout.</small>
-                </div>
-                <div class="stat-card">
-                  <span>Total Collected</span>
-                  <strong id="portalCollected">$0.00</strong>
-                  <small>The public tracker keeps both the gross collection and the receiver payout visible.</small>
-                </div>
-              </div>
+            <div class="workspace-stat">
+              <span>Next Stage</span>
+              <strong id="workspaceNextStage">Verify and save schedule</strong>
             </div>
+            <div class="workspace-stat">
+              <span>Payout Method</span>
+              <strong id="workspaceMethod">Not selected</strong>
+            </div>
+            <div class="workspace-stat">
+              <span>Receiver</span>
+              <strong id="workspaceRecipient">Not available</strong>
+            </div>
+          </div>
 
-            <form id="scheduleForm" class="form-grid" autocomplete="off">
-              <div class="field">
-                <label>Payout method</label>
-                <div id="methodGrid" class="method-grid"></div>
-                <small id="methodHint">Choose the payout method the receiver wants to use for the scheduled release.</small>
-              </div>
+          <button id="trackingButton" class="btn btn-secondary btn-block" type="button">Open Status Tracker</button>
+        </div>
+      </div>
+    </div>
 
-              <div class="row-two">
-                <div id="providerField" class="field">
-                  <label id="providerLabel" for="providerName">Bank name</label>
-                  <input id="providerName" type="text" placeholder="Example: First Atlantic Bank" />
-                </div>
-                <div id="accountHolderField" class="field">
-                  <label for="accountHolder">Account holder</label>
-                  <input id="accountHolder" type="text" placeholder="Receiver legal name" />
-                </div>
-              </div>
+    <div id="schedulerModal" class="modal-backdrop hidden" aria-hidden="true">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="schedulerModalTitle">
+        <div class="modal-header">
+          <div>
+            <div class="eyebrow">Scheduler Setup</div>
+            <h2 id="schedulerModalTitle">Unlock and schedule the payout</h2>
+            <p class="portal-copy">Work through this in order: verify access first, then fill the payout form in a clearer step-by-step layout.</p>
+          </div>
+          <button id="closeSchedulerModal" class="modal-close" type="button" aria-label="Close scheduler setup">&times;</button>
+        </div>
 
-              <div class="row-two">
-                <div class="field">
-                  <label id="destinationLabel" for="destinationValue">Bank account</label>
-                  <input id="destinationValue" type="text" placeholder="Account number" />
-                  <small id="destinationHint">Enter the payout destination that should receive the scheduled amount.</small>
-                </div>
-                <div class="field">
-                  <label for="startDate">Start date</label>
-                  <input id="startDate" type="date" />
-                  <small>Start date must be today or any future date. Public status begins from that date.</small>
-                </div>
-              </div>
-
-              <div class="portal-actions">
-                <button id="scheduleSubmitButton" class="btn btn-primary" type="submit">Save Scheduler</button>
-                <button id="scrollStatusButton" class="btn btn-secondary" type="button">Jump to Status</button>
-              </div>
-              <p id="scheduleMessage" class="message-pill hidden"></p>
-            </form>
+        <div class="modal-steps">
+          <div id="verifyStepPill" class="step-pill active">
+            <small>Step 1</small>
+            <strong>Verify access code</strong>
+          </div>
+          <div id="setupStepPill" class="step-pill">
+            <small>Step 2</small>
+            <strong>Fill payout details</strong>
+          </div>
+          <div id="reviewStepPill" class="step-pill">
+            <small>Step 3</small>
+            <strong>Review in tracker</strong>
           </div>
         </div>
 
-        <div class="portal-card">
-          <div class="eyebrow">Public Tracking Portal</div>
-          <div class="tracking-topline">
-            <div>
-              <h2>Scheduled payout status</h2>
-              <p id="trackingLead" class="portal-copy">Once a payout has been scheduled, anyone with this page can review its public status timeline.</p>
+        <div id="schedulerAccessCard" class="tracking-empty hidden">
+          Press <strong>Open Scheduler Setup</strong> to enter the verification code and unlock the scheduler controls.
+        </div>
+
+        <form id="verifyForm" class="form-panel hidden" autocomplete="off">
+          <div class="inline-form">
+            <div class="field">
+              <label for="verificationCode">Verification code</label>
+              <input id="verificationCode" type="text" placeholder="Enter the admin password" maxlength="16" />
             </div>
-            <div id="currentStageChip" class="mini-chip warning hidden">Awaiting schedule</div>
+            <button id="verifyButton" class="btn btn-primary" type="submit">Verify Code</button>
           </div>
+          <p id="verificationMessage" class="message-pill hidden"></p>
+        </form>
 
-          <div id="trackingEmpty" class="tracking-empty">
-            The scheduler has not been started yet. After payment approval, verify the admin password to choose the payout method, destination, and start date.
-          </div>
-
-          <div id="trackingPortal" class="form-grid hidden">
+        <div id="schedulerPortal" class="form-grid hidden">
+          <div class="form-panel portal-summary">
             <div class="stats-grid">
               <div class="stat-card">
-                <span>Receiver</span>
-                <strong id="trackingRecipient">Not scheduled</strong>
+                <span>Payout Receiver</span>
+                <strong id="portalRecipient">Not available</strong>
+                <small>The payout portal is tied to the approved receiver name for this reference.</small>
               </div>
               <div class="stat-card">
-                <span>Payout Amount</span>
-                <strong id="trackingAmount">$0.00</strong>
+                <span>Payment Received</span>
+                <strong id="portalAmount">$0.00</strong>
+                <small>This is the receiver-side amount shown inside the scheduling portal.</small>
               </div>
               <div class="stat-card">
-                <span>Payout Method</span>
-                <strong id="trackingMethod">Not scheduled</strong>
+                <span>Platform Fee Retained</span>
+                <strong id="portalFee">$0.00</strong>
+                <small>The service fee stays with the platform and is not part of the scheduled payout.</small>
               </div>
               <div class="stat-card">
-                <span>Destination</span>
-                <strong id="trackingDestination">Not scheduled</strong>
-              </div>
-              <div class="stat-card">
-                <span>Start Date</span>
-                <strong id="trackingStartDate">Not scheduled</strong>
+                <span>Total Collected</span>
+                <strong id="portalCollected">$0.00</strong>
+                <small>The public tracker keeps both the gross collection and the receiver payout visible.</small>
               </div>
             </div>
-
-            <div class="badge-row">
-              <div id="trackingCurrentBadge" class="mini-chip info">Awaiting schedule</div>
-              <div id="trackingNextBadge" class="mini-chip warning hidden">Next milestone pending</div>
-            </div>
-
-            <div id="timeline" class="timeline"></div>
-            <div id="hiddenStageNote" class="lock-note hidden"></div>
           </div>
+
+          <form id="scheduleForm" class="form-panel" autocomplete="off">
+            <div class="field">
+              <label>Payout method</label>
+              <div id="methodGrid" class="method-grid"></div>
+              <small id="methodHint">Choose the payout method the receiver wants to use for the scheduled release.</small>
+            </div>
+
+            <div class="row-two">
+              <div id="providerField" class="field">
+                <label id="providerLabel" for="providerName">Bank name</label>
+                <input id="providerName" type="text" placeholder="Example: First Atlantic Bank" />
+              </div>
+              <div id="accountHolderField" class="field">
+                <label for="accountHolder">Account holder</label>
+                <input id="accountHolder" type="text" placeholder="Receiver legal name" />
+              </div>
+            </div>
+
+            <div class="row-two">
+              <div class="field">
+                <label id="destinationLabel" for="destinationValue">Bank account</label>
+                <input id="destinationValue" type="text" placeholder="Account number" />
+                <small id="destinationHint">Enter the payout destination that should receive the scheduled amount.</small>
+              </div>
+              <div class="field">
+                <label for="startDate">Start date</label>
+                <input id="startDate" type="date" />
+                <small>Start date must be today or any future date. Public status begins from that date.</small>
+              </div>
+            </div>
+
+            <div class="portal-actions">
+              <button id="scheduleSubmitButton" class="btn btn-primary" type="submit">Save Scheduler</button>
+              <button id="scrollStatusButton" class="btn btn-secondary" type="button">Preview Tracker</button>
+            </div>
+            <p id="scheduleMessage" class="message-pill hidden"></p>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div id="trackingModal" class="modal-backdrop hidden" aria-hidden="true">
+      <div class="modal modal-large" role="dialog" aria-modal="true" aria-labelledby="trackingModalTitle">
+        <div class="modal-header">
+          <div>
+            <div class="eyebrow">Status Tracker</div>
+            <h2 id="trackingModalTitle">Scheduled payout status</h2>
+            <p id="trackingLead" class="portal-copy">Once a payout has been scheduled, anyone with this page can review its public status timeline.</p>
+          </div>
+          <button id="closeTrackingModal" class="modal-close" type="button" aria-label="Close status tracker">&times;</button>
+        </div>
+
+        <div class="badge-row">
+          <div id="currentStageChip" class="mini-chip warning hidden">Awaiting schedule</div>
+          <div id="trackingCurrentBadge" class="mini-chip info">Awaiting schedule</div>
+          <div id="trackingNextBadge" class="mini-chip warning hidden">Next milestone pending</div>
+        </div>
+
+        <div id="trackingEmpty" class="tracking-empty">
+          The scheduler has not been started yet. After payment approval, verify the admin password to choose the payout method, destination, and start date.
+        </div>
+
+        <div id="trackingPortal" class="form-grid hidden">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <span>Receiver</span>
+              <strong id="trackingRecipient">Not scheduled</strong>
+            </div>
+            <div class="stat-card">
+              <span>Payout Amount</span>
+              <strong id="trackingAmount">$0.00</strong>
+            </div>
+            <div class="stat-card">
+              <span>Payout Method</span>
+              <strong id="trackingMethod">Not scheduled</strong>
+            </div>
+            <div class="stat-card">
+              <span>Destination</span>
+              <strong id="trackingDestination">Not scheduled</strong>
+            </div>
+            <div class="stat-card">
+              <span>Start Date</span>
+              <strong id="trackingStartDate">Not scheduled</strong>
+            </div>
+          </div>
+
+          <div id="timeline" class="timeline"></div>
+          <div id="hiddenStageNote" class="lock-note hidden"></div>
         </div>
       </div>
     </div>
@@ -842,6 +1128,19 @@
       schedulerSection: document.getElementById("schedulerSection"),
       schedulerAccessChip: document.getElementById("schedulerAccessChip"),
       schedulerModeChip: document.getElementById("schedulerModeChip"),
+      openSchedulerModalButton: document.getElementById("openSchedulerModalButton"),
+      trackingButton: document.getElementById("trackingButton"),
+      workspaceCurrentStage: document.getElementById("workspaceCurrentStage"),
+      workspaceNextStage: document.getElementById("workspaceNextStage"),
+      workspaceMethod: document.getElementById("workspaceMethod"),
+      workspaceRecipient: document.getElementById("workspaceRecipient"),
+      schedulerModal: document.getElementById("schedulerModal"),
+      closeSchedulerModal: document.getElementById("closeSchedulerModal"),
+      trackingModal: document.getElementById("trackingModal"),
+      closeTrackingModal: document.getElementById("closeTrackingModal"),
+      verifyStepPill: document.getElementById("verifyStepPill"),
+      setupStepPill: document.getElementById("setupStepPill"),
+      reviewStepPill: document.getElementById("reviewStepPill"),
       schedulerAccessCard: document.getElementById("schedulerAccessCard"),
       verifyForm: document.getElementById("verifyForm"),
       verificationCode: document.getElementById("verificationCode"),
@@ -957,6 +1256,52 @@
       });
     }
 
+    function syncBodyModalState() {
+      const modalOpen = !els.schedulerModal.classList.contains("hidden")
+        || !els.trackingModal.classList.contains("hidden");
+      document.body.classList.toggle("modal-open", modalOpen);
+    }
+
+    function openModal(modal) {
+      if (!modal) return;
+      modal.classList.remove("hidden");
+      modal.setAttribute("aria-hidden", "false");
+      syncBodyModalState();
+    }
+
+    function closeModal(modal) {
+      if (!modal) return;
+      modal.classList.add("hidden");
+      modal.setAttribute("aria-hidden", "true");
+      syncBodyModalState();
+    }
+
+    function setStepPillState(element, state) {
+      element.className = `step-pill ${state}`;
+    }
+
+    function renderWorkspaceSummary(payment) {
+      const scheduler = payment?.scheduler || {};
+      const schedule = scheduler.schedule || null;
+
+      els.workspaceRecipient.textContent = scheduler.payoutRecipient || "Not available";
+      els.workspaceMethod.textContent = schedule?.payoutMethodLabel || "Not selected";
+      els.workspaceCurrentStage.textContent = schedule?.currentStage?.label || "Awaiting schedule";
+      els.workspaceNextStage.textContent = schedule?.nextStage?.label
+        || (schedule ? "Timeline complete" : (verifiedCode ? "Save schedule" : "Verify access code"));
+
+      setStepPillState(els.verifyStepPill, verifiedCode ? "complete" : "active");
+      setStepPillState(els.setupStepPill, verifiedCode ? (schedule ? "complete" : "active") : "upcoming");
+      setStepPillState(
+        els.reviewStepPill,
+        schedule?.currentStage?.key === "delivered"
+          ? "complete"
+          : schedule
+            ? "active"
+            : "upcoming"
+      );
+    }
+
     function getSupportedMethods() {
       return currentPayment?.scheduler?.supportedMethods || [];
     }
@@ -1064,6 +1409,8 @@
       els.cardButton.classList.remove("hidden");
       els.scheduleButton.classList.add("hidden");
       els.schedulerSection.classList.add("hidden");
+      closeModal(els.schedulerModal);
+      closeModal(els.trackingModal);
       verifiedCode = "";
       clearInlineMessage(els.verificationMessage);
       clearInlineMessage(els.scheduleMessage);
@@ -1136,6 +1483,7 @@
       els.schedulerAccessChip.className = `mini-chip ${verifiedCode ? "success" : "info"}`;
       els.schedulerModeChip.textContent = schedule ? "Tracker live" : (verifiedCode ? "Portal unlocked" : "Portal locked");
       els.schedulerModeChip.className = `mini-chip ${(schedule || verifiedCode) ? "success" : "warning"}`;
+      renderWorkspaceSummary(payment);
 
       if (!schedule) {
         els.trackingEmpty.classList.remove("hidden");
@@ -1193,6 +1541,8 @@
         els.schedulerAccessCard.classList.add("hidden");
         els.verifyForm.classList.add("hidden");
         els.schedulerPortal.classList.add("hidden");
+        closeModal(els.schedulerModal);
+        closeModal(els.trackingModal);
         return;
       }
 
@@ -1358,6 +1708,7 @@
         return;
       }
 
+      openModal(els.schedulerModal);
       els.schedulerSection.classList.remove("hidden");
       els.schedulerAccessCard.classList.add("hidden");
       els.verifyForm.classList.remove("hidden");
@@ -1366,8 +1717,16 @@
         els.schedulerPortal.classList.remove("hidden");
       }
 
-      els.schedulerSection.scrollIntoView({ behavior: "smooth", block: "start" });
       setTimeout(() => els.verificationCode.focus(), 200);
+    }
+
+    function openTrackingPortal() {
+      if (!currentPayment?.scheduler?.available) {
+        return;
+      }
+
+      closeModal(els.schedulerModal);
+      openModal(els.trackingModal);
     }
 
     els.methodGrid.addEventListener("click", (event) => {
@@ -1377,10 +1736,25 @@
     });
 
     els.scheduleButton.addEventListener("click", openSchedulerPortal);
+    els.openSchedulerModalButton.addEventListener("click", openSchedulerPortal);
+    els.trackingButton.addEventListener("click", openTrackingPortal);
     els.verifyForm.addEventListener("submit", handleVerify);
     els.scheduleForm.addEventListener("submit", handleScheduleSave);
-    els.scrollStatusButton.addEventListener("click", () => {
-      els.trackingPortal.scrollIntoView({ behavior: "smooth", block: "start" });
+    els.scrollStatusButton.addEventListener("click", openTrackingPortal);
+    els.closeSchedulerModal.addEventListener("click", () => closeModal(els.schedulerModal));
+    els.closeTrackingModal.addEventListener("click", () => closeModal(els.trackingModal));
+    [els.schedulerModal, els.trackingModal].forEach((modal) => {
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) {
+          closeModal(modal);
+        }
+      });
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        closeModal(els.schedulerModal);
+        closeModal(els.trackingModal);
+      }
     });
 
     loadPayment();
